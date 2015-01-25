@@ -48,11 +48,16 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 "}" => (Tokens.RBRACE(yypos, yypos+1));
 "{" => (Tokens.LBRACE(yypos, yypos+1));
 
+"]" => (Tokens.RBRACK(yypos, yypos+1));
+"[" => (Tokens.LBRACK(yypos, yypos+1));
+")" => (Tokens.RPAREN(yypos, yypos+1));
+"(" => (Tokens.LPAREN(yypos, yypos+1));
+";" => (Tokens.SEMICOLON(yypos, yypos+1));
+":" => (Tokens.COLON(yypos, yypos+1));
+"," => (Tokens.COMMA(yypos, yypos+1));
+[.\n]* => (Tokens.STRING(yytext, yypos, yypos+size yytext));
+[1-9][0-9]* => (Tokens.INT(yytext, yypos, yypos+size yytext));
+[a-z][a-z0-9]* => (Tokens.ID(yytext, yypos, yypos+size yytext));
+"eof" => (Tokens.EOF(yypos, yypos+3));
 
-
-
-
-
-
-"," => (Tokens.COMMA(yypos,yypos+1));
-.       => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
+. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
