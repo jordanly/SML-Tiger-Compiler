@@ -59,7 +59,7 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 <INITIAL>":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL>"," => (Tokens.COMMA(yypos, yypos+1));
 <INITIAL>[.\n]* => (Tokens.STRING(yytext, yypos, yypos+size yytext));
-<INITIAL>([1-9][0-9]*)|0 => (Tokens.INT(yytext, yypos, yypos+size yytext));
+<INITIAL>([1-9][0-9]*)|0 => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
 <INITIAL>([a-zA-Z][a-zA-Z0-9_]*)|"_main" => (Tokens.ID(yytext, yypos, yypos+size yytext));
 
 <INITIAL>"/*" => (YYBEGIN COMMENT; continue());
