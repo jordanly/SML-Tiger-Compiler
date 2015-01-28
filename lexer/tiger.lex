@@ -3,13 +3,22 @@ type lexresult = Tokens.token
 
 val lineNum = ErrorMsg.lineNum
 val linePos = ErrorMsg.linePos
-fun err(p1,p2) = ErrorMsg.error p1
+fun err(p1,p2) = ErrorMsg.error 
+
+val stringBuf : string ref = ref ""
+val stringBegin = ref 0
+
+fun asciiCode str =
+    let val subStr = String.substring(str, 1, 3)
+        val intVal = valOf(Int.fromString(subStr))
+        val charVal = chr intVal
+    in Char.toString charVal end
 
 fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 
 
 %% 
-%s COMMENT;
+%s COMMENT STRING;
 
 %%
 
@@ -58,12 +67,22 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 <INITIAL>";" => (Tokens.SEMICOLON(yypos, yypos+1));
 <INITIAL>":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL>"," => (Tokens.COMMA(yypos, yypos+1));
-<INITIAL>[.\n]* => (Tokens.STRING(yytext, yypos, yypos+size yytext));
 <INITIAL>([1-9][0-9]*)|0 => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
 <INITIAL>([a-zA-Z][a-zA-Z0-9_]*)|"_main" => (Tokens.ID(yytext, yypos, yypos+size yytext));
 
 <INITIAL>"/*" => (YYBEGIN COMMENT; continue());
 <COMMENT>"*/" => (YYBEGIN INITIAL; continue());
 <COMMENT>. => (continue());
+
+<INITIAL>\" => (YYBEGIN STRING; stringBuf := ""; continue());
+<STRING>[^\\\"]* => (stringBuf := !stringBuf ^ yytext; continue());
+<STRING>\\n => (stringBuf := !stringBuf ^ "\n"; continue());
+<STRING>\\t => (stringBuf := !stringBuf ^ "\t"; continue());
+<STRING>\\\" => (stringBuf := !stringBuf ^ "\""; continue());
+<STRING>\\\\ => (stringBuf := !stringBuf ^ "\\"; continue());
+<STRING>\\[0-9][0-9][0-9] => (stringBuf := !stringBuf ^ asciiCode(yytext); continue());
+<STRING>\\[\n\t \f]+\\ => (continue());
+<STRING>\\[^nt\\\" ] => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
+<STRING>\" => (YYBEGIN INITIAL; Tokens.STRING(!stringBuf, !stringBegin, yypos));
 
 <INITIAL>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
