@@ -16,6 +16,8 @@ fun asciiCode str =
 
 fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 
+val commentDepth = ref 0
+
 
 %% 
 %s COMMENT STRING;
@@ -70,8 +72,9 @@ fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
 <INITIAL>([1-9][0-9]*)|0 => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
 <INITIAL>([a-zA-Z][a-zA-Z0-9_]*)|"_main" => (Tokens.ID(yytext, yypos, yypos+size yytext));
 
-<INITIAL>"/*" => (YYBEGIN COMMENT; continue());
-<COMMENT>"*/" => (YYBEGIN INITIAL; continue());
+<INITIAL>"/*" => (commentDepth := (!commentDepth + 1); YYBEGIN COMMENT; continue());
+<COMMENT>"/*" => (commentDepth := (!commentDepth + 1); continue());
+<COMMENT>"*/" => (if (!commentDepth - 1) = 0 then YYBEGIN INITIAL else commentDepth := (!commentDepth - 1); continue());
 <COMMENT>. => (continue());
 
 <INITIAL>\" => (YYBEGIN STRING; stringBuf := ""; continue());
