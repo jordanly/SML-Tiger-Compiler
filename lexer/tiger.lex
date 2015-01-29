@@ -78,14 +78,15 @@ val commentDepth = ref 0
 <COMMENT>. => (continue());
 
 <INITIAL>\" => (YYBEGIN STRING; stringBuf := ""; continue());
-<STRING>[^\\\"]* => (stringBuf := !stringBuf ^ yytext; continue());
+<STRING>[ -!#-\[\]-~]* => (stringBuf := !stringBuf ^ yytext; continue());
 <STRING>\\n => (stringBuf := !stringBuf ^ "\n"; continue());
 <STRING>\\t => (stringBuf := !stringBuf ^ "\t"; continue());
 <STRING>\\\" => (stringBuf := !stringBuf ^ "\""; continue());
 <STRING>\\\\ => (stringBuf := !stringBuf ^ "\\"; continue());
 <STRING>\\[0-9][0-9][0-9] => (stringBuf := !stringBuf ^ asciiCode(yytext); continue());
 <STRING>\\[\n\t \f]+\\ => (continue());
-<STRING>\\[^nt\\\" ] => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
 <STRING>\" => (YYBEGIN INITIAL; Tokens.STRING(!stringBuf, !stringBegin, yypos));
+<STRING>\n => (ErrorMsg.error yypos ("illegal newline character "); continue());
+<STRING>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
 
 <INITIAL>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
