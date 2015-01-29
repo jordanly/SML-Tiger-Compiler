@@ -73,6 +73,7 @@ val commentDepth = ref 0
 <INITIAL>([a-zA-Z][a-zA-Z0-9_]*)|"_main" => (Tokens.ID(yytext, yypos, yypos+size yytext));
 
 <INITIAL>"/*" => (commentDepth := (!commentDepth + 1); YYBEGIN COMMENT; continue());
+<INITIAL>"*/" => (ErrorMsg.error yypos ("illegal comment close"); continue());
 <COMMENT>"/*" => (commentDepth := (!commentDepth + 1); continue());
 <COMMENT>"*/" => (if (!commentDepth - 1) = 0 then YYBEGIN INITIAL else commentDepth := (!commentDepth - 1); continue());
 <COMMENT>. => (continue());
