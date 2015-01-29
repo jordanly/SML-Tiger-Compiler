@@ -25,7 +25,7 @@ val commentDepth = ref 0
 %%
 
 <INITIAL,COMMENT>\n	=> (lineNum := !lineNum+1; linePos := yypos :: !linePos; continue());
-<INITIAL,COMMENT>[\ \t\n]+ => (lex());
+<INITIAL,COMMENT>[\ \t]+ => (continue());
 
 <INITIAL>"type" => (Tokens.TYPE(yypos, yypos+4));
 <INITIAL>"var"  => (Tokens.VAR(yypos, yypos+3));
@@ -69,7 +69,7 @@ val commentDepth = ref 0
 <INITIAL>";" => (Tokens.SEMICOLON(yypos, yypos+1));
 <INITIAL>":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL>"," => (Tokens.COMMA(yypos, yypos+1));
-<INITIAL>([1-9][0-9]*)|0 => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
+<INITIAL>([0-9]*)|0 => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
 <INITIAL>([a-zA-Z][a-zA-Z0-9_]*)|"_main" => (Tokens.ID(yytext, yypos, yypos+size yytext));
 
 <INITIAL>"/*" => (commentDepth := (!commentDepth + 1); YYBEGIN COMMENT; continue());
