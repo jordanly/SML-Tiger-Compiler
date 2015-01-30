@@ -14,10 +14,15 @@ fun asciiCode str =
         val charVal = chr intVal
     in Char.toString charVal end
 
-fun eof() = let val pos = hd(!linePos) in Tokens.EOF(pos,pos) end
-
 val commentDepth = ref 0
 
+val inString = ref 0
+
+fun eof() = let val pos = hd(!linePos) in 
+    if(!commentDepth > 0) then ErrorMsg.error pos ("Unclosed Comment at EOF")
+    else if (!inString = 1) then ErrorMsg.error pos ("Unclosed String at EOF")
+    else ();
+    Tokens.EOF(pos,pos) end
 
 %% 
 %s COMMENT STRING;
@@ -69,8 +74,8 @@ val commentDepth = ref 0
 <INITIAL>";" => (Tokens.SEMICOLON(yypos, yypos+1));
 <INITIAL>":" => (Tokens.COLON(yypos, yypos+1));
 <INITIAL>"," => (Tokens.COMMA(yypos, yypos+1));
-<INITIAL>([0-9]*)|0 => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
-<INITIAL>([a-zA-Z][a-zA-Z0-9_]*)|"_main" => (Tokens.ID(yytext, yypos, yypos+size yytext));
+<INITIAL>[0-9]* => (Tokens.INT(valOf(Int.fromString(yytext)), yypos, yypos+size yytext));
+<INITIAL>[a-zA-Z][a-zA-Z0-9_]* => (Tokens.ID(yytext, yypos, yypos+size yytext));
 
 <INITIAL>"/*" => (commentDepth := 1; YYBEGIN COMMENT; continue());
 <INITIAL>"*/" => (ErrorMsg.error yypos ("illegal comment close"); continue());
@@ -78,7 +83,7 @@ val commentDepth = ref 0
 <COMMENT>"*/" => (commentDepth := (!commentDepth - 1); if (!commentDepth = 0) then YYBEGIN INITIAL else (); continue());
 <COMMENT>. => (continue());
 
-<INITIAL>\" => (YYBEGIN STRING; stringBuf := ""; continue());
+<INITIAL>\" => (inString := 1; YYBEGIN STRING; stringBuf := ""; continue());
 <STRING>[ -!#-\[\]-~]* => (stringBuf := !stringBuf ^ yytext; continue());
 <STRING>\\n => (stringBuf := !stringBuf ^ "\n"; continue());
 <STRING>\\t => (stringBuf := !stringBuf ^ "\t"; continue());
@@ -86,7 +91,7 @@ val commentDepth = ref 0
 <STRING>\\\\ => (stringBuf := !stringBuf ^ "\\"; continue());
 <STRING>\\[0-9][0-9][0-9] => (stringBuf := !stringBuf ^ asciiCode(yytext); continue());
 <STRING>\\[\n\t \f]+\\ => (continue());
-<STRING>\" => (YYBEGIN INITIAL; Tokens.STRING(!stringBuf, !stringBegin, yypos));
+<STRING>\" => (inString := 0; YYBEGIN INITIAL; Tokens.STRING(!stringBuf, !stringBegin, yypos));
 <STRING>\n => (ErrorMsg.error yypos ("illegal newline character "); continue());
 <STRING>. => (ErrorMsg.error yypos ("illegal character " ^ yytext); continue());
 
