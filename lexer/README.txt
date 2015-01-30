@@ -4,7 +4,7 @@ January 30, 2015
 
 Our lexer is fairly straightforward.
 
-Lines 32 and 33 ignore whitespace and increment counters on newlines.
+Lines 33 and 34 ignore whitespace and increment counters on newlines.
 
 We allow integers to begin with a 0, per Professor Hilton's post on Piazza.
 
