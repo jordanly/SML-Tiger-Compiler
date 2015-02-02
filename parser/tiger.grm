@@ -5,13 +5,14 @@
   | INT of int | STRING of string 
   | COMMA | COLON | SEMICOLON | LPAREN | RPAREN | LBRACK | RBRACK 
   | LBRACE | RBRACE | DOT 
-  | PLUS | MINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE
+  | PLUS | MINUS | UMINUS | TIMES | DIVIDE | EQ | NEQ | LT | LE | GT | GE
   | AND | OR | ASSIGN
   | ARRAY | IF | THEN | ELSE | WHILE | FOR | TO | DO | LET | IN | END | OF 
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | explist
+%nonterm  exp | program | lvalue | explist | funarg | funarglist | arithop
+          | compareop | boolop
 
 %pos int
 %verbose
@@ -20,6 +21,8 @@
 %noshift EOF
 
 %name Tiger
+
+%right UMINUS
 
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
@@ -41,6 +44,33 @@ exp: lvalue			()
    | LPAREN RPAREN ()
    | INT ()
    | STRING ()
+   | MINUS exp %prec UMINUS ()
+   | ID LPAREN funarg RPAREN ()
+   | exp arithop exp ()
+   | exp compareop exp ()
+   | exp boolop exp ()
+   | lvalue ASSIGN exp ()
+
+arithop : PLUS ()
+   | MINUS ()
+   | TIMES ()
+   | DIVIDE ()
+
+compareop : EQ ()
+       | NEQ ()
+       | LT ()
+       | LE ()
+       | GT ()
+       | GE ()
+
+boolop : AND ()
+       | OR ()
+
+funarg : ()
+       | exp funarglist ()
+
+funarglist : COMMA exp funarglist ()
+           | ()
 
 explist : SEMICOLON exp explist ()
         |  ()
