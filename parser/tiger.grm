@@ -11,8 +11,8 @@
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | explist | funarg | funarglist | plusminus
-          | timesdivide | compareop | boolop
+%nonterm  exp | program | lvalue | exptail | funarg | funargtail | plusminus
+          | timesdivide | compareop | boolop | vardec | fundec | letbody | recordbody | recordtail
 
 %pos int
 %verbose
@@ -23,7 +23,10 @@
 %name Tiger
 
 %nonassoc ASSIGN
-%left AND OR
+%nonassoc WHILE DO
+%nonassoc LBRACK RBRACK OF
+%left OR
+%left AND
 %nonassoc EQ NEQ LT LE GT GE
 %left PLUS MINUS
 %left TIMES DIVIDE
@@ -47,8 +50,10 @@ program	: exp				()
 	
 exp: lvalue			()
    | NIL  ()
-   | LPAREN exp SEMICOLON exp explist RPAREN ()
+   | LPAREN exp SEMICOLON exp exptail RPAREN ()
    | LPAREN RPAREN ()
+   | LET vardec IN letbody END ()
+   | LET fundec IN letbody END ()
    | INT ()
    | STRING ()
    | MINUS exp %prec UMINUS ()
@@ -57,7 +62,25 @@ exp: lvalue			()
    | exp timesdivide exp %prec TIMES ()
    | exp compareop exp %prec GE ()
    | exp boolop exp %prec AND ()
+   | ID LBRACE recordbody RBRACE ()
+   | ID LBRACK exp RBRACK OF exp ()
    | lvalue ASSIGN exp ()
+   | IF exp THEN exp ELSE exp ()
+   | IF exp THEN exp ()
+   | WHILE exp DO exp ()
+
+recordbody : ID EQ exp recordtail ()
+           | ()
+
+recordtail : COMMA exp recordtail ()
+           | ()
+
+letbody : exp ()
+        | ()
+
+vardec : VAR () (* THIS VAR IS A PLACEHOLDER; THIS NEEDS TO BE DONE *)
+
+fundec : FUNCTION () (* THIS FUNCTION IS A PLACEHOLDER; THIS NEEDS TO BE DONE *)
 
 plusminus : PLUS ()
    | MINUS ()
@@ -76,14 +99,14 @@ boolop : AND ()
        | OR ()
 
 funarg : ()
-       | exp funarglist ()
+       | exp funargtail ()
 
-funarglist : COMMA exp funarglist ()
+funargtail : COMMA exp funargtail ()
            | ()
 
-explist : SEMICOLON exp explist ()
+exptail : SEMICOLON exp exptail ()
         |  ()
 
-lvalue : ID ()
+lvalue : ID %prec ASSIGN ()
        | lvalue DOT ID ()
        | lvalue LBRACK exp RBRACK ()
