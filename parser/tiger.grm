@@ -11,8 +11,8 @@
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | explist | funarg | funarglist | arithop
-          | compareop | boolop
+%nonterm  exp | program | lvalue | explist | funarg | funarglist | plusminus
+          | timesdivide | compareop | boolop
 
 %pos int
 %verbose
@@ -22,7 +22,12 @@
 
 %name Tiger
 
-%right UMINUS
+%nonassoc ASSIGN
+%left AND OR
+%nonassoc EQ NEQ LT LE GT GE
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left UMINUS
 
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
 	DO OF NIL
@@ -32,6 +37,8 @@
 %value ID ("bogus")
 %value INT (1)
 %value STRING ("")
+
+%verbose
 
 %%
 
@@ -46,14 +53,16 @@ exp: lvalue			()
    | STRING ()
    | MINUS exp %prec UMINUS ()
    | ID LPAREN funarg RPAREN ()
-   | exp arithop exp ()
-   | exp compareop exp ()
-   | exp boolop exp ()
+   | exp plusminus exp %prec PLUS ()
+   | exp timesdivide exp %prec TIMES ()
+   | exp compareop exp %prec GE ()
+   | exp boolop exp %prec AND ()
    | lvalue ASSIGN exp ()
 
-arithop : PLUS ()
+plusminus : PLUS ()
    | MINUS ()
-   | TIMES ()
+
+timesdivide : TIMES ()
    | DIVIDE ()
 
 compareop : EQ ()
