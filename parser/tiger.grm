@@ -12,7 +12,7 @@
   | FUNCTION | VAR | TYPE 
 
 %nonterm  exp | program | lvalue | exptail | funarg | funargtail | plusminus
-          | timesdivide | compareop | boolop | vardec | fundec | letbody | recordbody | recordtail
+          | timesdivide | compareop | boolop | decs | letbody | recordbody | recordtail
 
 %pos int
 %verbose
@@ -24,6 +24,8 @@
 
 %nonassoc ASSIGN
 %nonassoc WHILE DO
+%right THEN
+%right ELSE
 %nonassoc LBRACK RBRACK OF
 %left OR
 %left AND
@@ -52,8 +54,7 @@ exp: lvalue			()
    | NIL  ()
    | LPAREN exp SEMICOLON exp exptail RPAREN ()
    | LPAREN RPAREN ()
-   | LET vardec IN letbody END ()
-   | LET fundec IN letbody END ()
+   | LET decs IN letbody END ()
    | INT ()
    | STRING ()
    | MINUS exp %prec UMINUS ()
@@ -68,6 +69,9 @@ exp: lvalue			()
    | IF exp THEN exp ELSE exp ()
    | IF exp THEN exp ()
    | WHILE exp DO exp ()
+   | FOR ID ASSIGN exp TO exp DO exp ()
+   | BREAK ()
+   | LPAREN exp RPAREN ()
 
 recordbody : ID EQ exp recordtail ()
            | ()
@@ -75,12 +79,10 @@ recordbody : ID EQ exp recordtail ()
 recordtail : COMMA exp recordtail ()
            | ()
 
-letbody : exp ()
+letbody : exp SEMICOLON exptail()
         | ()
 
-vardec : VAR () (* THIS VAR IS A PLACEHOLDER; THIS NEEDS TO BE DONE *)
-
-fundec : FUNCTION () (* THIS FUNCTION IS A PLACEHOLDER; THIS NEEDS TO BE DONE *)
+decs : ()
 
 plusminus : PLUS ()
    | MINUS ()
