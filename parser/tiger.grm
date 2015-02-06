@@ -11,8 +11,10 @@
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | exptail | funarg | funargtail | plusminus
-          | timesdivide | compareop | boolop | decs | letbody | recordbody | recordtail
+%nonterm  exp | program | lvalue | exptail | funarg | funargtail 
+        | plusminus | timesdivide | compareop | boolop 
+        | decs | dec | tydec | ty | tyfield | vardec | fundec
+        | letbody | recordbody | recordtail
 
 %pos int
 %verbose
@@ -47,10 +49,10 @@
 
 %%
 
-program	: exp				()
+program	: exp ()
 
 	
-exp: lvalue			()
+exp: lvalue	()
    | NIL  ()
    | LPAREN exp SEMICOLON exp exptail RPAREN ()
    | LPAREN RPAREN ()
