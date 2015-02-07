@@ -94,7 +94,7 @@ dec : tydec ()
 tydec : TYPE ID EQ ty ()
 
 ty : ID ()
-   | LBRACK tyfields RBRACK ()
+   | LBRACE tyfields RBRACE ()
    | ARRAY OF ID ()
 
 tyfields : tyfields COMMA ID COLON ID ()
