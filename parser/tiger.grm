@@ -13,7 +13,7 @@
 
 %nonterm  exp | program | lvalue | exptail | funarg | funargtail 
         | plusminus | timesdivide | compareop | boolop 
-        | decs | dec | tydec | ty | tyfield | vardec | fundec
+        | decs | dec | tydec | ty | tyfields | vardec | fundec
         | letbody | recordbody | recordtail
 
 %pos int
@@ -84,7 +84,28 @@ recordtail : COMMA exp recordtail ()
 letbody : exp SEMICOLON exptail()
         | ()
 
-decs : ()
+decs : decs dec ()
+     | ()
+
+dec : tydec ()
+    | vardec ()
+    | fundec ()
+
+tydec : TYPE ID EQ ty ()
+
+ty : ID ()
+   | LBRACK tyfields RBRACK ()
+   | ARRAY OF ID ()
+
+tyfields : tyfields COMMA ID COLON ID ()
+         | ID COLON ID ()
+
+vardec : VAR ID ASSIGN exp ()
+       | VAR ID COLON ID ASSIGN exp ()
+
+fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp ()
+       | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp ()
+
 
 plusminus : PLUS ()
    | MINUS ()
