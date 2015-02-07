@@ -81,7 +81,7 @@ recordbody : ID EQ exp recordtail ()
 recordtail : COMMA exp recordtail ()
            | ()
 
-letbody : exp SEMICOLON exptail()
+letbody : exp exptail()
         | ()
 
 decs : decs dec ()
