@@ -97,7 +97,8 @@ ty : ID ()
    | LBRACE tyfields RBRACE ()
    | ARRAY OF ID ()
 
-tyfields : tyfields COMMA ID COLON ID ()
+tyfields : ()
+         | tyfields COMMA ID COLON ID ()
          | ID COLON ID ()
 
 vardec : VAR ID ASSIGN exp ()
