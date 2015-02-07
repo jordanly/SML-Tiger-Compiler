@@ -51,7 +51,6 @@
 
 program	: exp ()
 
-	
 exp: lvalue	()
    | NIL  ()
    | LPAREN exp SEMICOLON exp exptail RPAREN ()
@@ -66,7 +65,7 @@ exp: lvalue	()
    | exp compareop exp %prec GE ()
    | exp boolop exp %prec AND ()
    | ID LBRACE recordbody RBRACE ()
-   | ID LBRACK exp RBRACK OF exp ()
+   | lvalue OF exp ()
    | lvalue ASSIGN exp ()
    | IF exp THEN exp ELSE exp ()
    | IF exp THEN exp ()
@@ -106,7 +105,6 @@ vardec : VAR ID ASSIGN exp ()
 
 fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp ()
        | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp ()
-
 
 plusminus : PLUS ()
    | MINUS ()
