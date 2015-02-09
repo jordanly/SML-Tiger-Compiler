@@ -13,11 +13,9 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | lvalorid | exptail | funarg | funargtail 
-        | plusminus | timesdivide | compareop | boolop 
-        | decs | dec | tydec | ty | tyfields | vardec | fundec
+%nonterm  exp | program | lvalue | exptail | funarg | funargtail 
+        | decs | dec | tydec | ty | tyfields | vardec | fundec | fundectail
         | letbody | recordbody | recordtail
-        | brackvalue
 
 %pos int
 %verbose
@@ -41,7 +39,7 @@ structure A = Absyn
 %left UMINUS
 
 %keyword WHILE FOR TO BREAK LET IN END FUNCTION VAR TYPE ARRAY IF THEN ELSE 
-	DO OF NIL
+    DO OF NIL
 
 %prefer THEN ELSE LPAREN
 
@@ -53,10 +51,10 @@ structure A = Absyn
 
 %%
 
-program	: exp ()
+program : exp ()
 
-	
-exp: lvalue	()
+    
+exp: lvalue ()
    | NIL  ()
    | LPAREN exp SEMICOLON exp exptail RPAREN ()
    | LPAREN RPAREN ()
@@ -65,10 +63,16 @@ exp: lvalue	()
    | STRING ()
    | MINUS exp %prec UMINUS ()
    | ID LPAREN funarg RPAREN ()
-   | exp plusminus exp %prec PLUS ()
-   | exp timesdivide exp %prec TIMES ()
-   | exp compareop exp %prec GE ()
-   | exp boolop exp %prec AND ()
+   | exp PLUS exp ()
+   | exp MINUS exp ()
+   | exp TIMES exp ()
+   | exp DIVIDE exp ()
+   | exp EQ exp ()
+   | exp NEQ exp ()
+   | exp LT exp ()
+   | exp LE exp ()
+   | exp GT exp ()
+   | exp GE exp ()
    | ID LBRACE recordbody RBRACE ()
    | ID LBRACK exp RBRACK OF exp ()
    | lvalue ASSIGN exp ()
@@ -110,23 +114,6 @@ vardec : VAR ID ASSIGN exp ()
 
 fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp ()
        | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp ()
-
-
-plusminus : PLUS ()
-   | MINUS ()
-
-timesdivide : TIMES ()
-   | DIVIDE ()
-
-compareop : EQ ()
-       | NEQ ()
-       | LT ()
-       | LE ()
-       | GT ()
-       | GE ()
-
-boolop : AND ()
-       | OR ()
 
 funarg : ()
        | exp funargtail ()
