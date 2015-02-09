@@ -1,3 +1,5 @@
+structure A = Absyn
+
 %%
 %term
     EOF 
@@ -49,8 +51,6 @@
 %verbose
 
 %%
-
-structure A = Absyn
 
 program	: exp ()
 
