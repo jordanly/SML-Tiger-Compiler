@@ -49,6 +49,8 @@
 
 %%
 
+structure A = Absyn
+
 program	: exp ()
 
 exp: lvalue	()
