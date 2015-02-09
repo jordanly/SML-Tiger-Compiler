@@ -13,7 +13,7 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | exptail | funarg | funargtail 
+%nonterm  exp | program | lvalue | lvalorid | exptail | funarg | funargtail 
         | plusminus | timesdivide | compareop | boolop 
         | decs | dec | tydec | ty | tyfields | vardec | fundec
         | letbody | recordbody | recordtail
@@ -28,6 +28,7 @@ structure A = Absyn
 %name Tiger
 
 %nonassoc ASSIGN
+%nonassoc ID
 %nonassoc WHILE DO
 %right THEN
 %right ELSE
@@ -69,7 +70,7 @@ exp: lvalue	()
    | exp compareop exp %prec GE ()
    | exp boolop exp %prec AND ()
    | ID LBRACE recordbody RBRACE ()
-   | brackvalue OF exp ()
+   | ID LBRACK exp RBRACK OF exp ()
    | lvalue ASSIGN exp ()
    | IF exp THEN exp ELSE exp ()
    | IF exp THEN exp ()
@@ -136,8 +137,7 @@ funargtail : COMMA exp funargtail ()
 exptail : SEMICOLON exp exptail ()
         |  ()
 
-lvalue : ID %prec ASSIGN ()
+lvalue : ID ()
        | lvalue DOT ID ()
-       | brackvalue ()
-
-brackvalue : ID LBRACK exp RBRACK ()
+       | ID LBRACK exp RBRACK ()
+       | lvalue LBRACK exp RBRACK ()
