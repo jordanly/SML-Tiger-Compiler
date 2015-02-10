@@ -13,7 +13,7 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp | program | lvalue | exptail | funarg | funargtail 
+%nonterm  exp0 | exp | program | lvalue | exptail | funarg | funargtail 
         | decs | dec | tydec | ty | tyfields | vardec | fundec | fundectail
         | letbody | recordbody | recordtail
 
@@ -51,18 +51,20 @@ structure A = Absyn
 
 %%
 
-program : exp ()
+program : exp0 ()
 
-    
+exp0 : exp ()
+   | lvalue ASSIGN exp ()
+
 exp: lvalue ()
    | NIL  ()
-   | LPAREN exp SEMICOLON exp exptail RPAREN ()
+   | LPAREN exp0 SEMICOLON exp0 exptail RPAREN ()
    | LPAREN RPAREN ()
    | LET decs IN letbody END ()
    | INT ()
    | STRING ()
-   | MINUS exp %prec UMINUS ()
    | ID LPAREN funarg RPAREN ()
+   | MINUS exp %prec UMINUS ()
    | exp PLUS exp ()
    | exp MINUS exp ()
    | exp TIMES exp ()
@@ -77,13 +79,18 @@ exp: lvalue ()
    | exp OR exp ()
    | ID LBRACE recordbody RBRACE ()
    | ID LBRACK exp RBRACK OF exp ()
-   | lvalue ASSIGN exp ()
    | IF exp THEN exp ELSE exp ()
+   | IF exp THEN exp ELSE lvalue ASSIGN exp ()
+   | IF exp THEN lvalue ASSIGN exp ELSE exp ()
+   | IF exp THEN lvalue ASSIGN exp ELSE lvalue ASSIGN exp ()
    | IF exp THEN exp ()
+   | IF exp THEN lvalue ASSIGN exp ()
    | WHILE exp DO exp ()
+   | WHILE exp DO lvalue ASSIGN exp ()
    | FOR ID ASSIGN exp TO exp DO exp ()
+   | FOR ID ASSIGN exp TO exp DO lvalue ASSIGN exp ()
    | BREAK ()
-   | LPAREN exp RPAREN ()
+   | LPAREN exp0 RPAREN ()
 
 recordbody : ID EQ exp recordtail ()
            | ()
@@ -91,7 +98,7 @@ recordbody : ID EQ exp recordtail ()
 recordtail : COMMA exp recordtail ()
            | ()
 
-letbody : exp exptail()
+letbody : exp0 exptail()
         | ()
 
 decs : decs dec ()
@@ -114,8 +121,8 @@ tyfields : ()
 vardec : VAR ID ASSIGN exp ()
        | VAR ID COLON ID ASSIGN exp ()
 
-fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp ()
-       | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp ()
+fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp0 ()
+       | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp0 ()
 
 funarg : ()
        | exp funargtail ()
@@ -123,7 +130,7 @@ funarg : ()
 funargtail : COMMA exp funargtail ()
            | ()
 
-exptail : SEMICOLON exp exptail ()
+exptail : SEMICOLON exp0 exptail ()
         |  ()
 
 lvalue : ID ()
