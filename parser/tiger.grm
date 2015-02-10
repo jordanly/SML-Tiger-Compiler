@@ -15,7 +15,7 @@ structure A = Absyn
 
 %nonterm  exp0 | exp | program | lvalue | exptail | funarg | funargtail 
         | decs | dec | tydec | ty | tyfields | vardec | fundec | fundectail
-        | letbody | recordbody | recordtail
+        | letbody | recordbody | recordtail | nontydec | nonfundec
 
 %pos int
 %verbose
@@ -101,14 +101,21 @@ recordtail : COMMA exp recordtail ()
 letbody : exp0 exptail()
         | ()
 
-decs : decs dec ()
+decs : tydec nontydec ()
+     | vardec decs ()
+     | fundec nonfundec ()
      | ()
 
-dec : tydec ()
-    | vardec ()
-    | fundec ()
+nontydec : vardec decs ()
+         | fundec nonfundec ()
+         | ()
+
+nonfundec : vardec decs ()
+          | tydec nontydec ()
+          | ()
 
 tydec : TYPE ID EQ ty ()
+      | tydec tydec ()
 
 ty : ID ()
    | LBRACE tyfields RBRACE ()
@@ -123,6 +130,7 @@ vardec : VAR ID ASSIGN exp ()
 
 fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp0 ()
        | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp0 ()
+       | fundec fundec ()
 
 funarg : ()
        | exp funargtail ()
