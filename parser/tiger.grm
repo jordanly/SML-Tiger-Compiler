@@ -107,7 +107,7 @@ nonfundec : vardec decs ()
           | ()
 
 tydec : TYPE ID EQ ty ()
-      | tydec tydec ()
+      | TYPE ID EQ ty tydec ()
 
 ty : ID ()
    | LBRACE tyfields RBRACE ()
@@ -122,7 +122,8 @@ vardec : VAR ID ASSIGN exp ()
 
 fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp ()
        | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp ()
-       | fundec fundec ()
+       | FUNCTION ID LPAREN tyfields RPAREN EQ exp fundec ()
+       | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp fundec ()
 
 funarg : ()
        | exp funargtail ()
