@@ -13,7 +13,8 @@ structure A = Absyn
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  exp of A.exp | program | lvalue of A.var | exptail | funarg | funargtail 
+%nonterm  exp of A.exp | program | lvalue of A.var | exptail of (A.exp * pos) list 
+        | funarg | funargtail 
         | decs | dec | tydec | ty | tyfields | vardec | fundec | fundectail
         | letbody | recordbody | recordtail | nontydec | nonfundec
 
@@ -54,8 +55,8 @@ structure A = Absyn
 program : exp ()
 
 exp: lvalue                                     (A.VarExp(lvalue))
-   | NIL                                        ()
-   | LPAREN exp SEMICOLON exp exptail RPAREN    ()
+   | NIL                                        (A.NilExp)
+   | LPAREN exp SEMICOLON exp exptail RPAREN    (A.SeqExp((exp1, exp1left)::(exp2, exp2left)::exptail))
    | LPAREN RPAREN                              ()
    | LET decs IN letbody END                    ()
    | INT                                        (A.IntExp(INT))
@@ -75,14 +76,14 @@ exp: lvalue                                     (A.VarExp(lvalue))
    | exp AND exp                                (if exp1 then exp2 else 0)
    | exp OR exp                                 (if exp1 then 1 else exp2)
    | lvalue ASSIGN exp                          (A.AssignExp({var=lvalue, exp=exp, pos=lvalueleft}))
-   | ID LBRACE recordbody RBRACE                ()
+   | ID LBRACE recordbody RBRACE                (A.RecordExp({fields=recordbody, typ=Symbol.symbol ID, pos=IDleft}))
    | ID LBRACK exp RBRACK OF exp                ()
    | IF exp THEN exp ELSE exp                   ()
    | IF exp THEN exp                            ()
    | WHILE exp DO exp                           (A.WhileExp({test=exp1, body=exp2, pos=WHILEleft}))
    | FOR ID ASSIGN exp TO exp DO exp            ()
    | BREAK                                      (A.BreakExp(BREAKleft))
-   | LPAREN exp RPAREN                          ()
+   | LPAREN exp RPAREN                          (exp)
 
 recordbody : ID EQ exp recordtail ()
            | ()
@@ -131,8 +132,8 @@ funarg : ()
 funargtail : COMMA exp funargtail ()
            | ()
 
-exptail : SEMICOLON exp exptail ()
-        |  ()
+exptail : SEMICOLON exp exptail ((exp, expleft)::exptail)
+        | ([])
 
 lvalue : ID (A.SimpleVar(Symbol.symbol ID, IDleft))
        | lvalue DOT ID (A.FieldVar(lvalue, Symbol.symbol ID, lvalueleft))
