@@ -1,6 +1,7 @@
 Group is
 
 absyn.sml
+prabsyn.sml
 tiger.lex
 errormsg.sml
 table.sig
