@@ -32,7 +32,7 @@ fun addToFunctionDec(newType, (A.FunctionDec a)::l) = A.FunctionDec(newType::a):
         | tydec of A.dec list
         | ty of A.ty
         | tyfields of A.field list
-        | vardec of A.dec list
+        | vardec of A.dec
         | fundec of A.dec list
         | letbody of A.exp
         | recordbody of (A.symbol * A.exp * pos) list
@@ -114,15 +114,15 @@ letbody : exp exptail                           (A.SeqExp((exp, expleft)::exptai
         |                                       (A.NilExp)
 
 decs : tydec nontydec                           (tydec @ nontydec)
-     | vardec decs                              (vardec @ decs)
+     | vardec decs                              (vardec :: decs)
      | fundec nonfundec                         (fundec @ nonfundec)
      |                                          ([])
 
-nontydec : vardec decs                          (vardec @ decs)
+nontydec : vardec decs                          (vardec :: decs)
          | fundec nonfundec                     (fundec @ nonfundec)
          |                                      ([])
 
-nonfundec : vardec decs                         (vardec @ decs)
+nonfundec : vardec decs                         (vardec :: decs)
           | tydec nontydec                      (tydec @ nontydec)
           |                                     ([])
 
@@ -137,8 +137,8 @@ tyfields :                                      ([])
          | tyfields COMMA ID COLON ID           ({name=Symbol.symbol ID1, escape=(ref true), typ=Symbol.symbol ID2, pos=ID1left}::tyfields)
          | ID COLON ID                          ([{name=Symbol.symbol ID1, escape=(ref true), typ=Symbol.symbol ID2, pos=ID1left}])
 
-vardec : VAR ID ASSIGN exp                      ([A.VarDec({name=Symbol.symbol ID, escape=(ref true), typ=NONE, init=exp, pos=VARleft})])
-       | VAR ID COLON ID ASSIGN exp             ([A.VarDec({name=Symbol.symbol ID1, escape=(ref true), typ=SOME (Symbol.symbol ID2, ID2left), init=exp, pos=VARleft})])
+vardec : VAR ID ASSIGN exp                      (A.VarDec({name=Symbol.symbol ID, escape=(ref true), typ=NONE, init=exp, pos=VARleft}))
+       | VAR ID COLON ID ASSIGN exp             (A.VarDec({name=Symbol.symbol ID1, escape=(ref true), typ=SOME (Symbol.symbol ID2, ID2left), init=exp, pos=VARleft}))
 
 fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp                 (A.FunctionDec([
                                                                         {name=Symbol.symbol ID, params=tyfields,
