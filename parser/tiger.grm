@@ -1,9 +1,11 @@
 structure A = Absyn
 
 fun addToTypeDec(newType, (A.TypeDec a)::l) = A.TypeDec(newType::a)::l
+  | addToTypeDec(newType, a::l) = A.TypeDec([])::[]
   | addToTypeDec(newType, []) = A.TypeDec([newType])::[];
 
 fun addToFunctionDec(newType, (A.FunctionDec a)::l) = A.FunctionDec(newType::a)::l
+  | addToFunctionDec(newType, a::l) = A.FunctionDec([])::[]
   | addToFunctionDec(newType, []) = A.FunctionDec([newType])::[];
     
 %%
@@ -72,7 +74,7 @@ fun addToFunctionDec(newType, (A.FunctionDec a)::l) = A.FunctionDec(newType::a):
 
 %%
 
-program : exp (PrintAbsyn.print(TextIO.stdOut, exp))
+program : exp                                   (PrintAbsyn.print(TextIO.stdOut, exp))
 
 exp: lvalue                                     (A.VarExp(lvalue))
    | NIL                                        (A.NilExp)
@@ -152,9 +154,9 @@ fundec : FUNCTION ID LPAREN tyfields RPAREN EQ exp                 (A.FunctionDe
                                                                         pos=FUNCTIONleft}, fundec))
 
 funarg :                                        ([])
-       | exp funargtail                         ([])
+       | exp funargtail                         (exp::funargtail)
 
-funargtail : COMMA exp funargtail               ([])
+funargtail : COMMA exp funargtail               (exp::funargtail)
            |                                    ([])
 
 exptail : SEMICOLON exp exptail                 ((exp, expleft)::exptail)
