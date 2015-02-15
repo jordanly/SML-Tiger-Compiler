@@ -109,6 +109,7 @@ exp: lvalue                                     (A.VarExp(lvalue))
 
 recordbody : ID EQ exp                          ([(Symbol.symbol ID, exp, defaultPos)])
            | ID EQ exp COMMA recordbody         ((Symbol.symbol ID, exp, defaultPos) :: recordbody)
+           |                                    ([])
 
 letbody : exp exptail                           (A.SeqExp((exp, expleft)::exptail))
         |                                       (A.NilExp)
