@@ -21,7 +21,7 @@ fun addToFunctionDec(newType, (A.FunctionDec a)::l) = A.FunctionDec(newType::a):
   | BREAK | NIL
   | FUNCTION | VAR | TYPE 
 
-%nonterm  program
+%nonterm  program of A.exp
         | exp of A.exp
         | lvalue of A.var
         | exptail of (A.exp * pos) list
@@ -74,7 +74,7 @@ fun addToFunctionDec(newType, (A.FunctionDec a)::l) = A.FunctionDec(newType::a):
 
 %%
 
-program : exp                                   (PrintAbsyn.print(TextIO.stdOut, exp))
+program : exp                                   (exp)
 
 exp: lvalue                                     (A.VarExp(lvalue))
    | NIL                                        (A.NilExp)
