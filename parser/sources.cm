@@ -7,7 +7,7 @@ errormsg.sml
 table.sig
 table.sml
 symbol.sml
-parsetest.sml
+parse.sml
 tiger.grm
 $/smlnj-lib.cm
 $/basis.cm
