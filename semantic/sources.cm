@@ -8,7 +8,9 @@ table.sig
 table.sml
 symbol.sml
 parse.sml
+semant.sml
 tiger.grm
+types.sml
 $/smlnj-lib.cm
 $/basis.cm
 $/ml-yacc-lib.cm
