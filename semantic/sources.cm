@@ -6,6 +6,8 @@ tiger.lex
 errormsg.sml
 table.sig
 table.sml
+env.sig
+env.sml
 symbol.sml
 parse.sml
 semant.sml
