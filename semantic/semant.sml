@@ -8,18 +8,34 @@ struct
       | checkInt ({exp=_, ty=_ }, pos) = Err.error pos "integer required"
 
     fun transExp (venv, tenv, exp) = 
-        let fun trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
-              | trexp (A.OpExp{left, oper=A.PlusOp,right,pos}) = 
-                      (checkInt(trexp left, pos);
-                       checkInt(trexp right, pos);
-                       {exp=(), ty=T.INT})
+        let fun trexp (A.VarExp(var)) = trvar var
+              | trexp (A.NilExp) = {exp=(), ty=T.NIL}
+              | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
+              | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
+              | trexp (A.CallExp({func, args, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.OpExp{left, oper, right, pos}) = 
+                    (case oper of
+                      A.PlusOp => (checkInt(trexp left, pos); 
+                                   checkInt(trexp right, pos);
+                                   {exp=(), ty=T.INT})
+                    | A.MinusOp => (checkInt(trexp left, pos); 
+                                   checkInt(trexp right, pos);
+                                   {exp=(), ty=T.INT})
+                    | A.TimesOp => (checkInt(trexp left, pos); 
+                                   checkInt(trexp right, pos);
+                                   {exp=(), ty=T.INT})
+                    | A.DivideOp => (checkInt(trexp left, pos); 
+                                   checkInt(trexp right, pos);
+                                   {exp=(), ty=T.INT})
+                    (* TODO do rest of Ops *)
+                    )
               | trexp (anythingelse) = {exp=(), ty=T.NIL} (*Place holder to ensure exhaustive match*)
         and trvar (A.SimpleVar(id,pos)) = 
                 (case Symbol.look(venv, id) of
-                    SOME(Env.VarEntry({ty=varty})) =>
-                        {exp=(), ty=varty}
-                  | SOME(Env.FunEntry({formals=formalsTyList, result=resultTy})) =>
-                        {exp=(), ty=resultTy}
+                    SOME(Env.VarEntry({ty})) =>
+                        {exp=(), ty=ty}
+                  | SOME(Env.FunEntry({formals, result})) =>
+                        {exp=(), ty=result}
                   | NONE => (Err.error pos ("undefined variable " ^ S.name id);
                              {exp=(), ty=T.INT}))
           | trvar (anythingelse) = {exp=(), ty=T.INT} (*Place holder to ensure exhaustive match*)
