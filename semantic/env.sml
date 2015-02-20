@@ -6,7 +6,7 @@ structure S = Symbol
 structure Env :> ENV = 
 struct
     type access = unit
-    type ty = T.ty
+    type ty = Types.ty
 
     datatype enventry = VarEntry of {ty: ty}
                       | FunEntry of {formals: ty list, result : ty}

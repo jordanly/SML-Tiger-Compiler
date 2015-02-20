@@ -1,8 +1,7 @@
 structure Semant =
 struct
-    type ty = T.ty
     type venv = Env.enventry Symbol.table
-    type tenv = Env.ty Symbol.table
+    type tenv = T.ty Symbol.table
     type expty = {exp: Translate.exp, ty: T.ty}
 
     fun checkInt ({exp=_, ty=T.INT }, pos) = ()
@@ -14,7 +13,16 @@ struct
                       (checkInt(trexp left, pos);
                        checkInt(trexp right, pos);
                        {exp=(), ty=T.INT})
-              | trexp (a) = {exp=(), ty=T.NIL} (*Place holder: delete me*)
+              | trexp (anythingelse) = {exp=(), ty=T.NIL} (*Place holder to ensure exhaustive match*)
+        and trvar (A.SimpleVar(id,pos)) = 
+                (case Symbol.look(venv, id) of
+                    SOME(Env.VarEntry({ty=varty})) =>
+                        {exp=(), ty=varty}
+                  | SOME(Env.FunEntry({formals=formalsTyList, result=resultTy})) =>
+                        {exp=(), ty=resultTy}
+                  | NONE => (Err.error pos ("undefined variable " ^ S.name id);
+                             {exp=(), ty=T.INT}))
+          | trvar (anythingelse) = {exp=(), ty=T.INT} (*Place holder to ensure exhaustive match*)
         in
             trexp exp
         end
