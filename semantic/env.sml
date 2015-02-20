@@ -1,3 +1,8 @@
+structure A = Absyn
+structure Err = ErrorMsg
+structure T = Types
+structure S = Symbol
+
 structure Env :> ENV = 
 struct
     type access = unit

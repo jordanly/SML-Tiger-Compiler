@@ -10,6 +10,7 @@ env.sig
 env.sml
 symbol.sml
 parse.sml
+translate.sml
 semant.sml
 tiger.grm
 types.sml
