@@ -33,9 +33,22 @@ struct
                     | A.DivideOp => (checkInt(trexp left, pos); 
                                    checkInt(trexp right, pos);
                                    {exp=(), ty=T.INT})
-                    (* TODO do rest of Ops *)
+                    | A.EqOp => {exp=(), ty=T.INT} (* TODO *)
+                    | A.NeqOp => {exp=(), ty=T.INT} (* TODO *)
+                    | A.LtOp => {exp=(), ty=T.INT} (* TODO *)
+                    | A.LeOp => {exp=(), ty=T.INT} (* TODO *)
+                    | A.GtOp => {exp=(), ty=T.INT} (* TODO *)
+                    | A.GeOp => {exp=(), ty=T.INT} (* TODO *)
                     )
-              | trexp (anythingelse) = {exp=(), ty=T.NIL} (*Place holder to ensure exhaustive match*)
+              | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.SeqExp(expList)) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.AssignExp({var, exp, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.IfExp({test, then', else', pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.WhileExp({test, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.BreakExp(pos)) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.LetExp({decs, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.ArrayExp({typ, size, init, pos})) = {exp=(), ty=T.NIL} (* TODO *)
         and trvar (A.SimpleVar(id, pos)) = 
                 (case Symbol.look(venv, id) of
                     SOME(Env.VarEntry({ty})) => {exp=(), ty=ty}
