@@ -30,7 +30,7 @@ struct
                     (* TODO do rest of Ops *)
                     )
               | trexp (anythingelse) = {exp=(), ty=T.NIL} (*Place holder to ensure exhaustive match*)
-        and trvar (A.SimpleVar(id,pos)) = 
+        and trvar (A.SimpleVar(id, pos)) = 
                 (case Symbol.look(venv, id) of
                     SOME(Env.VarEntry({ty})) =>
                         {exp=(), ty=ty}
@@ -38,7 +38,8 @@ struct
                         {exp=(), ty=result}
                   | NONE => (Err.error pos ("undefined variable " ^ S.name id);
                              {exp=(), ty=T.INT}))
-          | trvar (anythingelse) = {exp=(), ty=T.INT} (*Place holder to ensure exhaustive match*)
+          | trvar (A.FieldVar(v, id, pos)) = {exp=(), ty=T.NIL} (* TODO *)
+          | trvar (A.SubscriptVar(v, exp, pos)) = {exp=(), ty=T.NIL} (* TODO *)
         in
             trexp exp
         end
