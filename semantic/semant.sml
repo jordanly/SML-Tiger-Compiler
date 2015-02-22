@@ -48,13 +48,22 @@ struct
                     | A.GeOp => {exp=(), ty=T.INT} (* TODO *)
                     )
               | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL} (* TODO *)
-              | trexp (A.SeqExp(expList)) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.SeqExp(expList)) = 
+                    (case expList of
+                          [] => {exp=(), ty=T.UNIT}
+                        | [(exp, pos)] => trexp(exp)
+                        | a::l => trexp(#1 (List.last l)))
               | trexp (A.AssignExp({var, exp, pos})) = {exp=(), ty=T.NIL} (* TODO *)
               | trexp (A.IfExp({test, then', else', pos})) = {exp=(), ty=T.NIL} (* TODO *)
               | trexp (A.WhileExp({test, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
               | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
               | trexp (A.BreakExp(pos)) = {exp=(), ty=T.NIL} (* TODO *)
-              | trexp (A.LetExp({decs, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.LetExp({decs, body, pos})) = 
+                    let
+                      val {venv=venv', tenv=tenv'} = transDecs(venv, tenv, decs)
+                    in
+                      transExp(venv', tenv', body)
+                    end
               | trexp (A.ArrayExp({typ, size, init, pos})) = {exp=(), ty=T.NIL} (* TODO *)
         and trvar (A.SimpleVar(id, pos)) = 
                 (case Symbol.look(venv, id) of
@@ -82,6 +91,21 @@ struct
         in
             trexp exp
         end
+    and transDecs(venv, tenv, decs) = 
+        let fun trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
+                    (case typ of
+                          SOME(_) => {venv=venv, tenv=tenv}
+                        | NONE => let val {exp, ty} = transExp(venv, tenv, init)
+                                  in 
+                                    {venv=S.enter(venv, name, Env.VarEntry{ty=ty}),
+                                     tenv=tenv}
+                                  end
+                    )
+            and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
+        in
+          foldl foldHelper {venv=venv, tenv=tenv} decs
+        end
+
 
     fun transProg (my_exp : A.exp) = 
         (transExp (Env.base_venv, Env.base_tenv, my_exp); ())
