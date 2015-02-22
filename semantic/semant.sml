@@ -13,12 +13,19 @@ struct
       | getFieldType ([], id, pos) = (Err.error pos "no such field";
                                       T.INT)
 
-    fun transExp (venv, tenv, exp) = 
+        fun transExp (venv, tenv, exp) = 
         let fun trexp (A.VarExp(var)) = trvar var
               | trexp (A.NilExp) = {exp=(), ty=T.NIL}
               | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
               | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
-              | trexp (A.CallExp({func, args, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+              | trexp (A.CallExp({func, args, pos})) = 
+                    (case Symbol.look(venv, func) of
+                          SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos);
+                                                                    {exp=(), ty=result})
+                        | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func);
+                                      {exp=(), ty=T.INT})
+                        | NONE => (Err.error pos ("no such function " ^ S.name func);
+                                   {exp=(), ty=T.INT}))
               | trexp (A.OpExp{left, oper, right, pos}) = 
                     (case oper of
                       A.PlusOp => (checkInt(trexp left, pos); 
@@ -66,10 +73,15 @@ struct
                                                               {exp=(), ty=arrTy})
                     | {exp=_, ty=_} => (Err.error pos ("requires array"); (* TODO add name to error? *)
                                         {exp=(), ty=T.INT}))
+        and checkArgs(forTy::formalList, argExp::argList, pos) = if forTy = #ty (trexp argExp)
+                                                                    then checkArgs(formalList, argList, pos)
+                                                                    else Err.error pos "mismatched args"
+          | checkArgs([], argExp::argList, pos) = Err.error pos "mismatched args"
+          | checkArgs(forTy::formalList, [], pos) = Err.error pos "insufficient args"
+          | checkArgs([], [], pos) = ()
         in
             trexp exp
         end
-
 
     fun transProg (my_exp : A.exp) = 
         (transExp (Env.base_venv, Env.base_tenv, my_exp); ())
