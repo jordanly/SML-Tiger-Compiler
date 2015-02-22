@@ -13,7 +13,7 @@ struct
       | getFieldType ([], id, pos) = (Err.error pos "no such field";
                                       T.INT)
 
-        fun transExp (venv, tenv, exp) = 
+    fun transExp (venv, tenv, exp) = 
         let fun trexp (A.VarExp(var)) = trvar var
               | trexp (A.NilExp) = {exp=(), ty=T.NIL}
               | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
@@ -74,8 +74,8 @@ struct
                     | {exp=_, ty=_} => (Err.error pos ("requires array"); (* TODO add name to error? *)
                                         {exp=(), ty=T.INT}))
         and checkArgs(forTy::formalList, argExp::argList, pos) = if forTy = #ty (trexp argExp)
-                                                                    then checkArgs(formalList, argList, pos)
-                                                                    else Err.error pos "mismatched args"
+                                                                 then checkArgs(formalList, argList, pos)
+                                                                 else Err.error pos "mismatched args"
           | checkArgs([], argExp::argList, pos) = Err.error pos "mismatched args"
           | checkArgs(forTy::formalList, [], pos) = Err.error pos "insufficient args"
           | checkArgs([], [], pos) = ()
