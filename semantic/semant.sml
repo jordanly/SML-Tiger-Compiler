@@ -102,10 +102,27 @@ struct
                                   end
                     )
               | trdec(venv, tenv, A.TypeDec({name, ty, pos}::l)) =
-                    let val tenvNew = S.enter(tenv, name, transTy(tenv, ty))
+                    let val tenv' = S.enter(tenv, name, transTy(tenv, ty))
                     in
-                      trdec(venv, tenvNew, A.TypeDec(l))
+                      trdec(venv, tenv', A.TypeDec(l))
                     end
+              | trdec(venv, tenv, A.FunctionDec[{name, params, body, pos,
+                                                result=SOME(rt, pos')}]) =
+                    let val SOME(result_ty) = S.look(tenv, rt)
+                        fun transparam {name, escape, typ, pos} = 
+                          case S.look(tenv, typ)
+                            of SOME t => {name=name, ty=t}
+                        val params' = map transparam params
+                        val venv' = S.enter(venv, name,
+                                    Env.FunEntry{formals= map #ty params',
+                                               result=result_ty})
+                        fun enterparam ({name, ty}, venv) =
+                                    S.enter(venv, name,
+                                            Env.VarEntry{ty=ty})
+                        val venv'' = foldl enterparam venv' params'
+                      in transExp (venv'', tenv, body);
+                        {venv=venv', tenv=tenv}
+                      end
 
             and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
