@@ -101,9 +101,11 @@ struct
                                      tenv=tenv}
                                   end
                     )
-              | trdec(venv, tenv, A.TypeDec[{name, ty, pos}]) =
-                    {venv=venv,
-                     tenv=S.enter(tenv, name, transTy(tenv, ty))}
+              | trdec(venv, tenv, A.TypeDec({name, ty, pos}::l)) =
+                    let val tenvNew = S.enter(tenv, name, transTy(tenv, ty))
+                    in
+                      trdec(venv, tenvNew, A.TypeDec(l))
+                    end
 
             and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
