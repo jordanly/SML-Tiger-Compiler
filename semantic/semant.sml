@@ -97,13 +97,33 @@ struct
                           SOME(_) => {venv=venv, tenv=tenv}
                         | NONE => let val {exp, ty} = transExp(venv, tenv, init)
                                   in 
-                                    {venv=S.enter(venv, name, Env.VarEntry{ty=ty}),
+                                    {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})),
                                      tenv=tenv}
                                   end
                     )
+              | trdec(venv, tenv, A.TypeDec[{name, ty, pos}]) =
+                    {venv=venv,
+                     tenv=S.enter(tenv, name, transTy(tenv, ty))}
+
             and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
           foldl foldHelper {venv=venv, tenv=tenv} decs
+        end
+      and transTy(tenv, ty) =
+        let fun trty(tenv, A.NameTy (name, _)) = 
+                    (case Symbol.look (tenv, name) of
+                          NONE => T.NAME (name, ref NONE) (* Use Types.NAME (name, ref (SOME ty))) instead? *)
+                        | SOME ty => ty
+                    )
+              | trty(tenv, A.RecordTy (fields)) =
+                    T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} =>
+                                       (name, (transTy(tenv, A.NameTy (typ, pos')))))
+                                    fields),
+                              T.unique)
+              | trty(tenv, A.ArrayTy (sym, pos')) =
+                    T.ARRAY (transTy (tenv, A.NameTy (sym, pos')), T.unique)
+        in
+          trty(tenv, ty)
         end
 
 
