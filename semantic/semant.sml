@@ -60,7 +60,7 @@ struct
               | trexp (A.BreakExp(pos)) = {exp=(), ty=T.NIL} (* TODO *)
               | trexp (A.LetExp({decs, body, pos})) = 
                     let
-                      val {venv=venv', tenv=tenv'} = transDecs(venv, tenv, decs)
+                      val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs)
                     in
                       transExp(venv', tenv', body)
                     end
@@ -91,10 +91,14 @@ struct
         in
             trexp exp
         end
-    and transDecs(venv, tenv, decs) = 
+    and transDec(venv, tenv, decs) = 
         let fun trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
                     (case typ of
-                          SOME(_) => {venv=venv, tenv=tenv}
+                          SOME(symbol, pos) => (case S.look(tenv, symbol) of
+                                                 SOME ty => if (#ty (transExp(venv, tenv, init)) = ty)
+                                                            then {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv}
+                                                            else (Err.error pos "mismatched types in vardec"; {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv})
+                                               | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv}))
                         | NONE => let val {exp, ty} = transExp(venv, tenv, init)
                                   in 
                                     {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})),
@@ -128,7 +132,7 @@ struct
         in
           foldl foldHelper {venv=venv, tenv=tenv} decs
         end
-      and transTy(tenv, ty) =
+    and transTy(tenv, ty) =
         let fun trty(tenv, A.NameTy (name, _)) = 
                     (case Symbol.look (tenv, name) of
                           NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *)
