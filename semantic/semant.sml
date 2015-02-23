@@ -112,16 +112,16 @@ struct
       and transTy(tenv, ty) =
         let fun trty(tenv, A.NameTy (name, _)) = 
                     (case Symbol.look (tenv, name) of
-                          NONE => T.NAME (name, ref NONE) (* Use Types.NAME (name, ref (SOME ty))) instead? *)
+                          NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *)
                         | SOME ty => ty
                     )
               | trty(tenv, A.RecordTy (fields)) =
                     T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} =>
                                        (name, (transTy(tenv, A.NameTy (typ, pos')))))
                                     fields),
-                              T.unique)
+                              ref ())
               | trty(tenv, A.ArrayTy (sym, pos')) =
-                    T.ARRAY (transTy (tenv, A.NameTy (sym, pos')), T.unique)
+                    T.ARRAY (transTy (tenv, A.NameTy (sym, pos')), ref ())
         in
           trty(tenv, ty)
         end
