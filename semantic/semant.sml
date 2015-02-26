@@ -112,11 +112,11 @@ struct
                             {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv}
                         end
                 )
-          | trdec(venv, tenv, A.TypeDec({name, ty, pos}::l)) =
+          | trdec(venv, tenv, A.TypeDec(tydeclist)) =
             let
-                val tenv' = S.enter(tenv, name, transTy(tenv, ty))
+                fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
             in
-                trdec(venv, tenv', A.TypeDec(l))
+                foldl foldtydec {venv=venv, tenv=tenv} tydeclist
             end
           | trdec(venv, tenv, A.FunctionDec(fundeclist)) =
                 let 
@@ -145,14 +145,14 @@ struct
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
                             else ()
                         end
-                    fun foldHelper (fundec, ()) = checkfundec fundec
+                    fun foldfundec (fundec, ()) = checkfundec fundec
                 in
-                    (foldr foldHelper () fundeclist;
+                    (foldr foldfundec () fundeclist;
                     {venv=venv', tenv=tenv})
                 end
-            and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
+            and folddec(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
-            foldl foldHelper {venv=venv, tenv=tenv} decs
+            foldl folddec {venv=venv, tenv=tenv} decs
         end
     and transTy(tenv, ty) =
         let fun
@@ -162,7 +162,8 @@ struct
                   | SOME ty => ty
                 )
           | trty(tenv, A.RecordTy (fields)) =
-                T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} => (name, (transTy(tenv, A.NameTy (typ, pos'))))) fields), ref ())
+                T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} =>
+                    (name, (transTy(tenv, A.NameTy (typ, pos'))))) fields), ref ())
           | trty(tenv, A.ArrayTy (sym, pos')) =
                 T.ARRAY (transTy (tenv, A.NameTy (sym, pos')), ref ())
         in
