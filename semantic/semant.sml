@@ -119,17 +119,24 @@ struct
                 trdec(venv, tenv', A.TypeDec(l))
             end
           | trdec(venv, tenv, A.FunctionDec[{name, params, body, pos, result=SOME(rt, pos')}]) =
-                let val SOME(result_ty) = S.look(tenv, rt)
+                let val result_ty =
+                        (case S.look(tenv, rt) of 
+                            SOME(rt') => rt'
+                          | NONE => (Err.error pos "Return type unrecognized"; T.NIL)
+                        )
                     fun transparam {name, escape, typ, pos} = 
                         (case S.look(tenv, typ) of
                             SOME t => {name=name, ty=t}
+                          | NONE => (Err.error pos "Parameter type unrecognized"; {name=name, ty=T.NIL})
                         )
                     val params' = map transparam params
                     val venv' = S.enter(venv, name, Env.FunEntry{formals= map #ty params', result=result_ty})
                     fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
                     val venv'' = foldl enterparam venv' params'
-                in transExp (venv'', tenv, body);
-                    {venv=venv', tenv=tenv}
+                    val body' = transExp (venv'', tenv, body)
+                in
+                    ((if #ty body' <> result_ty then Err.error pos "function body type doesn't match return type" else ());
+                    {venv=venv', tenv=tenv})
                 end
             and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
