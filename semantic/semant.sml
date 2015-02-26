@@ -7,12 +7,12 @@ struct
 
     (* Global helper functions *)
     fun checkInt ({exp=_, ty=T.INT }, pos) = ()
-    |   checkInt ({exp=_, ty=_ }, pos) = Err.error pos "integer required"
+      | checkInt ({exp=_, ty=_ }, pos) = Err.error pos "Expected int"
 
     fun getFieldType ((fSymbol, fTy)::l, id, pos) = if S.name fSymbol = S.name id
                                                     then fTy
                                                     else getFieldType(l, id, pos)
-    |   getFieldType ([], id, pos) = (Err.error pos "no such field"; T.INT)
+      | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.INT)
 
 
     (* Main recursive type-checking functions *)
@@ -123,12 +123,12 @@ struct
                     fun transrt rt =
                         (case S.look(tenv, rt) of 
                             SOME(rt') => rt'
-                          | NONE => (Err.error 0 ("Return type unrecognized" ^ S.name rt); T.NIL) (*Add position to error?*)
+                          | NONE => (Err.error 0 ("Return type unrecognized: " ^ S.name rt); T.NIL) (*Add position to error?*)
                         )
                     fun transparam {name, escape, typ, pos} = 
                         (case S.look(tenv, typ) of
                             SOME t => {name=name, ty=t}
-                          | NONE => (Err.error pos "Parameter type unrecognized"; {name=name, ty=T.NIL})
+                          | NONE => (Err.error 0 ("Parameter type unrecognized: " ^ S.name typ); {name=name, ty=T.NIL})
                         )
                     fun enterFuncs ({name, params, body, pos, result=SOME(rt, pos')}, venv) = 
                             S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=transrt rt})
@@ -142,7 +142,7 @@ struct
                             val body' = transExp (venv'', tenv, body)
                         in
                             if #ty body' <> result_ty
-                            then Err.error pos "function body type doesn't match return type"
+                            then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
                             else ()
                         end
                     fun foldHelper (fundec, ()) = checkfundec fundec
