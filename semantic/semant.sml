@@ -118,8 +118,41 @@ struct
             in
                 trdec(venv, tenv', A.TypeDec(l))
             end
-          | trdec(venv, tenv, A.FunctionDec[{name, params, body, pos, result=SOME(rt, pos')}]) =
-                let val result_ty =
+          | trdec(venv, tenv, A.FunctionDec(fundeclist)) =
+                let 
+                    fun transrt rt =
+                        (case S.look(tenv, rt) of 
+                            SOME(rt') => rt'
+                          | NONE => (Err.error 0 ("Return type unrecognized" ^ S.name rt); T.NIL) (*Add position to error?*)
+                        )
+                    fun transparam {name, escape, typ, pos} = 
+                        (case S.look(tenv, typ) of
+                            SOME t => {name=name, ty=t}
+                          | NONE => (Err.error pos "Parameter type unrecognized"; {name=name, ty=T.NIL})
+                        )
+                    fun enterFuncs ({name, params, body, pos, result=SOME(rt, pos')}, venv) = 
+                            S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=transrt rt})
+                    val venv' = foldr enterFuncs venv fundeclist
+                    fun checkfundec({name, params, body, pos, result=SOME(rt, pos')}) = 
+                        let 
+                            val result_ty = transrt rt
+                            val params' = map transparam params
+                            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
+                            val venv'' = foldl enterparam venv' params'
+                            val body' = transExp (venv'', tenv, body)
+                        in
+                            if #ty body' <> result_ty
+                            then Err.error pos "function body type doesn't match return type"
+                            else ()
+                        end
+                    fun foldHelper (fundec, ()) = checkfundec fundec
+                in
+                    (foldr foldHelper () fundeclist;
+                    {venv=venv', tenv=tenv})
+                end
+          (*| trdec(venv, tenv, A.FunctionDec[{name, params, body, pos, result=SOME(rt, pos')}]) =
+                let 
+                    val result_ty =
                         (case S.look(tenv, rt) of 
                             SOME(rt') => rt'
                           | NONE => (Err.error pos "Return type unrecognized"; T.NIL)
@@ -137,7 +170,8 @@ struct
                 in
                     ((if #ty body' <> result_ty then Err.error pos "function body type doesn't match return type" else ());
                     {venv=venv', tenv=tenv})
-                end
+                end*)
+          (*| trdec(venv, tenv, A.FunctionDec[]) = {venv=venv, tenv=tenv}*)
             and foldHelper(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
             foldl foldHelper {venv=venv, tenv=tenv} decs
