@@ -33,7 +33,7 @@ struct
           | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
           | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
-                (case Symbol.look(venv, func) of
+                (case S.look(venv, func) of
                     SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
                   | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.INT})
                   | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.INT})
@@ -85,7 +85,7 @@ struct
                 end
           | trexp (A.ArrayExp({typ, size, init, pos})) = {exp=(), ty=T.NIL} (* TODO *)
         and trvar (A.SimpleVar(id, pos)) = 
-                (case Symbol.look(venv, id) of
+                (case S.look(venv, id) of
                     SOME(Env.VarEntry({ty})) => {exp=(), ty=ty}
                   | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
                   | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.INT})
@@ -173,7 +173,7 @@ struct
     and transTy(tenv, ty) =
         let fun
             trty(tenv, A.NameTy (name, _)) =
-                (case Symbol.look (tenv, name) of
+                (case S.look (tenv, name) of
                     NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *)
                   | SOME ty => ty
                 )
