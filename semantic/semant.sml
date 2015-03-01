@@ -6,8 +6,18 @@ struct
     type expty = {exp: Translate.exp, ty: T.ty}
 
     (* Global helper functions *)
-    fun checkInt ({exp=_, ty=T.INT }, pos) = ()
+    fun checkInt ({exp=_, ty=T.INT}, pos) = ()
       | checkInt ({exp=_, ty=_ }, pos) = Err.error pos "Expected int"
+
+    fun checkEqualityOp ({exp=_, ty=T.INT}, {exp=_, ty=T.INT}, pos) = ()
+      | checkEqualityOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
+      | checkEqualityOp ({exp=_, ty=T.RECORD(_, _)}, {exp=_, ty=T.RECORD(_, _)}, pos) = ()
+      | checkEqualityOp ({exp=_, ty=T.ARRAY(_, _)}, {exp=_, ty=T.ARRAY(_, _)}, pos) = ()
+      | checkEqualityOp ({exp=_, ty=_}, {exp=_, ty=_}, pos) = Err.error pos "Expected both int, string, record, or array"
+
+    fun checkComparisonOp ({exp=_, ty=T.INT}, {exp=_, ty=T.INT}, pos) = ()
+      | checkComparisonOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
+      | checkComparisonOp ({exp=_, ty=_ }, {exp=_, ty=_ }, pos) = Err.error pos "Expected both string or int"
 
     fun getFieldType ((fSymbol, fTy)::l, id, pos) = if S.name fSymbol = S.name id
                                                     then fTy
@@ -42,12 +52,18 @@ struct
                   | A.DivideOp => (checkInt(trexp left, pos); 
                                    checkInt(trexp right, pos);
                                    {exp=(), ty=T.INT})
-                  | A.EqOp => {exp=(), ty=T.INT} (* TODO *)
-                  | A.NeqOp => {exp=(), ty=T.INT} (* TODO *)
-                  | A.LtOp => {exp=(), ty=T.INT} (* TODO *)
-                  | A.LeOp => {exp=(), ty=T.INT} (* TODO *)
-                  | A.GtOp => {exp=(), ty=T.INT} (* TODO *)
-                  | A.GeOp => {exp=(), ty=T.INT} (* TODO *)
+                  | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
+                               {exp=(), ty=T.INT})
+                  | A.NeqOp => (checkEqualityOp(trexp left, trexp right, pos);
+                                {exp=(), ty=T.INT})
+                  | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
+                               {exp=(), ty=T.INT})
+                  | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
+                               {exp=(), ty=T.INT})
+                  | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
+                               {exp=(), ty=T.INT})
+                  | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
+                               {exp=(), ty=T.INT})
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL} (* TODO *)
           | trexp (A.SeqExp(expList)) = 
