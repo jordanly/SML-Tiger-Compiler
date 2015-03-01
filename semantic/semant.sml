@@ -24,6 +24,10 @@ struct
                                                     else getFieldType(l, id, pos)
       | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.INT)
 
+    fun checkTypesEqual (tyA, tyB, pos, errMsg) = if tyA <> tyB
+                                                  then Err.error pos errMsg
+                                                  else ()
+
     (* Main recursive type-checking functions *)
     fun transExp (venv, tenv, exp) = 
         let fun
@@ -79,42 +83,25 @@ struct
                   | [(exp, pos)] => trexp(exp)
                   | a::l => trexp(#1 (List.last l))
                 )
-          | trexp (A.AssignExp({var, exp, pos})) = ( (* not sure if we have to do type checking or assignment overrides or what *)
-                                                   if #ty (trvar var) <> #ty (trexp exp)
-                                                   then Err.error pos "mismatched types in assignment"
-                                                   else ();
-                                                   {exp=(), ty=T.UNIT}
-                                                   )
+          | trexp (A.AssignExp({var, exp, pos})) = 
+                ( (* not sure if we have to do type checking or assignment overrides or what *)
+                checkTypesEqual(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
+                {exp=(), ty=T.UNIT}
+                )
           | trexp (A.IfExp({test, then', else', pos})) = 
-                let
-                  fun checkTest test = if #ty (trexp test) <> T.INT
-                                       then Err.error pos "test does not evaluate to an int"
-                                       else ()
-                  fun checkBody(then', SOME(elseExp)) = if #ty (trexp then') <> #ty (trexp elseExp)
-                                                        then Err.error pos "mismatching types in if expression"
-                                                        else ()
-                    | checkBody(then', NONE) = if #ty (trexp then') <> T.UNIT
-                                               then Err.error pos "then must be no value in if then statement"
-                                               else ()
-                  val expType = #ty (trexp then')
-                in
-                  checkTest test;
-                  checkBody(then', else');
-                  {exp=(), ty=expType}
-                end
+                (
+                checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
+                case else' of 
+                      SOME(elseExp) => checkTypesEqual(#ty (trexp then'), #ty (trexp elseExp), pos, "mismatching types in if expression")
+                    | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "then must be unit in if then expression");
+                {exp=(), ty=(#ty (trexp then'))}
+                )
           | trexp (A.WhileExp({test, body, pos})) = 
-                let
-                  fun checkTest test = if #ty (trexp test) <> T.INT
-                                       then Err.error pos "test does not evaluate to an int"
-                                       else ()
-                  fun checkBody(body) = if #ty (trexp body) <> T.UNIT
-                                        then Err.error pos "while body must be no value"
-                                        else ()
-                in
-                  checkTest test;
-                  checkBody body;
-                  {exp=(), ty=T.UNIT}
-                end
+                (
+                checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
+                checkTypesEqual(#ty (trexp body), T.UNIT, pos, "while body must be no value");
+                {exp=(), ty=T.UNIT}
+                )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
           | trexp (A.BreakExp(pos)) = {exp=(), ty=T.NIL} (* TODO *)
           | trexp (A.LetExp({decs, body, pos})) = 
