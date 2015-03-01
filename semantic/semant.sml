@@ -102,7 +102,19 @@ struct
                   checkBody(then', else');
                   {exp=(), ty=expType}
                 end
-          | trexp (A.WhileExp({test, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+          | trexp (A.WhileExp({test, body, pos})) = 
+                let
+                  fun checkTest test = if #ty (trexp test) <> T.INT
+                                       then Err.error pos "test does not evaluate to an int"
+                                       else ()
+                  fun checkBody(body) = if #ty (trexp body) <> T.UNIT
+                                        then Err.error pos "while body must be no value"
+                                        else ()
+                in
+                  checkTest test;
+                  checkBody body;
+                  {exp=(), ty=T.UNIT}
+                end
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
           | trexp (A.BreakExp(pos)) = {exp=(), ty=T.NIL} (* TODO *)
           | trexp (A.LetExp({decs, body, pos})) = 
