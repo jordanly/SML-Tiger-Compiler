@@ -78,11 +78,12 @@ struct
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL} (* TODO *)
           | trexp (A.SeqExp(expList)) = 
-                (case expList of
-                    [] => {exp=(), ty=T.UNIT}
-                  | [(exp, pos)] => trexp(exp)
-                  | a::l => trexp(#1 (List.last l))
-                )
+                let
+                  fun helper((seqExp, pos), {exp=_, ty=_}) = (trexp seqExp)
+                  fun checkSequence sequence = foldl helper {exp=(), ty=T.UNIT} sequence
+                in
+                  checkSequence expList
+                end
           | trexp (A.AssignExp({var, exp, pos})) = 
                 ( (* not sure if we have to do type checking or assignment overrides or what *)
                 checkTypesEqual(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
