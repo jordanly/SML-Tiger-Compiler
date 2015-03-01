@@ -33,11 +33,19 @@ struct
           | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
           | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
-                (case S.look(venv, func) of
-                    SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
-                  | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.INT})
-                  | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.INT})
-                )
+          let
+            fun checkArgs (forTy::formalList, argExp::argList, pos) = if forTy = #ty (trexp argExp)
+                                                                      then checkArgs(formalList, argList, pos)
+                                                                      else Err.error pos "mismatched args"
+              | checkArgs ([], argExp::argList, pos) = Err.error pos "mismatched args"
+              | checkArgs (forTy::formalList, [], pos) = Err.error pos "insufficient args"
+              | checkArgs ([], [], pos) = ()
+          in
+            case S.look(venv, func) of
+                SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
+              | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.INT})
+              | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.INT})
+          end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of
                     A.PlusOp => (checkInt(trexp left, pos);
@@ -100,12 +108,6 @@ struct
                     {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=arrTy})
                   | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.INT}) (* TODO add name to error? *)
                 )
-        and checkArgs (forTy::formalList, argExp::argList, pos) = if forTy = #ty (trexp argExp)
-                                                                  then checkArgs(formalList, argList, pos)
-                                                                  else Err.error pos "mismatched args"
-          | checkArgs ([], argExp::argList, pos) = Err.error pos "mismatched args"
-          | checkArgs (forTy::formalList, [], pos) = Err.error pos "insufficient args"
-          | checkArgs ([], [], pos) = ()
         in
             trexp exp
         end
