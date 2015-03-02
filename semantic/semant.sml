@@ -170,10 +170,16 @@ struct
                         )
                     fun enterFuncs ({name, params, body, pos, result=SOME(rt, pos')}, venv) = 
                             S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=transrt rt})
+                      | enterFuncs ({name, params, body, pos, result=NONE}, venv) = 
+                            S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
                     val venv' = foldr enterFuncs venv fundeclist
-                    fun checkfundec({name, params, body, pos, result=SOME(rt, pos')}) = 
+                    fun checkfundec({name, params, body, pos, result}) = 
                         let 
-                            val result_ty = transrt rt
+                            val result_ty = 
+                                (case result of
+                                    SOME(rt, pos') => transrt rt
+                                  | NONE => T.UNIT
+                                )
                             val params' = map transparam params
                             fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
                             val venv'' = foldl enterparam venv' params'
@@ -182,7 +188,7 @@ struct
                             if #ty body' <> result_ty
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
                             else ()
-                        end
+                        end 
                     fun foldfundec (fundec, ()) = checkfundec fundec
                 in
                     (foldr foldfundec () fundeclist;
