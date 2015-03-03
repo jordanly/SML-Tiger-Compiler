@@ -22,7 +22,7 @@ struct
     fun getFieldType ((fSymbol, fTy)::l, id, pos) = if S.name fSymbol = S.name id
                                                     then fTy
                                                     else getFieldType(l, id, pos)
-      | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.INT)
+      | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.BOTTOM)
 
     fun checkTypesEqual (tyA, tyB, pos, errMsg) = if not (T.eq(tyA, tyB))
                                                   then Err.error pos errMsg
@@ -46,8 +46,8 @@ struct
           in
             case S.look(venv, func) of
                 SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
-              | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.INT})
-              | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.INT})
+              | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.BOTTOM})
+              | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.BOTTOM})
           end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of
@@ -116,17 +116,17 @@ struct
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({ty})) => {exp=(), ty=ty}
                   | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
-                  | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.INT})
+                  | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) = {exp=(), ty=T.INT} (* TODO *)
                  (*(case trvar v of
                     {exp=(), ty=T.RECORD(fieldList, unique)} => {exp=(), ty=getFieldType(fieldList, id, pos)}
-                  | {exp=_, ty=_} => (Err.error pos ("requires record"); {exp=(), ty=T.INT})
+                  | {exp=_, ty=_} => (Err.error pos ("requires record"); {exp=(), ty=T.BOTTOM})
                 )*)
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 (case trvar v of
                     {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=arrTy})
-                  | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.INT}) (* TODO add name to error? *)
+                  | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.BOTTOM}) (* TODO add name to error? *)
                 )
         in
             trexp exp
@@ -161,12 +161,12 @@ struct
                     fun transrt rt =
                         (case S.look(tenv, rt) of 
                             SOME(rt') => rt'
-                          | NONE => (Err.error 0 ("Return type unrecognized: " ^ S.name rt); T.NIL) (*Add position to error?*)
+                          | NONE => (Err.error 0 ("Return type unrecognized: " ^ S.name rt); T.BOTTOM)
                         )
                     fun transparam {name, escape, typ, pos} = 
                         (case S.look(tenv, typ) of
                             SOME t => {name=name, ty=t}
-                          | NONE => (Err.error 0 ("Parameter type unrecognized: " ^ S.name typ); {name=name, ty=T.NIL})
+                          | NONE => (Err.error 0 ("Parameter type unrecognized: " ^ S.name typ); {name=name, ty=T.BOTTOM})
                         )
                     fun enterFuncs ({name, params, body, pos, result=SOME(rt, pos')}, venv) = 
                             S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=transrt rt})
