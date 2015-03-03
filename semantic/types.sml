@@ -1,9 +1,9 @@
 structure Types =
 struct
 
-  type unique = unit ref
+	type unique = unit ref
 
-  datatype ty = 
+	datatype ty = 
             RECORD of (Symbol.symbol * ty) list * unique
           | NIL
           | INT
@@ -11,5 +11,33 @@ struct
           | ARRAY of ty * unique
           | NAME of Symbol.symbol * ty option ref
           | UNIT
+          | BOTTOM
+
+  	datatype comp = 
+  		    LT
+  		  | GT
+  		  | EQ
+  		  | INCOMP (* incomparable *)
+
+    fun leq(BOTTOM, _) = true
+      | leq(_, UNIT) = true
+      | leq(NIL, RECORD(_)) = true
+      | leq(INT, INT) = true
+      | leq(STRING, STRING) = true
+      | leq(RECORD(_), RECORD(_)) = false (* TODO compare uniques as pointers *)
+      | leq(ARRAY(_), ARRAY(_)) = false (* TODO *)
+      | leq(NIL, NIL) = true
+      | leq(NAME(_), NAME(_)) = false (* TODO *)
+      | leq(_, _) = false
+
+     fun comp(t1, t2) = 
+    	if leq(t1, t2) andalso leq(t2, t1)
+    		then EQ
+    	else if leq(t1, t2)
+    		then LT
+    	else if leq(t2, t1)
+    		then GT
+    	else
+    		INCOMP
 
 end
