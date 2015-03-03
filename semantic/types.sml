@@ -4,7 +4,7 @@ struct
 	type unique = unit ref
 
 	datatype ty = 
-            RECORD of (Symbol.symbol * ty) list * unique
+            RECORD of (unit -> (Symbol.symbol * ty) list) * unique
           | NIL
           | INT
           | STRING
@@ -30,7 +30,7 @@ struct
       | leq(NAME(_), NAME(_)) = false (* TODO *)
       | leq(_, _) = false
 
-     fun comp(t1, t2) = 
+    fun comp(t1, t2) = 
     	if leq(t1, t2) andalso leq(t2, t1)
     		then EQ
     	else if leq(t1, t2)
@@ -39,5 +39,8 @@ struct
     		then GT
     	else
     		INCOMP
+
+    fun eq(t1, t2) = 
+        comp(t1, t2) = EQ
 
 end

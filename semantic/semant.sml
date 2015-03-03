@@ -24,7 +24,7 @@ struct
                                                     else getFieldType(l, id, pos)
       | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.INT)
 
-    fun checkTypesEqual (tyA, tyB, pos, errMsg) = if tyA <> tyB
+    fun checkTypesEqual (tyA, tyB, pos, errMsg) = if not (T.eq(tyA, tyB))
                                                   then Err.error pos errMsg
                                                   else ()
 
@@ -37,7 +37,7 @@ struct
           | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
           let
-            fun checkArgs (forTy::formalList, argExp::argList, pos) = if forTy = #ty (trexp argExp)
+            fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
                                                                       then checkArgs(formalList, argList, pos)
                                                                       else Err.error pos "mismatched args"
               | checkArgs ([], argExp::argList, pos) = Err.error pos "mismatched args"
@@ -118,11 +118,11 @@ struct
                   | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
                   | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.INT})
                 )
-          | trvar (A.FieldVar(v, id, pos)) = 
-                (case trvar v of
+          | trvar (A.FieldVar(v, id, pos)) = {exp=(), ty=T.INT} (* TODO *)
+                 (*(case trvar v of
                     {exp=(), ty=T.RECORD(fieldList, unique)} => {exp=(), ty=getFieldType(fieldList, id, pos)}
                   | {exp=_, ty=_} => (Err.error pos ("requires record"); {exp=(), ty=T.INT})
-                )
+                )*)
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 (case trvar v of
                     {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=arrTy})
@@ -137,7 +137,7 @@ struct
                 (case typ of
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
-                            SOME ty => if (#ty (transExp(venv, tenv, init)) = ty)
+                            SOME ty => if T.eq(#ty (transExp(venv, tenv, init)), ty)
                                        then {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv}
                                        else (Err.error pos "mismatched types in vardec";
                                             {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv})
@@ -185,7 +185,7 @@ struct
                             val venv'' = foldl enterparam venv' params'
                             val body' = transExp (venv'', tenv, body)
                         in
-                            if #ty body' <> result_ty
+                            if not (T.eq((#ty body'), result_ty))
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
                             else ()
                         end 
@@ -205,9 +205,9 @@ struct
                     NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *)
                   | SOME ty => ty
                 )
-          | trty(tenv, A.RecordTy (fields)) =
-                T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} =>
-                    (name, (transTy(tenv, A.NameTy (typ, pos'))))) fields), ref ())
+          | trty(tenv, A.RecordTy (fields)) = T.INT (* TODO *)
+                (* T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} =>
+                    (name, (transTy(tenv, A.NameTy (typ, pos'))))) fields), ref ())*)
           | trty(tenv, A.ArrayTy (sym, pos')) =
                 T.ARRAY (transTy (tenv, A.NameTy (sym, pos')), ref ())
         in
