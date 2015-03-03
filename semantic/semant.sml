@@ -85,13 +85,13 @@ struct
                   checkSequence expList
                 end
           | trexp (A.AssignExp({var, exp, pos})) = 
-                ( (* not sure if we have to do type checking or assignment overrides or what *)
+                (
                 checkTypesEqual(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
                 {exp=(), ty=T.UNIT}
                 )
           | trexp (A.IfExp({test, then', else', pos})) = 
                 (
-                checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
+                checkTypesEqual(#ty (trexp test), T.INT, pos, "test in if exp does not evaluate to an int");
                 case else' of 
                       SOME(elseExp) => checkTypesEqual(#ty (trexp then'), #ty (trexp elseExp), pos, "mismatching types in if expression")
                     | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "then must be unit in if then expression");
@@ -104,7 +104,7 @@ struct
                 {exp=(), ty=T.UNIT}
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
-          | trexp (A.BreakExp(pos)) = {exp=(), ty=T.NIL} (* TODO *)
+          | trexp (A.BreakExp(pos)) = {exp=(), ty=T.BOTTOM} (* TODO *)
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
                     val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs)
@@ -126,7 +126,7 @@ struct
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 (case trvar v of
                     {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=arrTy})
-                  | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.BOTTOM}) (* TODO add name to error? *)
+                  | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.BOTTOM})
                 )
         in
             trexp exp
