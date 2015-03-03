@@ -76,7 +76,7 @@ struct
                   | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
                                {exp=(), ty=T.INT})
                 )
-          | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+          | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL}
           | trexp (A.SeqExp(expList)) = 
                 let
                   fun helper((seqExp, pos), {exp=_, ty=_}) = (trexp seqExp)
@@ -202,12 +202,20 @@ struct
         let fun
             trty(tenv, A.NameTy (name, _)) =
                 (case S.look (tenv, name) of
-                    NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *)
+                    NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *) (*TODO is this right *)
                   | SOME ty => ty
                 )
-          | trty(tenv, A.RecordTy (fields)) = T.INT (* TODO *)
-                (* T.RECORD ((map (fn {name, escape=_, typ, pos=pos'} =>
-                    (name, (transTy(tenv, A.NameTy (typ, pos'))))) fields), ref ())*)
+          | trty(tenv, A.RecordTy (fields)) =
+                let 
+                    fun fieldProcess {name, escape, typ, pos} =
+                        case S.look(tenv, typ) of
+                            SOME x => (name, x)
+                          | NONE => (Err.error pos "unknown type in record"; (name, T.BOTTOM))
+                    fun listConcat(a, b) = fieldProcess(a)::b
+                    fun recGen () = foldr listConcat [] fields
+                in 
+                    T.RECORD (recGen, ref ())
+                end
           | trty(tenv, A.ArrayTy (sym, pos')) =
                 T.ARRAY (transTy (tenv, A.NameTy (sym, pos')), ref ())
         in
