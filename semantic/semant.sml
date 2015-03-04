@@ -89,7 +89,7 @@ struct
                                             then #ty (trexp exp)
                                             else getFieldType(name, l)
                                     fun checkFormal (sym, ty) =
-                                            if not (T.eq(getFieldType(S.name sym, fields), ty))
+                                            if not (T.leq(getFieldType(S.name sym, fields), ty))
                                             then Err.error pos ("actual type doesn't match formal type: " ^ S.name sym)
                                             else ()
                                     fun iterator((fieldname, typeid), ()) = 
