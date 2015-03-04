@@ -4,7 +4,7 @@ struct
 	type unique = unit ref
 
 	datatype ty = 
-            RECORD of (unit -> (Symbol.symbol * ty) list) * unique
+            RECORD of (unit -> (Symbol.symbol * Symbol.symbol) list) * unique (* (fieldname, typeid) *)
           | NIL
           | INT
           | STRING

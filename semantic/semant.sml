@@ -82,7 +82,7 @@ struct
                         (case x of
                             T.RECORD(f, _) => 
                                 let 
-                                    val recFormal : (S.symbol * T.ty) list = (f ())
+                                    val recFormal : (S.symbol * S.symbol) list = (f ())
                                     fun getFieldType (name: string, []) = T.BOTTOM
                                       | getFieldType (name: string, (sym, exp, pos)::l) =
                                             if String.compare (name, S.name sym) = EQUAL
@@ -92,7 +92,10 @@ struct
                                             if not (T.eq(getFieldType(S.name sym, fields), ty))
                                             then Err.error pos ("actual type doesn't match formal type: " ^ S.name sym)
                                             else ()
-                                    fun iterator(formal, ()) = (checkFormal formal; ())
+                                    fun iterator((fieldname, typeid), ()) = 
+                                        case S.look(tenv, typeid) of
+                                            SOME x => (checkFormal (fieldname, x); ())
+                                          | NONE => (Err.error pos ("unknown type in record: " ^ S.name typ); ())
                                 in
                                     if List.length(recFormal) <> List.length(fields)
                                     then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=(), ty=x})
@@ -232,12 +235,9 @@ struct
                 )
           | trty(tenv, A.RecordTy (fields)) =
                 let 
-                    fun fieldProcess {name, escape, typ, pos} =
-                        case S.look(tenv, typ) of
-                            SOME x => (name, x)
-                          | NONE => (Err.error pos ("unknown type in record: " ^ S.name typ); (name, T.BOTTOM))
+                    fun fieldProcess {name, escape, typ, pos} = (name, typ)
                     fun listConcat(a, b) = fieldProcess(a)::b
-                    fun recGen () = foldr listConcat [] fields
+                    fun recGen () = foldl listConcat [] fields
                 in 
                     T.RECORD (recGen, ref ())
                 end
