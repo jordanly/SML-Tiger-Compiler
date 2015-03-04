@@ -76,7 +76,32 @@ struct
                   | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
                                {exp=(), ty=T.INT})
                 )
-          | trexp (A.RecordExp({fields, typ, pos})) = {exp=(), ty=T.NIL}
+          | trexp (A.RecordExp({fields, typ, pos})) = 
+                (case S.look(tenv, typ) of
+                    SOME x => 
+                        (case x of
+                            T.RECORD(f, _) => 
+                                let 
+                                    val recFormal : (S.symbol * T.ty) list = (f ())
+                                    fun getFieldType (name: string, []) = T.BOTTOM
+                                      | getFieldType (name: string, (sym, exp, pos)::l) =
+                                            if String.compare (name, S.name sym) = EQUAL
+                                            then #ty (trexp exp)
+                                            else getFieldType(name, l)
+                                    fun checkFormal (sym, ty) =
+                                            if not (T.eq(getFieldType(S.name sym, fields), ty))
+                                            then Err.error pos ("actual type doesn't match formal type: " ^ S.name sym)
+                                            else ()
+                                    fun iterator(formal, ()) = (checkFormal formal; ())
+                                in
+                                    if List.length(recFormal) <> List.length(fields)
+                                    then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=(), ty=x})
+                                    else (foldr iterator () recFormal; {exp=(), ty=x})
+                                end
+                          | _ => (Err.error pos ("expected record type, not: " ^ S.name typ); {exp=(), ty=T.NIL})
+                        )
+                  | NONE => (Err.error pos ("invalid record type: " ^ S.name typ); {exp=(), ty=T.NIL})
+                )
           | trexp (A.SeqExp(expList)) = 
                 let
                   fun helper((seqExp, pos), {exp=_, ty=_}) = (trexp seqExp)
@@ -210,7 +235,7 @@ struct
                     fun fieldProcess {name, escape, typ, pos} =
                         case S.look(tenv, typ) of
                             SOME x => (name, x)
-                          | NONE => (Err.error pos "unknown type in record"; (name, T.BOTTOM))
+                          | NONE => (Err.error pos ("unknown type in record: " ^ S.name typ); (name, T.BOTTOM))
                     fun listConcat(a, b) = fieldProcess(a)::b
                     fun recGen () = foldr listConcat [] fields
                 in 

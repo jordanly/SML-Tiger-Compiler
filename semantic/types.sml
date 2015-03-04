@@ -24,7 +24,7 @@ struct
       | leq(NIL, RECORD(_)) = true
       | leq(INT, INT) = true
       | leq(STRING, STRING) = true
-      | leq(RECORD(_), RECORD(_)) = false (* TODO compare uniques as pointers *)
+      | leq(RECORD(_, unique1), RECORD(_, unique2)) = (unique1 = unique2)
       | leq(ARRAY(_), ARRAY(_)) = false (* TODO *)
       | leq(NIL, NIL) = true
       | leq(NAME(_), NAME(_)) = false (* TODO *)
