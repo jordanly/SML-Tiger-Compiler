@@ -19,11 +19,6 @@ struct
       | checkComparisonOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
       | checkComparisonOp ({exp=_, ty=_ }, {exp=_, ty=_ }, pos) = Err.error pos "Expected both string or int"
 
-    fun getFieldType ((fSymbol, fTy)::l, id, pos) = if S.name fSymbol = S.name id
-                                                    then fTy
-                                                    else getFieldType(l, id, pos)
-      | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.BOTTOM)
-
     fun checkTypesEqual (tyA, tyB, pos, errMsg) = if not (T.eq(tyA, tyB))
                                                   then Err.error pos errMsg
                                                   else ()
@@ -146,11 +141,23 @@ struct
                   | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
                   | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
                 )
-          | trvar (A.FieldVar(v, id, pos)) = {exp=(), ty=T.INT} (* TODO *)
-                 (*(case trvar v of
-                    {exp=(), ty=T.RECORD(fieldList, unique)} => {exp=(), ty=getFieldType(fieldList, id, pos)}
+          | trvar (A.FieldVar(v, id, pos)) =
+                 (case trvar v of
+                    {exp=(), ty=T.RECORD(recGen, unique)} => 
+                    let
+                      val fields = recGen()
+                      fun getFieldType ((fSymbol, fTy)::l, id, pos) = if String.compare(S.name fSymbol, S.name id) = EQUAL
+                                                                      then 
+                                                                        case S.look(tenv, fTy) of
+                                                                             SOME(ty) => ty
+                                                                           | NONE => (Err.error pos "type error in record"; T.BOTTOM)
+                                                                      else getFieldType(l, id, pos)
+                        | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.BOTTOM)
+                    in
+                      {exp=(), ty=getFieldType(fields, id, pos)}
+                    end
                   | {exp=_, ty=_} => (Err.error pos ("requires record"); {exp=(), ty=T.BOTTOM})
-                )*)
+                )
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 (case trvar v of
                     {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=arrTy})
