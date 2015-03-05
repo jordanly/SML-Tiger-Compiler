@@ -180,7 +180,9 @@ struct
                 )
           | trdec(venv, tenv, A.TypeDec(tydeclist)) =
             let
-                fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(tenv, ty))}
+                fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
+                val temp_tenv = foldl maketemptydec tenv tydeclist
+                fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty))}
             in
                 foldl foldtydec {venv=venv, tenv=tenv} tydeclist
             end
@@ -235,7 +237,10 @@ struct
                 )
           | trty(tenv, A.RecordTy (fields)) =
                 let 
-                    fun fieldProcess {name, escape, typ, pos} = (name, typ)
+                    fun fieldProcess {name, escape, typ, pos} =
+                        case S.look(tenv, typ) of
+                            SOME _ => (name, typ)
+                          | NONE => (Err.error pos ("undefined type in rec: " ^ S.name typ); (name, typ))    
                     fun listConcat(a, b) = fieldProcess(a)::b
                     fun recGen () = foldl listConcat [] fields
                 in 
