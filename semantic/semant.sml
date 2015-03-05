@@ -232,7 +232,7 @@ struct
         let fun
             trty(tenv, A.NameTy (name, _)) =
                 (case S.look (tenv, name) of
-                    NONE => T.NAME (name, ref NONE) (* Use T.NAME (name, ref (SOME ty))) instead? *) (*TODO is this right *)
+                    NONE => (Err.error 0 ("undefined type: " ^ S.name name); T.BOTTOM)
                   | SOME ty => ty
                 )
           | trty(tenv, A.RecordTy (fields)) =
