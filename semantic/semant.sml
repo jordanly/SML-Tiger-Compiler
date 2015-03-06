@@ -134,7 +134,31 @@ struct
                 in
                     transExp(venv', tenv', body)
                 end
-          | trexp (A.ArrayExp({typ, size, init, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+          | trexp (A.ArrayExp({typ, size, init, pos})) = 
+            (
+            case S.look(tenv, typ) of
+                 SOME(x) => 
+                 (
+                 case x of
+                      T.ARRAY(ty, unique) => 
+                      (
+                      let
+                        fun getType(SOME(ty)) = ty
+                          | getType(NONE) = T.BOTTOM
+                        fun actualTy ty = 
+                          case ty of
+                              T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
+                            | someTy => someTy
+                      in
+                        checkInt(trexp size, pos);
+                        checkTypesEqual(#ty (trexp init), actualTy ty, pos, "Types not equal in array init");
+                        {exp=(), ty=T.ARRAY(ty, unique)}
+                      end
+                      )
+                    | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=(), ty=T.BOTTOM})
+                )
+               | NONE => (Err.error pos "No such type"; {exp=(), ty=T.BOTTOM})
+            )
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({ty})) => {exp=(), ty=ty}
@@ -179,7 +203,8 @@ struct
                     T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
                   | someTy => someTy
             in
-                (case typ of
+                (
+                case typ of
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
                             SOME ty => if T.eq(#ty (transExp(venv, tenv, init)), actualTy ty)
