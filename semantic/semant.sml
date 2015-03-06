@@ -146,12 +146,13 @@ struct
                     {exp=(), ty=T.RECORD(recGen, unique)} => 
                     let
                       val fields = recGen()
-                      fun getFieldType ((fSymbol, fTy)::l, id, pos) = if String.compare(S.name fSymbol, S.name id) = EQUAL
-                                                                      then 
-                                                                        case S.look(tenv, fTy) of
-                                                                             SOME(ty) => ty
-                                                                           | NONE => (Err.error pos "type error in record"; T.BOTTOM)
-                                                                      else getFieldType(l, id, pos)
+                      fun getFieldType ((fSymbol, fTy)::l, id, pos) = 
+                            if String.compare(S.name fSymbol, S.name id) = EQUAL
+                            then 
+                              case S.look(tenv, fTy) of
+                                    SOME(ty) => ty
+                                  | NONE => (Err.error pos "type error in record"; T.BOTTOM)
+                            else getFieldType(l, id, pos)
                         | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.BOTTOM)
                     in
                       {exp=(), ty=getFieldType(fields, id, pos)}
@@ -187,11 +188,28 @@ struct
                 )
           | trdec(venv, tenv, A.TypeDec(tydeclist)) =
             let
-                fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
-                val temp_tenv = foldl maketemptydec tenv tydeclist
-                fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty))}
+              fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
+              val temp_tenv = foldl maketemptydec tenv tydeclist
+              fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty))}
+              val new_env = foldl foldtydec {venv=venv, tenv=tenv} tydeclist
+
+              fun checkIllegalCycle({name, ty, pos}, ()) = 
+              let
+                fun checkHelper(seenList, name) =
+                  (
+                  case S.look(#tenv new_env, name) of
+                       SOME(T.NAME(symb, _)) => if List.exists (fn y => String.compare(S.name symb, S.name y) = EQUAL) seenList
+                                                then Err.error pos "illegal cycle"
+                                                else checkHelper(name::seenList, symb)
+                     | _ => ()
+                  )
+              in
+                checkHelper([], name)
+              end
+
             in
-                foldl foldtydec {venv=venv, tenv=tenv} tydeclist
+              foldl checkIllegalCycle () tydeclist;
+              new_env
             end
           | trdec(venv, tenv, A.FunctionDec(fundeclist)) =
                 let 
@@ -237,11 +255,13 @@ struct
         end
     and transTy(tenv, ty) =
         let fun
-            trty(tenv, A.NameTy (name, _)) =
-                (case S.look (tenv, name) of
+            trty(tenv, A.NameTy (name, _)) = T.NAME(name, ref(NONE))
+            (* TODO make a function actual_ty?
+            (case S.look (tenv, name) of
                     NONE => (Err.error 0 ("undefined type: " ^ S.name name); T.BOTTOM)
                   | SOME ty => ty
                 )
+            *)
           | trty(tenv, A.RecordTy (fields)) =
                 let 
                     fun fieldProcess {name, escape, typ, pos} =
