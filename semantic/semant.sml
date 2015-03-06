@@ -170,13 +170,22 @@ struct
     and transDec(venv, tenv, decs) = 
         let fun
             trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
+            let
+              (* TODO might need to do this actual_ty stuff elsewhere as well *)
+              fun getType(SOME(ty)) = ty
+                | getType(NONE) = T.BOTTOM
+              fun actualTy ty = 
+                case ty of
+                    T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
+                  | someTy => someTy
+            in
                 (case typ of
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
-                            SOME ty => if T.eq(#ty (transExp(venv, tenv, init)), ty)
-                                       then {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv}
+                            SOME ty => if T.eq(#ty (transExp(venv, tenv, init)), actualTy ty)
+                                       then {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty})), tenv=tenv}
                                        else (Err.error pos "mismatched types in vardec";
-                                            {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv})
+                                            {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty})), tenv=tenv})
                           | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                         )
                   | NONE =>
@@ -186,6 +195,7 @@ struct
                             {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv}
                         end
                 )
+            end
           | trdec(venv, tenv, A.TypeDec(tydeclist)) =
             let
               fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
