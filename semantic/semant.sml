@@ -21,9 +21,13 @@ struct
       | checkComparisonOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
       | checkComparisonOp ({exp=_, ty=_ }, {exp=_, ty=_ }, pos) = Err.error pos "Expected both string or int"
 
-    fun checkTypesEqual (tyA, tyB, pos, errMsg) = if not (T.eq(tyA, tyB))
-                                                  then Err.error pos errMsg
-                                                  else ()
+    fun checkTypesEqual (tyA, tyB, pos, errMsg) = if T.eq(tyA, tyB)
+                                                  then ()
+                                                  else Err.error pos errMsg
+
+    fun checkTypesAssignable (var, value, pos, errMsg) = if T.comp(var, value) = T.EQ orelse T.comp(var, value) = T.GT
+                                                         then ()
+                                                         else Err.error pos errMsg 
 
     (* Main recursive type-checking functions *)
     fun transExp (venv, tenv, exp) = 
@@ -125,7 +129,7 @@ struct
                        | _ => Err.error pos "cannot assign to a function"
                 in
                   canAssign var;
-                  checkTypesEqual(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
+                  checkTypesAssignable(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
                   {exp=(), ty=T.UNIT}
                 end
           | trexp (A.IfExp({test, then', else', pos})) = 
@@ -240,7 +244,7 @@ struct
                 case typ of
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
-                            SOME ty => (checkTypesEqual(#ty (transExp(venv, tenv, init)), actualTy ty, pos, "mismatched types in vardec");
+                            SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init)), pos, "mismatched types in vardec");
                                        {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
                           | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                         )
