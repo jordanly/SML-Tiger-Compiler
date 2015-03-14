@@ -240,17 +240,18 @@ struct
                 case typ of
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
-                            SOME ty => if T.eq(#ty (transExp(venv, tenv, init)), actualTy ty)
-                                       then {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv}
-                                       else (Err.error pos "mismatched types in vardec";
-                                            {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
+                            SOME ty => (checkTypesEqual(#ty (transExp(venv, tenv, init)), actualTy ty, pos, "mismatched types in vardec");
+                                       {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
                           | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                         )
                   | NONE =>
                         let 
-                            val {exp, ty} = transExp(venv, tenv, init)
+                          val {exp, ty} = transExp(venv, tenv, init)
                         in 
-                            {venv=S.enter(venv, name, (Env.VarEntry{ty=ty, read_only=false})), tenv=tenv}
+                          if T.eq(ty, T.NIL)
+                          then Err.error pos "error: initializing nil expressions not constrained by record type"
+                          else ();
+                          {venv=S.enter(venv, name, (Env.VarEntry{ty=ty, read_only=false})), tenv=tenv}
                         end
                 )
             end

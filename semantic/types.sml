@@ -22,7 +22,6 @@ struct
     fun leq(BOTTOM, _) = true
       | leq(_, UNIT) = true
       | leq(NIL, RECORD(_)) = true
-      | leq(RECORD(_), NIL) = true
       | leq(INT, INT) = true
       | leq(STRING, STRING) = true
       | leq(RECORD(_, unique1), RECORD(_, unique2)) = (unique1 = unique2)
