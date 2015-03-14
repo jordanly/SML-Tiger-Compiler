@@ -110,10 +110,24 @@ struct
                   checkSequence expList
                 end
           | trexp (A.AssignExp({var, exp, pos})) = 
-                (
-                checkTypesEqual(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
-                {exp=(), ty=T.UNIT}
-                )
+                let
+                  fun getVarSymbol var' =
+                    case var' of
+                         A.SimpleVar(sym, _) => S.look(venv, sym)
+                       | A.FieldVar(var', _, _) => getVarSymbol var'
+                       | A.SubscriptVar(var', _, _) => getVarSymbol var'
+                  fun canAssign var' =
+                    case getVarSymbol var' of 
+                         SOME(Env.VarEntry({ty, read_only})) => 
+                              if read_only 
+                              then Err.error pos "cannot assign loop variable"
+                              else ()
+                       | _ => Err.error pos "cannot assign to a function"
+                in
+                  canAssign var;
+                  checkTypesEqual(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
+                  {exp=(), ty=T.UNIT}
+                end
           | trexp (A.IfExp({test, then', else', pos})) = 
                 (
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test in if exp does not evaluate to an int");
@@ -130,7 +144,7 @@ struct
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
                 let
-                  val venv' = S.enter(venv, var, Env.VarEntry({ty=T.INT}))
+                  val venv' = S.enter(venv, var, Env.VarEntry({ty=T.INT, read_only=true}))
                 in
                   checkInt(trexp lo, pos);
                   checkInt(trexp hi, pos);
@@ -171,7 +185,7 @@ struct
             )
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
-                    SOME(Env.VarEntry({ty})) => {exp=(), ty=ty}
+                    SOME(Env.VarEntry({ty, read_only=_})) => {exp=(), ty=ty}
                   | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
                   | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
                 )
@@ -227,16 +241,16 @@ struct
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
                             SOME ty => if T.eq(#ty (transExp(venv, tenv, init)), actualTy ty)
-                                       then {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty})), tenv=tenv}
+                                       then {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv}
                                        else (Err.error pos "mismatched types in vardec";
-                                            {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty})), tenv=tenv})
+                                            {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
                           | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                         )
                   | NONE =>
                         let 
                             val {exp, ty} = transExp(venv, tenv, init)
                         in 
-                            {venv=S.enter(venv, name, (Env.VarEntry{ty=ty})), tenv=tenv}
+                            {venv=S.enter(venv, name, (Env.VarEntry{ty=ty, read_only=false})), tenv=tenv}
                         end
                 )
             end
@@ -290,7 +304,7 @@ struct
                                   | NONE => T.UNIT
                                 )
                             val params' = map transparam params
-                            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty})
+                            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty, read_only=false})
                             val venv'' = foldl enterparam venv' params'
                             val body' = transExp (venv'', tenv, body)
                         in

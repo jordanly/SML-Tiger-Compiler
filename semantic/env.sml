@@ -8,7 +8,7 @@ struct
     type access = unit
     type ty = Types.ty
 
-    datatype enventry = VarEntry of {ty: ty}
+    datatype enventry = VarEntry of {ty: ty, read_only: bool}
                       | FunEntry of {formals: ty list, result : ty}
 
     val base_tenv = (* predefined types *)
