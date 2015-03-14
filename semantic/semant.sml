@@ -12,6 +12,8 @@ struct
     fun checkEqualityOp ({exp=_, ty=T.INT}, {exp=_, ty=T.INT}, pos) = ()
       | checkEqualityOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
       | checkEqualityOp ({exp=_, ty=T.RECORD(_, _)}, {exp=_, ty=T.RECORD(_, _)}, pos) = ()
+      | checkEqualityOp ({exp=_, ty=T.NIL}, {exp=_, ty=T.RECORD(_, _)}, pos) = ()
+      | checkEqualityOp ({exp=_, ty=T.RECORD(_, _)}, {exp=_, ty=T.NIL}, pos) = ()
       | checkEqualityOp ({exp=_, ty=T.ARRAY(_, _)}, {exp=_, ty=T.ARRAY(_, _)}, pos) = ()
       | checkEqualityOp ({exp=_, ty=_}, {exp=_, ty=_}, pos) = Err.error pos "Expected both int, string, record, or array"
 
@@ -126,7 +128,15 @@ struct
                 checkTypesEqual(#ty (trexp body), T.UNIT, pos, "while body must be no value");
                 {exp=(), ty=T.UNIT}
                 )
-          | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = {exp=(), ty=T.NIL} (* TODO *)
+          | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
+                let
+                  val venv' = S.enter(venv, var, Env.VarEntry({ty=T.INT}))
+                in
+                  checkInt(trexp lo, pos);
+                  checkInt(trexp hi, pos);
+                  checkTypesEqual(#ty (transExp(venv', tenv, body)), T.UNIT, pos, "for body must be no value");
+                  {exp=(), ty=T.UNIT}
+                end
           | trexp (A.BreakExp(pos)) = {exp=(), ty=T.BOTTOM} (* TODO *)
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
@@ -184,10 +194,19 @@ struct
                   | {exp=_, ty=_} => (Err.error pos ("requires record"); {exp=(), ty=T.BOTTOM})
                 )
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
-                (case trvar v of
-                    {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=arrTy})
-                  | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.BOTTOM})
-                )
+                let
+                  fun getType(SOME(ty)) = ty
+                    | getType(NONE) = T.BOTTOM
+                  fun actualTy ty = 
+                    case ty of
+                        T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
+                      | someTy => someTy
+                in
+                  (case trvar v of
+                      {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=actualTy arrTy})
+                    | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.BOTTOM})
+                  )
+                end
         in
             trexp exp
         end
