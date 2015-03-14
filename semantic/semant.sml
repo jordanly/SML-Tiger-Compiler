@@ -344,6 +344,7 @@ struct
                     fun listConcat(a, b) = fieldProcess(a)::b
                     fun recGen () = foldl listConcat [] fields
                 in 
+                    recGen();
                     T.RECORD (recGen, ref ())
                 end
           | trty(tenv, A.ArrayTy (sym, pos')) =
