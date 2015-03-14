@@ -136,7 +136,13 @@ struct
                 (
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test in if exp does not evaluate to an int");
                 case else' of 
-                      SOME(elseExp) => checkTypesEqual(#ty (trexp then'), #ty (trexp elseExp), pos, "mismatching types in if expression")
+                      SOME(elseExp) => 
+                              (
+                          case (#ty (trexp then'), #ty (trexp elseExp)) of
+                                (T.RECORD(_), NIL) => ()
+                              | (NIL, T.RECORD(_)) => ()
+                              | (tyA, tyB) => checkTypesEqual(tyA, tyB, pos, "mismatched if-then-else statement")
+                              )
                     | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "then must be unit in if then expression");
                 {exp=(), ty=(#ty (trexp then'))}
                 )
