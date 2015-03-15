@@ -47,19 +47,19 @@ struct
           | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
           | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
-          let
-            fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
-                                                                      then checkArgs(formalList, argList, pos)
-                                                                      else Err.error pos "error : formals and actuals have different types"
-              | checkArgs ([], argExp::argList, pos) = Err.error pos "error : formals are fewer then actuals"
-              | checkArgs (forTy::formalList, [], pos) = Err.error pos "error : formals are more then actuals"
-              | checkArgs ([], [], pos) = ()
-          in
-            case S.look(venv, func) of
-                SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
-              | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.BOTTOM})
-              | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.BOTTOM})
-          end
+                let
+                  fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
+                                                                            then checkArgs(formalList, argList, pos)
+                                                                            else Err.error pos "error : formals and actuals have different types"
+                    | checkArgs ([], argExp::argList, pos) = Err.error pos "error : formals are fewer then actuals"
+                    | checkArgs (forTy::formalList, [], pos) = Err.error pos "error : formals are more then actuals"
+                    | checkArgs ([], [], pos) = ()
+                in
+                  case S.look(venv, func) of
+                      SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
+                    | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.BOTTOM})
+                    | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.BOTTOM})
+                end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of
                     A.PlusOp => (checkInt(trexp left, pos);
