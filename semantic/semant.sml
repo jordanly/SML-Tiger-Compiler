@@ -364,7 +364,11 @@ struct
         end
     and transTy(tenv, ty) =
         let fun
-            trty(tenv, A.NameTy (name, _)) = T.NAME(name, ref(NONE))
+            trty(tenv, A.NameTy (name, _)) =
+                (case S.look(tenv, name) of
+                    SOME _ => T.NAME(name, ref(NONE))
+                  | NONE => (Err.error 0 ("Unrecognized name type: " ^ S.name name); T.NAME(name, ref(NONE)))
+                )  
           | trty(tenv, A.RecordTy (fields)) =
                 let 
                     fun fieldProcess {name, escape, typ, pos} =
