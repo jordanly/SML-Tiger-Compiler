@@ -7,7 +7,7 @@ struct
 
     (* Global helper functions *)
     fun checkInt ({exp=_, ty=T.INT}, pos) = ()
-      | checkInt ({exp=_, ty=_ }, pos) = Err.error pos "Expected int"
+      | checkInt ({exp=_, ty=_ }, pos) = Err.error pos "error : integer required"
 
     fun checkEqualityOp ({exp=_, ty=T.INT}, {exp=_, ty=T.INT}, pos) = ()
       | checkEqualityOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
@@ -50,9 +50,9 @@ struct
           let
             fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
                                                                       then checkArgs(formalList, argList, pos)
-                                                                      else Err.error pos "mismatched args"
-              | checkArgs ([], argExp::argList, pos) = Err.error pos "mismatched args"
-              | checkArgs (forTy::formalList, [], pos) = Err.error pos "insufficient args"
+                                                                      else Err.error pos "error : formals and actuals have different types"
+              | checkArgs ([], argExp::argList, pos) = Err.error pos "error : formals are fewer then actuals"
+              | checkArgs (forTy::formalList, [], pos) = Err.error pos "error : formals are more then actuals"
               | checkArgs ([], [], pos) = ()
           in
             case S.look(venv, func) of
@@ -112,9 +112,9 @@ struct
                                     then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=(), ty=x})
                                     else (foldr iterator () recFormal; {exp=(), ty=x})
                                 end
-                          | _ => (Err.error pos ("expected record type, not: " ^ S.name typ); {exp=(), ty=T.NIL})
+                          | _ => (Err.error pos ("error : expected record type, not: " ^ S.name typ); {exp=(), ty=T.NIL})
                         )
-                  | NONE => (Err.error pos ("invalid record type: " ^ S.name typ); {exp=(), ty=T.NIL})
+                  | NONE => (Err.error pos ("error : invalid record type: " ^ S.name typ); {exp=(), ty=T.NIL})
                 )
           | trexp (A.SeqExp(expList)) = 
                 let
@@ -191,30 +191,39 @@ struct
                     transExp(venv', tenv', body)
                 end
           | trexp (A.ArrayExp({typ, size, init, pos})) = 
-            (
-            case S.look(tenv, typ) of
-                 SOME(x) => 
-                 (
-                 case x of
-                      T.ARRAY(ty, unique) => 
+                let
+                  fun getType(SOME(ty)) = ty
+                    | getType(NONE) = T.BOTTOM
+                  fun actualTy ty = 
+                    case ty of
+                        T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
+                      | someTy => someTy
+                in
+                  (
+                  case S.look(tenv, typ) of
+                      SOME(x) => 
                       (
-                      let
-                        fun getType(SOME(ty)) = ty
-                          | getType(NONE) = T.BOTTOM
-                        fun actualTy ty = 
-                          case ty of
-                              T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
-                            | someTy => someTy
-                      in
-                        checkInt(trexp size, pos);
-                        checkTypesEqual(#ty (trexp init), actualTy ty, pos, "Types not equal in array init");
-                        {exp=(), ty=T.ARRAY(ty, unique)}
-                      end
+                      case actualTy x of
+                            T.ARRAY(ty, unique) => 
+                            (
+                            let
+                              fun getType(SOME(ty)) = ty
+                                | getType(NONE) = T.BOTTOM
+                              fun actualTy ty = 
+                                case ty of
+                                    T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
+                                  | someTy => someTy
+                            in
+                              checkInt(trexp size, pos);
+                              checkTypesEqual(#ty (trexp init), actualTy ty, pos, "error : initializing exp and array type differ");
+                              {exp=(), ty=T.ARRAY(ty, unique)}
+                            end
+                            )
+                          | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=(), ty=T.BOTTOM})
                       )
-                    | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=(), ty=T.BOTTOM})
-                )
-               | NONE => (Err.error pos "No such type"; {exp=(), ty=T.BOTTOM})
-            )
+                    | NONE => (Err.error pos "No such type"; {exp=(), ty=T.BOTTOM})
+                  )
+                end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({ty, read_only=_})) => {exp=(), ty=ty}
@@ -237,7 +246,7 @@ struct
                     in
                       {exp=(), ty=getFieldType(fields, id, pos)}
                     end
-                  | {exp=_, ty=_} => (Err.error pos ("requires record"); {exp=(), ty=T.BOTTOM})
+                  | {exp=_, ty=_} => (Err.error pos ("error : variable not record"); {exp=(), ty=T.BOTTOM})
                 )
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 let
@@ -260,7 +269,6 @@ struct
         let fun
             trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
             let
-              (* TODO might need to do this actual_ty stuff elsewhere as well *)
               fun getType(SOME(ty)) = ty
                 | getType(NONE) = T.BOTTOM
               fun actualTy ty = 
@@ -272,7 +280,7 @@ struct
                 case typ of
                     SOME(symbol, pos) =>
                         (case S.look(tenv, symbol) of
-                            SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init)), pos, "mismatched types in vardec");
+                            SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init)), pos, "error : mismatched types in vardec");
                                        {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
                           | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                         )
@@ -357,12 +365,6 @@ struct
     and transTy(tenv, ty) =
         let fun
             trty(tenv, A.NameTy (name, _)) = T.NAME(name, ref(NONE))
-            (* TODO make a function actual_ty?
-            (case S.look (tenv, name) of
-                    NONE => (Err.error 0 ("undefined type: " ^ S.name name); T.BOTTOM)
-                  | SOME ty => ty
-                )
-            *)
           | trty(tenv, A.RecordTy (fields)) =
                 let 
                     fun fieldProcess {name, escape, typ, pos} =
