@@ -29,6 +29,16 @@ struct
                                                          then ()
                                                          else Err.error pos errMsg 
 
+    val nestDepth : int ref = ref 0
+    fun incrementNestDepth () = nestDepth := !nestDepth + 1
+    fun decrementNestDepth () = nestDepth := !nestDepth - 1
+    fun getNestDepth () = !nestDepth
+    fun setNestDepth (n) = nestDepth := n
+    fun checkInLoop (pos, errorMsg) =
+      if !nestDepth = 0
+      then Err.error pos errorMsg
+      else ()
+
     (* Main recursive type-checking functions *)
     fun transExp (venv, tenv, exp) = 
         let fun
@@ -137,19 +147,21 @@ struct
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test in if exp does not evaluate to an int");
                 case else' of 
                       SOME(elseExp) => 
-                              (
+                          (
                           case (#ty (trexp then'), #ty (trexp elseExp)) of
                                 (T.RECORD(_), NIL) => ()
                               | (NIL, T.RECORD(_)) => ()
                               | (tyA, tyB) => checkTypesEqual(tyA, tyB, pos, "mismatched if-then-else statement")
-                              )
+                          )
                     | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "then must be unit in if then expression");
                 {exp=(), ty=(#ty (trexp then'))}
                 )
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
+                incrementNestDepth();
                 checkTypesEqual(#ty (trexp body), T.UNIT, pos, "while body must be no value");
+                decrementNestDepth();
                 {exp=(), ty=T.UNIT}
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
@@ -158,13 +170,22 @@ struct
                 in
                   checkInt(trexp lo, pos);
                   checkInt(trexp hi, pos);
+                  incrementNestDepth();
                   checkTypesEqual(#ty (transExp(venv', tenv, body)), T.UNIT, pos, "for body must be no value");
+                  decrementNestDepth();
                   {exp=(), ty=T.UNIT}
                 end
-          | trexp (A.BreakExp(pos)) = {exp=(), ty=T.BOTTOM} (* TODO *)
+          | trexp (A.BreakExp(pos)) =
+                ( 
+                checkInLoop(pos, "incorrect break");
+                {exp=(), ty=T.BOTTOM}
+                )
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
+                    val curDepth = !nestDepth
+                    val _ = setNestDepth(0)
                     val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs)
+                    val _ = setNestDepth(curDepth)
                 in
                     transExp(venv', tenv', body)
                 end
