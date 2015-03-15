@@ -268,58 +268,58 @@ struct
     and transDec(venv, tenv, decs) = 
         let fun
             trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
-            let
-              fun getType(SOME(ty)) = ty
-                | getType(NONE) = T.BOTTOM
-              fun actualTy ty = 
-                case ty of
-                    T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
-                  | someTy => someTy
-            in
-                (
-                case typ of
-                    SOME(symbol, pos) =>
-                        (case S.look(tenv, symbol) of
-                            SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init)), pos, "error : mismatched types in vardec");
-                                       {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
-                          | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
-                        )
-                  | NONE =>
-                        let 
-                          val {exp, ty} = transExp(venv, tenv, init)
-                        in 
-                          if T.eq(ty, T.NIL)
-                          then Err.error pos "error: initializing nil expressions not constrained by record type"
-                          else ();
-                          {venv=S.enter(venv, name, (Env.VarEntry{ty=ty, read_only=false})), tenv=tenv}
-                        end
-                )
-            end
+                let
+                  fun getType(SOME(ty)) = ty
+                    | getType(NONE) = T.BOTTOM
+                  fun actualTy ty = 
+                    case ty of
+                        T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
+                      | someTy => someTy
+                in
+                    (
+                    case typ of
+                        SOME(symbol, pos) =>
+                            (case S.look(tenv, symbol) of
+                                SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init)), pos, "error : mismatched types in vardec");
+                                           {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
+                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
+                            )
+                      | NONE =>
+                            let 
+                              val {exp, ty} = transExp(venv, tenv, init)
+                            in 
+                              if T.eq(ty, T.NIL)
+                              then Err.error pos "error: initializing nil expressions not constrained by record type"
+                              else ();
+                              {venv=S.enter(venv, name, (Env.VarEntry{ty=ty, read_only=false})), tenv=tenv}
+                            end
+                    )
+                end
           | trdec(venv, tenv, A.TypeDec(tydeclist)) =
-            let
-              fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
-              val temp_tenv = foldl maketemptydec tenv tydeclist
-              fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty))}
-              val new_env = foldl foldtydec {venv=venv, tenv=tenv} tydeclist
+                let
+                  fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
+                  val temp_tenv = foldl maketemptydec tenv tydeclist
+                  fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty))}
+                  val new_env = foldl foldtydec {venv=venv, tenv=tenv} tydeclist
 
-              fun checkIllegalCycle({name, ty, pos}, ()) = 
-              let
-                fun checkHelper(seenList, name) =
-                  (
-                  case S.look(#tenv new_env, name) of
-                       SOME(T.NAME(symb, _)) => if List.exists (fn y => String.compare(S.name symb, S.name y) = EQUAL) seenList
-                                                then Err.error pos "error: mutually recursive types thet do not pass through record or array - cycle"
-                                                else checkHelper(name::seenList, symb)
-                     | _ => ()
-                  )
-              in
-                checkHelper([], name)
-              end
+                  fun checkIllegalCycle({name, ty, pos}, ()) = 
+                  let
+                    fun checkHelper(seenList, name) =
+                      (
+                      case S.look(#tenv new_env, name) of
+                           SOME(T.NAME(symb, _)) => if List.exists (fn y => String.compare(S.name symb, S.name y) = EQUAL) seenList
+                                                    then Err.error pos "error: mutually recursive types thet do not pass through record or array - cycle"
+                                                    else checkHelper(name::seenList, symb)
+                         | _ => ()
+                      )
+                  in
+                    checkHelper([], name)
+                  end
 
-            in
-              foldl checkIllegalCycle () tydeclist;
-              new_env
-            end
+                in
+                  foldl checkIllegalCycle () tydeclist;
+                  new_env
+                end
           | trdec(venv, tenv, A.FunctionDec(fundeclist)) =
                 let 
                     fun transrt rt =
