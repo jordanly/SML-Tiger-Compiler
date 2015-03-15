@@ -15,11 +15,11 @@ struct
       | checkEqualityOp ({exp=_, ty=T.NIL}, {exp=_, ty=T.RECORD(_, _)}, pos) = ()
       | checkEqualityOp ({exp=_, ty=T.RECORD(_, _)}, {exp=_, ty=T.NIL}, pos) = ()
       | checkEqualityOp ({exp=_, ty=T.ARRAY(_, _)}, {exp=_, ty=T.ARRAY(_, _)}, pos) = ()
-      | checkEqualityOp ({exp=_, ty=_}, {exp=_, ty=_}, pos) = Err.error pos "Expected both int, string, record, or array"
+      | checkEqualityOp ({exp=_, ty=_}, {exp=_, ty=_}, pos) = Err.error pos "error : comparison expected both int, string, record, or array"
 
     fun checkComparisonOp ({exp=_, ty=T.INT}, {exp=_, ty=T.INT}, pos) = ()
       | checkComparisonOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
-      | checkComparisonOp ({exp=_, ty=_ }, {exp=_, ty=_ }, pos) = Err.error pos "Expected both string or int"
+      | checkComparisonOp ({exp=_, ty=_ }, {exp=_, ty=_ }, pos) = Err.error pos "error: comparison of incompatible types"
 
     fun checkTypesEqual (tyA, tyB, pos, errMsg) = if T.eq(tyA, tyB)
                                                   then ()
@@ -134,12 +134,13 @@ struct
                     case getVarSymbol var' of 
                          SOME(Env.VarEntry({ty, read_only})) => 
                               if read_only 
-                              then Err.error pos "cannot assign loop variable"
+                              then Err.error pos "error : index variable erroneously assigned to"
                               else ()
                        | _ => Err.error pos "cannot assign to a function"
                 in
                   canAssign var;
-                  checkTypesAssignable(#ty (trvar var), #ty (trexp exp), pos, "mismatched types in assignment");
+                  checkTypesAssignable(#ty (trvar var), #ty (trexp exp), pos, "error : mismatched types in assignment");
+
                   {exp=(), ty=T.UNIT}
                 end
           | trexp (A.IfExp({test, then', else', pos})) = 
@@ -151,16 +152,16 @@ struct
                           case (#ty (trexp then'), #ty (trexp elseExp)) of
                                 (T.RECORD(_), NIL) => ()
                               | (NIL, T.RECORD(_)) => ()
-                              | (tyA, tyB) => checkTypesEqual(tyA, tyB, pos, "mismatched if-then-else statement")
+                              | (tyA, tyB) => checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ")
                           )
-                    | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "then must be unit in if then expression");
+                    | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "error : if-then returns non unit");
                 {exp=(), ty=(#ty (trexp then'))}
                 )
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
                 incrementNestDepth();
-                checkTypesEqual(#ty (trexp body), T.UNIT, pos, "while body must be no value");
+                checkTypesEqual(#ty (trexp body), T.UNIT, pos, "error : body of while not unit");
                 decrementNestDepth();
                 {exp=(), ty=T.UNIT}
                 )
@@ -168,8 +169,8 @@ struct
                 let
                   val venv' = S.enter(venv, var, Env.VarEntry({ty=T.INT, read_only=true}))
                 in
-                  checkInt(trexp lo, pos);
-                  checkInt(trexp hi, pos);
+                  checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
+                  checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
                   incrementNestDepth();
                   checkTypesEqual(#ty (transExp(venv', tenv, body)), T.UNIT, pos, "for body must be no value");
                   decrementNestDepth();
@@ -218,7 +219,7 @@ struct
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({ty, read_only=_})) => {exp=(), ty=ty}
                   | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
-                  | NONE => (Err.error pos ("undefined variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
+                  | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =
                  (case trvar v of
@@ -299,7 +300,7 @@ struct
                   (
                   case S.look(#tenv new_env, name) of
                        SOME(T.NAME(symb, _)) => if List.exists (fn y => String.compare(S.name symb, S.name y) = EQUAL) seenList
-                                                then Err.error pos "illegal cycle"
+                                                then Err.error pos "error: mutually recursive types thet do not pass through record or array - cycle"
                                                 else checkHelper(name::seenList, symb)
                      | _ => ()
                   )
