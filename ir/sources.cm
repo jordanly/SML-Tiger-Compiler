@@ -14,6 +14,10 @@ translate.sml
 semant.sml
 tiger.grm
 types.sml
+printtree.sml
+tree.sml
+temp.sml
+temp.sig
 $/smlnj-lib.cm
 $/basis.cm
 $/ml-yacc-lib.cm
