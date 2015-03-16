@@ -112,7 +112,7 @@ recordbody : ID EQ exp                          ([(Symbol.symbol ID, exp, defaul
            |                                    ([])
 
 letbody : exp exptail                           (A.SeqExp((exp, expleft)::exptail))
-        |                                       (A.NilExp)
+        |                                       (A.SeqExp[])
 
 decs : tydec nontydec                           (tydec @ nontydec)
      | vardec decs                              (vardec :: decs)
