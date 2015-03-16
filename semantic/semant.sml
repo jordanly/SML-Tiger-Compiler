@@ -317,9 +317,9 @@ struct
                   end
 
                   fun checkDuplicates({name, ty, pos}, seenList) = 
-                    if List.exists (fn y => String.compare(S.name name, y) = EQUAL) seenList
-                    then (Err.error pos "error : two types of same name in mutually recursive dec"; seenList)
-                    else (S.name name)::seenList
+                      if List.exists (fn y => String.compare(S.name name, y) = EQUAL) seenList
+                      then (Err.error pos "error : two types of same name in mutually recursive tydec"; seenList)
+                      else (S.name name)::seenList
 
                 in
                   foldl checkDuplicates [] tydeclist;
@@ -360,9 +360,14 @@ struct
                             else ()
                         end 
                     fun foldfundec (fundec, ()) = checkfundec fundec
+                    fun checkDuplicates({name, params, body, pos, result}, seenList) = 
+                        if List.exists (fn y => String.compare(S.name name, y) = EQUAL) seenList
+                        then (Err.error pos "error : two types of same name in mutually recursive fundec"; seenList)
+                        else (S.name name)::seenList
                 in
-                    (foldr foldfundec () fundeclist;
-                    {venv=venv', tenv=tenv})
+                    foldl checkDuplicates [] fundeclist;
+                    foldr foldfundec () fundeclist;
+                    {venv=venv', tenv=tenv}
                 end
             and folddec(dec, {venv, tenv}) = trdec(venv, tenv, dec)
         in
