@@ -179,7 +179,7 @@ struct
           | trexp (A.BreakExp(pos)) =
                 ( 
                 checkInLoop(pos, "incorrect break");
-                {exp=(), ty=T.BOTTOM}
+                {exp=(), ty=T.UNIT}
                 )
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
@@ -316,7 +316,13 @@ struct
                     checkHelper([], name)
                   end
 
+                  fun checkDuplicates({name, ty, pos}, seenList) = 
+                    if List.exists (fn y => String.compare(S.name name, y) = EQUAL) seenList
+                    then (Err.error pos "error : two types of same name in mutually recursive dec"; seenList)
+                    else (S.name name)::seenList
+
                 in
+                  foldl checkDuplicates [] tydeclist;
                   foldl checkIllegalCycle () tydeclist;
                   new_env
                 end
