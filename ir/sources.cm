@@ -20,6 +20,7 @@ temp.sml
 temp.sig
 frame.sml
 mipsframe.sml
+findescape.sml
 $/smlnj-lib.cm
 $/basis.cm
 $/ml-yacc-lib.cm
