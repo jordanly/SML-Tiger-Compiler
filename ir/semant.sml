@@ -29,13 +29,13 @@ struct
                                                          then ()
                                                          else Err.error pos errMsg 
 
-    val nestDepth : int ref = ref 0
-    fun incrementNestDepth () = nestDepth := !nestDepth + 1
-    fun decrementNestDepth () = nestDepth := !nestDepth - 1
-    fun getNestDepth () = !nestDepth
-    fun setNestDepth (n) = nestDepth := n
+    val loopDepth : int ref = ref 0
+    fun incrementLoopDepth () = loopDepth := !loopDepth + 1
+    fun decrementLoopDepth () = loopDepth := !loopDepth - 1
+    fun getLoopDepth () = !loopDepth
+    fun setLoopDepth (n) = loopDepth := n
     fun checkInLoop (pos, errorMsg) =
-      if !nestDepth = 0
+      if !loopDepth = 0
       then Err.error pos errorMsg
       else ()
 
@@ -160,9 +160,9 @@ struct
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
-                incrementNestDepth();
+                incrementLoopDepth();
                 checkTypesEqual(#ty (trexp body), T.UNIT, pos, "error : body of while not unit");
-                decrementNestDepth();
+                decrementLoopDepth();
                 {exp=(), ty=T.UNIT}
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
@@ -171,9 +171,9 @@ struct
                 in
                   checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
                   checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
-                  incrementNestDepth();
+                  incrementLoopDepth();
                   checkTypesEqual(#ty (transExp(venv', tenv, body)), T.UNIT, pos, "for body must be no value");
-                  decrementNestDepth();
+                  decrementLoopDepth();
                   {exp=(), ty=T.UNIT}
                 end
           | trexp (A.BreakExp(pos)) =
@@ -183,10 +183,10 @@ struct
                 )
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
-                    val curDepth = !nestDepth
-                    val _ = setNestDepth(0)
+                    val curDepth = !loopDepth
+                    val _ = setLoopDepth(0)
                     val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs)
-                    val _ = setNestDepth(curDepth)
+                    val _ = setLoopDepth(curDepth)
                 in
                     transExp(venv', tenv', body)
                 end

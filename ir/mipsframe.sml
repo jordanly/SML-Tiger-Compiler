@@ -7,6 +7,7 @@ struct
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
     fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
     
+    (* Where to put instruction to copy stack pointer to frame pointer ? *)
     fun newFrame {name, formals} = 
     let
       (* Assume all escape right now *)
