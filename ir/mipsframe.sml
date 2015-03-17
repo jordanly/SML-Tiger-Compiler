@@ -1,31 +1,37 @@
 structure MipsFrame : FRAME = 
 struct
     datatype access = InFrame of int | InReg of Temp.temp
-    type frame = {name: Temp.label, formals: access list}
+    type frame = {name: Temp.label, formals: access list,
+                  numLocals: int ref, curOffset: int ref}
 
-    (* TODO implement *)
+    fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
+    fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
+    
     fun newFrame {name, formals} = 
     let
       (* Assume all escape right now *)
-      val frame' = {name=name, formals=[]}
+      (* TODO handle false escapes? *)
+      fun allocFormals(offset, [], allocList) = allocList
+        | allocFormals(offset, curFormal::l, allocList) = 
+          (
+          case curFormal of
+               true => (InFrame offset)::allocFormals(offset + 4, l, allocList)
+             | false => (InReg(Temp.newtemp()))::allocFormals(offset, l, allocList)
+          )
     in
-      frame'
+      {name=name, formals=allocFormals(0, formals, []),
+       numLocals=ref 0, curOffset=ref 0}
     end
 
-    fun name {name=name, formals=formals} = name
-    fun formals {name=name, formals=formals} = formals
-    
-    (* TODO fix for different escapes right now only does true *)
     fun allocLocal frame' escape = 
     let
-      fun maxFrameComparator(access', curMax) =
-        case access' of
-             InFrame x => Int.max(x, curMax)
-           | InReg x => curMax
-      fun getLastFrameNumber([]) = 0
-        | getLastFrameNumber(l) = foldl maxFrameComparator 0 l
+      fun incrementNumLocals {name=_, formals=_, numLocals=x, curOffset=_} = x := !x + 1
+      fun incrementOffset {name=_, formals=_, numLocals=_, curOffset=x} = x := !x - 4
+      fun getOffsetValue {name=_, formals=_, numLocals=_, curOffset=x} = !x
     in
-      InFrame(getLastFrameNumber(formals frame'))
+      incrementNumLocals frame';
+      case escape of
+           true => (incrementOffset frame'; InFrame(getOffsetValue frame'))
+         | false => InReg(Temp.newtemp())
     end
-
 end
