@@ -18,6 +18,8 @@ printtree.sml
 tree.sml
 temp.sml
 temp.sig
+frame.sml
+mipsframe.sml
 $/smlnj-lib.cm
 $/basis.cm
 $/ml-yacc-lib.cm
