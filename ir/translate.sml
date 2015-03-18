@@ -18,7 +18,7 @@ structure Translate =
 struct
 	datatype level =
 	    TOPLEVEL
-	  | NONTOP of {parent: level, frame: F.frame}
+	  | NONTOP of {uniq: unit ref, parent: level, frame: F.frame}
 	type access = level * F.access
 	datatype exp = 
 		Ex of Tree.exp
@@ -30,7 +30,7 @@ struct
 	    let
 	    	val formals'= true::formals (* Add static link *)
 	    in
-	    	NONTOP({parent=parent, frame=F.newFrame {name=name, formals=formals'}})
+	    	NONTOP({uniq = ref (), parent=parent, frame=F.newFrame {name=name, formals=formals'}})
 	    end
 
 	fun formals {parent=parent', frame=frame'} = 
@@ -42,7 +42,7 @@ struct
 
 	fun allocLocal level' escape' = 
       case level' of
-           NONTOP({parent=parent', frame=frame'}) => (NONTOP({parent=parent', frame=frame'}), F.allocLocal frame' escape')
+           NONTOP({uniq=uniq', parent=parent', frame=frame'}) => (NONTOP({uniq=uniq', parent=parent', frame=frame'}), F.allocLocal frame' escape')
          | TOPLEVEL => (outermost, F.allocLocal (F.newFrame {name=Temp.newlabel(), formals=[]}) escape') (* TODO error? *)
 
     fun unEx (Ex e) = e 
