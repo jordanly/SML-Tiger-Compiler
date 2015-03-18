@@ -1,0 +1,7 @@
+CM.make "sources.cm";
+print "================ AST ==================";
+(PrintAbsyn.print(TextIO.stdOut, Parse.parse "k1.tig"));
+print "============ Type-checking ============";
+Main.compile "k1.tig";
+print "================ IR ==================";
+Printtree.printtree(TextIO.stdOut, Tree.EXP(Main.compile "k1.tig"))

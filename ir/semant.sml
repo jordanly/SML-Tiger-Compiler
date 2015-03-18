@@ -43,9 +43,9 @@ struct
     fun transExp (venv, tenv, exp, level: Translate.level) = 
         let fun
             trexp (A.VarExp(var)) = trvar var
-          | trexp (A.NilExp) = {exp=(), ty=T.NIL}
-          | trexp (A.IntExp(intvalue)) = {exp=(), ty=T.INT}
-          | trexp (A.StringExp(stringvalue, pos)) = {exp=(), ty=T.STRING}
+          | trexp (A.NilExp) = {exp=Tr.TODO, ty=T.NIL}
+          | trexp (A.IntExp(intvalue)) = {exp=Tr.CONST intvalue, ty=T.INT}
+          | trexp (A.StringExp(stringvalue, pos)) = {exp=Tr.TODO, ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
                 let
                   fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
@@ -56,36 +56,36 @@ struct
                     | checkArgs ([], [], pos) = ()
                 in
                   case S.look(venv, func) of
-                      SOME(Env.FunEntry({level, label, formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
-                    | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.BOTTOM})
-                    | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.BOTTOM})
+                      SOME(Env.FunEntry({level, label, formals, result})) => (checkArgs(formals, args, pos); {exp=Tr.TODO, ty=result})
+                    | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=Tr.TODO, ty=T.BOTTOM})
+                    | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=Tr.TODO, ty=T.BOTTOM})
                 end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of
                     A.PlusOp => (checkInt(trexp left, pos);
                                  checkInt(trexp right, pos);
-                                 {exp=(), ty=T.INT})
+                                 {exp=Tr.TODO, ty=T.INT})
                   | A.MinusOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
-                                  {exp=(), ty=T.INT})
+                                  {exp=Tr.TODO, ty=T.INT})
                   | A.TimesOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
-                                  {exp=(), ty=T.INT})
+                                  {exp=Tr.TODO, ty=T.INT})
                   | A.DivideOp => (checkInt(trexp left, pos); 
                                    checkInt(trexp right, pos);
-                                   {exp=(), ty=T.INT})
+                                   {exp=Tr.TODO, ty=T.INT})
                   | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                               {exp=(), ty=T.INT})
+                               {exp=Tr.TODO, ty=T.INT})
                   | A.NeqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                                {exp=(), ty=T.INT})
+                                {exp=Tr.TODO, ty=T.INT})
                   | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=(), ty=T.INT})
+                               {exp=Tr.TODO, ty=T.INT})
                   | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=(), ty=T.INT})
+                               {exp=Tr.TODO, ty=T.INT})
                   | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=(), ty=T.INT})
+                               {exp=Tr.TODO, ty=T.INT})
                   | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=(), ty=T.INT})
+                               {exp=Tr.TODO, ty=T.INT})
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = 
                 (case S.look(tenv, typ) of
@@ -109,17 +109,17 @@ struct
                                           | NONE => (Err.error pos ("unknown type in record: " ^ S.name typ); ())
                                 in
                                     if List.length(recFormal) <> List.length(fields)
-                                    then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=(), ty=x})
-                                    else (foldr iterator () recFormal; {exp=(), ty=x})
+                                    then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=Tr.TODO, ty=x})
+                                    else (foldr iterator () recFormal; {exp=Tr.TODO, ty=x})
                                 end
-                          | _ => (Err.error pos ("error : expected record type, not: " ^ S.name typ); {exp=(), ty=T.NIL})
+                          | _ => (Err.error pos ("error : expected record type, not: " ^ S.name typ); {exp=Tr.TODO, ty=T.NIL})
                         )
-                  | NONE => (Err.error pos ("error : invalid record type: " ^ S.name typ); {exp=(), ty=T.NIL})
+                  | NONE => (Err.error pos ("error : invalid record type: " ^ S.name typ); {exp=Tr.TODO, ty=T.NIL})
                 )
           | trexp (A.SeqExp(expList)) = 
                 let
                   fun helper((seqExp, pos), {exp=_, ty=_}) = (trexp seqExp)
-                  fun checkSequence sequence = foldl helper {exp=(), ty=T.UNIT} sequence
+                  fun checkSequence sequence = foldl helper {exp=Tr.TODO, ty=T.UNIT} sequence
                 in
                   checkSequence expList
                 end
@@ -141,7 +141,7 @@ struct
                   canAssign var;
                   checkTypesAssignable(#ty (trvar var), #ty (trexp exp), pos, "error : mismatched types in assignment");
 
-                  {exp=(), ty=T.UNIT}
+                  {exp=Tr.TODO, ty=T.UNIT}
                 end
           | trexp (A.IfExp({test, then', else', pos})) = 
                 (
@@ -155,7 +155,7 @@ struct
                               | (tyA, tyB) => checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ")
                           )
                     | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "error : if-then returns non unit");
-                {exp=(), ty=(#ty (trexp then'))}
+                {exp=Tr.TODO, ty=(#ty (trexp then'))}
                 )
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
@@ -163,7 +163,7 @@ struct
                 incrementLoopDepth();
                 checkTypesEqual(#ty (trexp body), T.UNIT, pos, "error : body of while not unit");
                 decrementLoopDepth();
-                {exp=(), ty=T.UNIT}
+                {exp=Tr.TODO, ty=T.UNIT}
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
                 let
@@ -175,12 +175,12 @@ struct
                   incrementLoopDepth();
                   checkTypesEqual(#ty (transExp(venv', tenv, body, level)), T.UNIT, pos, "for body must be no value");
                   decrementLoopDepth();
-                  {exp=(), ty=T.UNIT}
+                  {exp=Tr.TODO, ty=T.UNIT}
                 end
           | trexp (A.BreakExp(pos)) =
                 ( 
                 checkInLoop(pos, "incorrect break");
-                {exp=(), ty=T.UNIT}
+                {exp=Tr.TODO, ty=T.UNIT}
                 )
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
@@ -217,23 +217,23 @@ struct
                             in
                               checkInt(trexp size, pos);
                               checkTypesEqual(#ty (trexp init), actualTy ty, pos, "error : initializing exp and array type differ");
-                              {exp=(), ty=T.ARRAY(ty, unique)}
+                              {exp=Tr.TODO, ty=T.ARRAY(ty, unique)}
                             end
                             )
-                          | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=(), ty=T.BOTTOM})
+                          | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=Tr.TODO, ty=T.BOTTOM})
                       )
-                    | NONE => (Err.error pos "No such type"; {exp=(), ty=T.BOTTOM})
+                    | NONE => (Err.error pos "No such type"; {exp=Tr.TODO, ty=T.BOTTOM})
                   )
                 end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
-                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=(), ty=ty}
-                  | SOME(Env.FunEntry({level, label, formals, result})) => {exp=(), ty=result}
-                  | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
+                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=Tr.TODO, ty=ty}
+                  | SOME(Env.FunEntry({level, label, formals, result})) => {exp=Tr.TODO, ty=result}
+                  | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=Tr.TODO, ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =
                  (case trvar v of
-                    {exp=(), ty=T.RECORD(recGen, unique)} => 
+                    {exp=Tr.TODO, ty=T.RECORD(recGen, unique)} => 
                     let
                       val fields = recGen()
                       fun getFieldType ((fSymbol, fTy)::l, id, pos) = 
@@ -245,9 +245,9 @@ struct
                             else getFieldType(l, id, pos)
                         | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.BOTTOM)
                     in
-                      {exp=(), ty=getFieldType(fields, id, pos)}
+                      {exp=Tr.TODO, ty=getFieldType(fields, id, pos)}
                     end
-                  | {exp=_, ty=_} => (Err.error pos ("error : variable not record"); {exp=(), ty=T.BOTTOM})
+                  | {exp=_, ty=_} => (Err.error pos ("error : variable not record"); {exp=Tr.TODO, ty=T.BOTTOM})
                 )
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 let
@@ -259,8 +259,8 @@ struct
                       | someTy => someTy
                 in
                   (case trvar v of
-                      {exp=(), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=(), ty=actualTy arrTy})
-                    | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=(), ty=T.BOTTOM})
+                      {exp=Tr.TODO, ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=Tr.TODO, ty=actualTy arrTy})
+                    | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=Tr.TODO, ty=T.BOTTOM})
                   )
                 end
         in
@@ -406,7 +406,7 @@ struct
         end
 
     fun transProg (my_exp : A.exp) = 
-        (transExp (Env.base_venv, Env.base_tenv, my_exp, Translate.outermost); ())
+        #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, Translate.outermost))
 end
 
 structure Main = 

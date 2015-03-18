@@ -17,6 +17,7 @@ sig
         | NAME of label
         | CONST of int
         | CALL of exp * exp list
+        | TODO
 
     and loc = TEMPLOC of Temp.temp
         | MEMLOC of exp
@@ -50,6 +51,7 @@ struct
         | NAME of label
         | CONST of int
         | CALL of exp * exp list
+        | TODO
 
     and loc = TEMPLOC of Temp.temp
         | MEMLOC of exp
