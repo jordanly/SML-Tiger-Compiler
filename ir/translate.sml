@@ -24,12 +24,12 @@ struct
 	  | Nx of Tree.stm
 	  | Cx of Temp.label * Temp.label -> Tree.stm
 
-	val outermost = {parent=nil, frame=nil}
+	val outermost = TOPLEVEL
 	fun newLevel {parent, name, formals} = 
 	    let
 	    	val formals'= true::formals (* Add static link *)
 	    in
-	    	{parent=parent, frame=F.newFrame {name=name, formals=formals'}}
+	    	NONTOP({parent=parent, frame=F.newFrame {name=name, formals=formals'}})
 	    end
 
 	fun formals {parent=parent', frame=frame'} = 
@@ -39,8 +39,10 @@ struct
 	    	foldl addLevel [] (F.formals frame')
 	    end
 
-	fun allocLocal {parent=parent', frame=frame'} escape' = 
-    	({parent=parent', frame=frame'}, F.allocLocal frame' escape')
+	fun allocLocal level' escape' = 
+      case level' of
+           NONTOP({parent=parent', frame=frame'}) => (NONTOP({parent=parent', frame=frame'}), F.allocLocal frame' escape')
+         | TOPLEVEL => (outermost, F.allocLocal (F.newFrame {name=Temp.newlabel(), formals=[]}) escape') (* TODO error? *)
 
     fun unEx (Ex e) = e 
       | unEx (Cx genstm) = 
@@ -61,7 +63,7 @@ struct
       | unCx (Ex (Tr.CONST 0)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(flabel), [flabel]))
       | unCx (Ex (Tr.CONST 1)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(tlabel), [tlabel]))
       | unCx (Ex e) = (fn(tlabel, flabel) => Tr.CJUMP(Tr.EQ, Tr.CONST 1, e, tlabel, flabel))
-      | unCx (Nx _) = (Err.error 0 "Compiler error"; fn (a, b) => Tree.LABEL(Temp.newlabel()))
+      | unCx (Nx _) = (ErrorMsg.error 0 "Compiler error"; fn (a, b) => Tree.LABEL(Temp.newlabel()))
 
     fun unNx (Ex e) = Tr.EXP(e)
       | unNx (Nx n) = n

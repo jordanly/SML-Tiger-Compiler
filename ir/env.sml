@@ -8,8 +8,11 @@ struct
     type access = unit
     type ty = Types.ty
 
-    datatype enventry = VarEntry of {ty: ty, read_only: bool}
-                      | FunEntry of {formals: ty list, result : ty}
+    datatype enventry = VarEntry of {access: Translate.access, 
+                                     ty: ty, read_only: bool}
+                      | FunEntry of {level: Translate.level,
+                                     label: Temp.label,
+                                     formals: ty list, result : ty}
 
     val base_tenv = (* predefined types *)
         let
@@ -23,16 +26,16 @@ struct
         let
             fun addtotable ((s, t), table) = S.enter(table, S.symbol s, t)
             val toadd = [
-                            ("print", FunEntry ({formals=[T.STRING], result=T.UNIT})),
-                            ("flush", FunEntry ({formals=[], result=T.UNIT})),
-                            ("getchar", FunEntry ({formals=[], result=T.STRING})),
-                            ("ord", FunEntry ({formals=[T.STRING], result=T.INT})),
-                            ("chr", FunEntry ({formals=[T.INT], result=T.STRING})),
-                            ("size", FunEntry ({formals=[T.STRING], result=T.INT})),
-                            ("substring", FunEntry ({formals=[T.STRING, T.INT, T.INT], result=T.STRING})),
-                            ("concat", FunEntry ({formals=[T.STRING, T.STRING], result=T.STRING})),
-                            ("not", FunEntry ({formals=[T.INT], result=T.INT})),
-                            ("exit", FunEntry ({formals=[T.INT], result=T.UNIT}))
+                            ("print", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.STRING], result=T.UNIT})),
+                            ("flush", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[], result=T.UNIT})),
+                            ("getchar", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[], result=T.STRING})),
+                            ("ord", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.STRING], result=T.INT})),
+                            ("chr", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.INT], result=T.STRING})),
+                            ("size", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.STRING], result=T.INT})),
+                            ("substring", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.STRING, T.INT, T.INT], result=T.STRING})),
+                            ("concat", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.STRING, T.STRING], result=T.STRING})),
+                            ("not", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.INT], result=T.INT})),
+                            ("exit", FunEntry ({level=Translate.outermost, label=Temp.newlabel(), formals=[T.INT], result=T.UNIT}))
                         ]
         in
             foldr addtotable S.empty toadd

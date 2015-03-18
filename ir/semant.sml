@@ -40,7 +40,7 @@ struct
       else ()
 
     (* Main recursive type-checking functions *)
-    fun transExp (venv, tenv, exp) = 
+    fun transExp (venv, tenv, exp, level: Translate.level) = 
         let fun
             trexp (A.VarExp(var)) = trvar var
           | trexp (A.NilExp) = {exp=(), ty=T.NIL}
@@ -56,7 +56,7 @@ struct
                     | checkArgs ([], [], pos) = ()
                 in
                   case S.look(venv, func) of
-                      SOME(Env.FunEntry({formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
+                      SOME(Env.FunEntry({level, label, formals, result})) => (checkArgs(formals, args, pos); {exp=(), ty=result})
                     | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=(), ty=T.BOTTOM})
                     | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=(), ty=T.BOTTOM})
                 end
@@ -132,7 +132,7 @@ struct
                        | A.SubscriptVar(var', _, _) => getVarSymbol var'
                   fun canAssign var' =
                     case getVarSymbol var' of 
-                         SOME(Env.VarEntry({ty, read_only})) => 
+                         SOME(Env.VarEntry({access, ty, read_only})) => 
                               if read_only 
                               then Err.error pos "error : index variable erroneously assigned to"
                               else ()
@@ -167,12 +167,13 @@ struct
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
                 let
-                  val venv' = S.enter(venv, var, Env.VarEntry({ty=T.INT, read_only=true}))
+                  val venv' = S.enter(venv, var, Env.VarEntry({access=Translate.allocLocal level true,
+                                                               ty=T.INT, read_only=true}))
                 in
                   checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
                   checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
                   incrementLoopDepth();
-                  checkTypesEqual(#ty (transExp(venv', tenv, body)), T.UNIT, pos, "for body must be no value");
+                  checkTypesEqual(#ty (transExp(venv', tenv, body, level)), T.UNIT, pos, "for body must be no value");
                   decrementLoopDepth();
                   {exp=(), ty=T.UNIT}
                 end
@@ -185,10 +186,10 @@ struct
                 let
                     val curDepth = !loopDepth
                     val _ = setLoopDepth(0)
-                    val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs)
+                    val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs, level)
                     val _ = setLoopDepth(curDepth)
                 in
-                    transExp(venv', tenv', body)
+                    transExp(venv', tenv', body, level)
                 end
           | trexp (A.ArrayExp({typ, size, init, pos})) = 
                 let
@@ -226,8 +227,8 @@ struct
                 end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
-                    SOME(Env.VarEntry({ty, read_only=_})) => {exp=(), ty=ty}
-                  | SOME(Env.FunEntry({formals, result})) => {exp=(), ty=result}
+                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=(), ty=ty}
+                  | SOME(Env.FunEntry({level, label, formals, result})) => {exp=(), ty=result}
                   | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=(), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =
@@ -265,7 +266,7 @@ struct
         in
             trexp exp
         end
-    and transDec(venv, tenv, decs) = 
+    and transDec(venv, tenv, decs, level) = 
         let fun
             trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
                 let
@@ -275,23 +276,24 @@ struct
                     case ty of
                         T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
                       | someTy => someTy
+                  val access' = Translate.allocLocal level (!escape)
                 in
                     (
                     case typ of
                         SOME(symbol, pos) =>
                             (case S.look(tenv, symbol) of
-                                SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init)), pos, "error : mismatched types in vardec");
-                                           {venv=S.enter(venv, name, (Env.VarEntry{ty=actualTy ty, read_only=false})), tenv=tenv})
+                                SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init, level)), pos, "error : mismatched types in vardec");
+                                           {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=actualTy ty, read_only=false})), tenv=tenv})
                               | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                             )
                       | NONE =>
                             let 
-                              val {exp, ty} = transExp(venv, tenv, init)
+                              val {exp, ty} = transExp(venv, tenv, init, level)
                             in 
                               if T.eq(ty, T.NIL)
                               then Err.error pos "error: initializing nil expressions not constrained by record type"
                               else ();
-                              {venv=S.enter(venv, name, (Env.VarEntry{ty=ty, read_only=false})), tenv=tenv}
+                              {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=ty, read_only=false})), tenv=tenv}
                             end
                     )
                 end
@@ -335,13 +337,16 @@ struct
                         )
                     fun transparam {name, escape, typ, pos} = 
                         (case S.look(tenv, typ) of
-                            SOME t => {name=name, ty=t}
-                          | NONE => (Err.error 0 ("Parameter type unrecognized: " ^ S.name typ); {name=name, ty=T.BOTTOM})
+                            SOME t => {name=name, escape=escape, ty=t, pos=pos}
+                          | NONE => (Err.error 0 ("Parameter type unrecognized: " ^ S.name typ);
+                                     {name=name, escape=escape, ty=T.BOTTOM, pos=pos})
                         )
                     fun enterFuncs ({name, params, body, pos, result=SOME(rt, pos')}, venv) = 
-                            S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=transrt rt})
+                            S.enter(venv, name, Env.FunEntry{level=level, label=Temp.newlabel(),
+                                                             formals= map #ty (map transparam params), result=transrt rt})
                       | enterFuncs ({name, params, body, pos, result=NONE}, venv) = 
-                            S.enter(venv, name, Env.FunEntry{formals= map #ty (map transparam params), result=T.UNIT})
+                            S.enter(venv, name, Env.FunEntry{level=level, label=Temp.newlabel(),
+                                                             formals= map #ty (map transparam params), result=T.UNIT})
                     val venv' = foldr enterFuncs venv fundeclist
                     fun checkfundec({name, params, body, pos, result}) = 
                         let 
@@ -351,9 +356,11 @@ struct
                                   | NONE => T.UNIT
                                 )
                             val params' = map transparam params
-                            fun enterparam ({name, ty}, venv) = S.enter(venv, name, Env.VarEntry{ty=ty, read_only=false})
+                            fun enterparam ({name, escape, ty, pos}, venv) = 
+                              S.enter(venv, name, Env.VarEntry{access=Translate.allocLocal level (!escape),
+                                                               ty=ty, read_only=false})
                             val venv'' = foldl enterparam venv' params'
-                            val body' = transExp (venv'', tenv, body)
+                            val body' = transExp (venv'', tenv, body, level)
                         in
                             if not (T.eq((#ty body'), result_ty))
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
@@ -399,7 +406,7 @@ struct
         end
 
     fun transProg (my_exp : A.exp) = 
-        (transExp (Env.base_venv, Env.base_tenv, my_exp); ())
+        (transExp (Env.base_venv, Env.base_tenv, my_exp, Translate.outermost); ())
 end
 
 structure Main = 
