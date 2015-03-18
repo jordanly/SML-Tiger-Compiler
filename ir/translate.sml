@@ -63,5 +63,7 @@ struct
       | unCx (Ex e) = (fn(tlabel, flabel) => Tr.CJUMP(Tr.EQ, Tr.CONST 1, e, tlabel, flabel))
       | unCx (Nx _) = (Err.error 0 "Compiler error"; fn (a, b) => Tree.LABEL(Temp.newlabel()))
 
-    
+    fun unNx (Ex e) = Tr.EXP(e)
+      | unNx (Nx n) = n
+      | unNx (c) = unNx(Ex(unEx(c)))
 end
