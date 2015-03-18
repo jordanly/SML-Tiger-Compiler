@@ -2,6 +2,8 @@ Kevin Do (kkd10), Cody Lieu (cal53), Jordan Ly (jl455)
 ECE 553 Type-Checker
 March 6, 2015
 
+To test, run "sml < a" at the shell.
+
 NOTE: We used a late day on this assignment so that although it was previously
 due on March 6, the late day and spring break extended the due date until 
 March 16.
