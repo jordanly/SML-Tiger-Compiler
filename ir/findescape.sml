@@ -53,8 +53,8 @@ struct
       | _ => ()
     end
 
-	and traverseDecs (env:escEnv, _, []): escEnv = env
-    | traverseDecs (env:escEnv, depth, dec :: decs:Absyn.dec list):escEnv =
+	and traverseDecs (env:escEnv, _, []:Absyn.dec list): escEnv = env
+    | traverseDecs (env:escEnv, depth:depth, dec :: decs:Absyn.dec list):escEnv =
       let
         fun extendEnv ({name, escape, typ, pos}, env) =
           Symbol.enter (env, name, (depth + 1, escape))
