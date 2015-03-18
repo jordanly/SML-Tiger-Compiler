@@ -25,7 +25,12 @@ struct
       {parent=parent, frame=F.newFrame {name=name, formals=formals'}}
     end
 
-	fun formals {parent=_, frame=frame'} = F.formals frame' 
+	fun formals {parent=parent', frame=frame'} = 
+    let
+      fun addLevel(f, l) = ({parent=parent', frame=frame'}, f)::l
+    in
+      foldl addLevel [] (F.formals frame')
+    end
 	fun allocLocal {parent=parent', frame=frame'} escape' = 
       ({parent=parent', frame=frame'}, F.allocLocal frame' escape')
 end
