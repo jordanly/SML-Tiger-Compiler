@@ -40,6 +40,11 @@ struct
 	    	foldl addLevel [] (F.formals frame')
 	    end
 
+    fun printLevel level' =
+      case level' of
+           TOPLEVEL => print "Current level = TOPLEVEL\n"
+         | NONTOP({uniq=uniq', parent=parent', frame=frame'}) => print ("Level is NONTOP: " ^ Symbol.name (F.name frame') ^ "\n")
+
 	fun allocLocal level' escape' = 
       case level' of
            NONTOP({uniq=uniq', parent=parent', frame=frame'}) => (NONTOP({uniq=uniq', parent=parent', frame=frame'}), F.allocLocal frame' escape')
