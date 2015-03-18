@@ -10,14 +10,22 @@ sig
 	val allocLocal : level -> bool -> access
 end
 
+structure F = MipsFrame
 structure Translate =
 struct
-	type exp = unit (* TODO *)
-	type level = int (* TODO *)
-	type access = int (* TODO *)
+	type exp = unit (* TODO i think this is more ch7 stuff *)
+	datatype level = level of {parent: level, frame: F.frame}
+	type access = level * F.access
 
-	val outermost = 0 (* TODO *)
-	fun newLevel {parent, name, formals} = 0 (* TODO *)
-	fun formals _ = [] (* TODO *)
-	fun allocLocal _ _ = 0 (* TODO *)
+	val outermost = {parent=nil, frame=nil}
+	fun newLevel {parent, name, formals} = 
+    let
+      val formals'= true::formals (* Add static link *)
+    in
+      {parent=parent, frame=F.newFrame {name=name, formals=formals'}}
+    end
+
+	fun formals {parent=_, frame=frame'} = F.formals frame' 
+	fun allocLocal {parent=parent', frame=frame'} escape' = 
+      ({parent=parent', frame=frame'}, F.allocLocal frame' escape')
 end
