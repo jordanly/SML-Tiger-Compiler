@@ -58,6 +58,10 @@ struct
       | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0)
 
     fun unCx (Cx c) = c
+      | unCx (Ex (Tr.CONST 0)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(flabel), [flabel]))
+      | unCx (Ex (Tr.CONST 1)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(tlabel), [tlabel]))
       | unCx (Ex e) = (fn(tlabel, flabel) => Tr.CJUMP(Tr.EQ, Tr.CONST 1, e, tlabel, flabel))
       | unCx (Nx _) = (Err.error 0 "Compiler error"; fn (a, b) => Tree.LABEL(Temp.newlabel()))
+
+    
 end
