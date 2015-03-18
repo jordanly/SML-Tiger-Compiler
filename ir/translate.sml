@@ -1,5 +1,4 @@
 structure F = MipsFrame
-structure Tr = Tree
 
 signature TRANSLATE = 
 sig
@@ -11,6 +10,8 @@ sig
 	val newLevel : {parent: level, name: Temp.label, formals: bool list} -> level
 	val formals : level -> access list
 	val allocLocal : level -> bool -> access
+
+	val simpleVar : access * level -> exp
 end
 
 structure Translate =
@@ -68,4 +69,7 @@ struct
     fun unNx (Ex e) = Tr.EXP(e)
       | unNx (Nx n) = n
       | unNx (c) = unNx(Ex(unEx(c)))
+
+    (* Only handles calllevel = funlevel right now; doesn't calculate static links *)
+    fun simpleVar ((funlevel, fraccess), calllevel) = F.exp fraccess (Tr.TEMP(F.FP))
 end
