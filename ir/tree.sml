@@ -3,11 +3,11 @@ sig
     type label = Temp.label
     type size
 
-    datatype stm = SEQ of stm * stm
+    datatype stm = SEQ of stm list
         | LABEL of label
         | JUMP of exp * label list
         | CJUMP of relop * exp * exp * label * label
-        | MOVE of exp * exp
+        | MOVE of loc * exp
         | EXP of exp
 
     and exp = BINOP of binop * exp * exp
@@ -17,6 +17,9 @@ sig
         | NAME of label
         | CONST of int
         | CALL of exp * exp list
+
+    and loc = TEMPLOC of Temp.temp
+        | MEMLOC of exp
 
     and binop = PLUS | MINUS | MUL | DIV 
         | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
@@ -33,11 +36,11 @@ struct
     type label=Temp.label
     type size = int
 
-    datatype stm = SEQ of stm * stm
+    datatype stm = SEQ of stm list
         | LABEL of label
         | JUMP of exp * label list
         | CJUMP of relop * exp * exp * label * label
-        | MOVE of exp * exp
+        | MOVE of loc * exp
         | EXP of exp
 
     and exp = BINOP of binop * exp * exp
@@ -47,6 +50,9 @@ struct
         | NAME of label
         | CONST of int
         | CALL of exp * exp list
+
+    and loc = TEMPLOC of Temp.temp
+        | MEMLOC of exp
 
     and binop = PLUS | MINUS | MUL | DIV 
         | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
