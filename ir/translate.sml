@@ -19,6 +19,7 @@ sig
 	val relopIR : Tr.relop * exp * exp -> exp
 	val ifIR : exp * exp * exp -> exp
 	val assignIR : exp * exp -> exp
+	(* val whileIR : exp * exp -> exp *)
 end
 
 structure Translate =

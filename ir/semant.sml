@@ -42,7 +42,7 @@ struct
       else ()
 
     (* Main recursive type-checking functions *)
-    fun transExp (venv, tenv, exp, level: Translate.level) : expty = 
+    fun transExp (venv, tenv, exp, level: Translate.level, break) : expty = 
         let fun
             trexp (A.VarExp(var)) = trvar var
           | trexp (A.NilExp) = {exp=R.Ex(Tr.TODO), ty=T.NIL}
@@ -170,6 +170,7 @@ struct
                 incrementLoopDepth();
                 checkTypesEqual(#ty (trexp body), T.UNIT, pos, "error : body of while not unit");
                 decrementLoopDepth();
+                (*{exp=R.whileIR(transExp(venv, tenv, test, level, break), transExp(venv, tenv, body, level, BREAKLABEL)), ty=T.UNIT} *)
                 {exp=R.Ex(Tr.TODO), ty=T.UNIT}
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
@@ -180,7 +181,7 @@ struct
                   checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
                   checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
                   incrementLoopDepth();
-                  checkTypesEqual(#ty (transExp(venv', tenv, body, level)), T.UNIT, pos, "for body must be no value");
+                  checkTypesEqual(#ty (transExp(venv', tenv, body, level, break)), T.UNIT, pos, "for body must be no value");
                   decrementLoopDepth();
                   {exp=R.Ex(Tr.TODO), ty=T.UNIT}
                 end
@@ -193,10 +194,10 @@ struct
                 let
                     val curDepth = !loopDepth
                     val _ = setLoopDepth(0)
-                    val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs, level)
+                    val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs, level, break)
                     val _ = setLoopDepth(curDepth)
                 in
-                    transExp(venv', tenv', body, level)
+                    transExp(venv', tenv', body, level, break)
                 end
           | trexp (A.ArrayExp({typ, size, init, pos})) = 
                 let
@@ -273,7 +274,7 @@ struct
         in
             trexp exp
         end
-    and transDec(venv, tenv, decs, level) = 
+    and transDec(venv, tenv, decs, level, break) = 
         let fun
             trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
                 let
@@ -289,13 +290,13 @@ struct
                     case typ of
                         SOME(symbol, pos) =>
                             (case S.look(tenv, symbol) of
-                                SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init, level)), pos, "error : mismatched types in vardec");
+                                SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init, level, break)), pos, "error : mismatched types in vardec");
                                            {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=actualTy ty, read_only=false})), tenv=tenv})
                               | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
                             )
                       | NONE =>
                             let 
-                              val {exp, ty} = transExp(venv, tenv, init, level)
+                              val {exp, ty} = transExp(venv, tenv, init, level, break)
                             in 
                               if T.eq(ty, T.NIL)
                               then Err.error pos "error: initializing nil expressions not constrained by record type"
@@ -380,7 +381,7 @@ struct
                               S.enter(venv, name, Env.VarEntry{access=Translate.allocLocal level (!escape),
                                                                ty=ty, read_only=false})
                             val venv'' = foldl enterparam venv' params'
-                            val body' = transExp (venv'', tenv, body, newLevel)
+                            val body' = transExp (venv'', tenv, body, newLevel, break)
                         in
                             if not (T.eq((#ty body'), result_ty))
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
@@ -426,7 +427,7 @@ struct
         end
 
     fun transProg (my_exp : A.exp) = 
-        #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, Translate.outermost))
+        #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, Translate.outermost, Temp.newlabel()))
 end
 
 structure Main = 
