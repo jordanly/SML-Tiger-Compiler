@@ -146,7 +146,7 @@ struct
                   canAssign var;
                   checkTypesAssignable(#ty (trvar var), #ty (trexp exp), pos, "error : mismatched types in assignment");
 
-                  {exp=R.Ex(Tr.TODO), ty=T.UNIT}
+                  {exp=R.assignIR(#exp (trvar var), #exp (trexp exp)), ty=T.UNIT}
                 end
           | trexp (A.IfExp({test, then', else', pos})) = 
                 (

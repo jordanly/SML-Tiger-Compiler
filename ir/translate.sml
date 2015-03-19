@@ -1,4 +1,5 @@
 structure F = MipsFrame
+structure Err = ErrorMsg
 
 signature TRANSLATE = 
 sig
@@ -11,10 +12,13 @@ sig
 	val formals : level -> access list
 	val allocLocal : level -> bool -> access
 
+	val exp2loc : Tr.exp -> Tr.loc
+
 	val simpleVarIR : access * level -> exp
 	val binopIR : Tr.binop * exp * exp -> exp
 	val relopIR : Tr.relop * exp * exp -> exp
 	val ifIR : exp * exp * exp -> exp
+	val assignIR : exp * exp -> exp
 end
 
 structure Translate =
@@ -100,4 +104,10 @@ struct
     			Tr.LABEL(f), Tr.EXP(e3), Tr.JUMP(Tr.NAME(join), [join])
     		])
     	end
+
+    fun exp2loc (Tr.MEM exp') = Tr.MEMLOC exp'
+      | exp2loc (Tr.TEMP temp') = Tr.TEMPLOC temp'
+      | exp2loc _ = (Err.error 0 "Can't convert exp to loc"; Tr.TEMPLOC(Temp.newtemp()))
+
+    fun assignIR (left, right) = Nx (Tr.MOVE (exp2loc (unEx left), unEx right))
 end

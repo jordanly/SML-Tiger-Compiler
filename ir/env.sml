@@ -1,5 +1,4 @@
 structure A = Absyn
-structure Err = ErrorMsg
 structure T = Types
 structure S = Symbol
 
