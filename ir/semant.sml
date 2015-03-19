@@ -169,10 +169,12 @@ struct
                 checkTypesEqual(#ty (trexp test), T.INT, pos, "test does not evaluate to an int");
                 incrementLoopDepth();
                 checkTypesEqual(#ty (trexp body), T.UNIT, pos, "error : body of while not unit");
-                decrementLoopDepth();
-                let val breakpoint = Temp.newlabel()
-                in {exp=R.whileIR(#exp (transExp(venv, tenv, test, level, break)), #exp (transExp(venv, tenv, body, level, breakpoint)), breakpoint),
+                let 
+                    val breakpoint = Temp.newlabel()
+                    val answer = {exp=R.whileIR(#exp (transExp(venv, tenv, test, level, break)), #exp (transExp(venv, tenv, body, level, breakpoint)), breakpoint),
                     ty=T.UNIT}
+                in
+                    (decrementLoopDepth(); answer)
                 end
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
