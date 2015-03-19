@@ -153,7 +153,7 @@ struct
                           (
                           case (#ty (trexp then'), #ty (trexp elseExp)) of
                                 (T.RECORD(_), NIL) => {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))}
-                              | (NIL, T.RECORD(_)) => {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))}
+                              | (NIL, T.RECORD(_)) => {exp=R.Ex(Tr.TODO), ty=(#ty (trexp elseExp))}
                               | (tyA, tyB) => (checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ");
                                                 {exp=R.ifIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)),
                                                 ty=(#ty (trexp then'))})
