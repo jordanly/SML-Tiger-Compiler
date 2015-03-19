@@ -120,10 +120,13 @@ struct
                 )
           | trexp (A.SeqExp(expList)) = 
                 let
-                  fun helper((seqExp, pos), {exp=_, ty=_}) = (trexp seqExp)
-                  fun checkSequence sequence = foldl helper {exp=R.Ex(Tr.TODO), ty=T.UNIT} sequence
+                    fun helper((seqExp, pos), {stmlist=stmlist', ty=ty'}) =
+                        let val {exp=exp'', ty=ty''} = trexp seqExp
+                        in {stmlist=(R.unNx exp'')::stmlist', ty=ty''}
+                        end
+                    fun checkSequence sequence = foldr helper {stmlist=[], ty=T.UNIT} sequence
                 in
-                  checkSequence expList
+                    {exp=R.Nx(Tr.SEQ(#stmlist (checkSequence expList))), ty= (#ty (checkSequence expList))}
                 end
           | trexp (A.AssignExp({var, exp, pos})) = 
                 let
