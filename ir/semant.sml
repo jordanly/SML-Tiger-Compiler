@@ -188,7 +188,7 @@ struct
                     incrementLoopDepth();
                     checkTypesEqual(#ty (transExp(venv', tenv, body, level, break)), T.UNIT, pos, "for body must be no value");
                     decrementLoopDepth();
-                    case S.look(venv, var) of
+                    case S.look(venv', var) of
                         SOME x =>
                             (case x of
                                 Env.VarEntry{access, ty, read_only} => {exp=R.forIR(R.simpleVarIR(access, level),
