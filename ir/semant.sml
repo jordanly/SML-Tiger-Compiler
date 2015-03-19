@@ -45,7 +45,7 @@ struct
     fun transExp (venv, tenv, exp, level: Translate.level, break) : expty = 
         let fun
             trexp (A.VarExp(var)) = trvar var
-          | trexp (A.NilExp) = {exp=R.Ex(Tr.TODO), ty=T.NIL}
+          | trexp (A.NilExp) = {exp=R.NIL, ty=T.NIL}
           | trexp (A.IntExp(intvalue)) = {exp=R.Ex(Tr.CONST intvalue), ty=T.INT}
           | trexp (A.StringExp(stringvalue, pos)) = {exp=R.Ex(Tr.TODO), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 

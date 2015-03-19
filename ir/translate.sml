@@ -10,6 +10,7 @@ sig
     val newLevel : {parent: level, name: Temp.label, formals: bool list} -> level
     val formals : level -> access list
     val allocLocal : level -> bool -> access
+    val NIL : exp
 
     val exp2loc : Tr.exp -> Tr.loc
 
@@ -35,6 +36,7 @@ struct
       | Cx of Temp.label * Temp.label -> Tree.stm
 
     val outermost = TOPLEVEL
+    val NIL = Ex(Tr.CONST 0)
     fun newLevel {parent, name, formals} = 
         let
             val formals'= true::formals (* Add static link *)
