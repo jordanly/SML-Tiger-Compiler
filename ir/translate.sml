@@ -46,9 +46,11 @@ struct
          | NONTOP({uniq=uniq', parent=parent', frame=frame'}) => print ("Level is NONTOP: " ^ Symbol.name (F.name frame') ^ "\n")
 
 	fun allocLocal level' escape' = 
+      (printLevel level';
       case level' of
            NONTOP({uniq=uniq', parent=parent', frame=frame'}) => (NONTOP({uniq=uniq', parent=parent', frame=frame'}), F.allocLocal frame' escape')
          | TOPLEVEL => (outermost, F.allocLocal (F.newFrame {name=Temp.newlabel(), formals=[]}) escape') (* TODO error? *)
+      )
 
     fun unEx (Ex e) = e 
       | unEx (Cx genstm) = 

@@ -341,15 +341,28 @@ struct
                           | NONE => (Err.error 0 ("Parameter type unrecognized: " ^ S.name typ);
                                      {name=name, escape=escape, ty=T.BOTTOM, pos=pos})
                         )
-                    fun enterFuncs ({name, params, body, pos, result=SOME(rt, pos')}, venv) = 
-                            S.enter(venv, name, Env.FunEntry{level=level, label=Temp.newlabel(),
-                                                             formals= map #ty (map transparam params), result=transrt rt})
-                      | enterFuncs ({name, params, body, pos, result=NONE}, venv) = 
-                            S.enter(venv, name, Env.FunEntry{level=level, label=Temp.newlabel(),
-                                                             formals= map #ty (map transparam params), result=T.UNIT})
+                    fun enterFuncs (func, venv) = 
+                        let
+                          val newlabel = Temp.newlabel()
+                          fun getEscape {name=name', escape=escape', typ=typ', pos=pos'} = !escape'
+                          fun genEscapeList params' = map getEscape params'
+                        in
+                          case func of 
+                              {name, params, body, pos, result=SOME(rt, pos')} =>
+                                    S.enter(venv, name, Env.FunEntry{level=Translate.newLevel {parent=level, name=newlabel, formals=genEscapeList params},
+                                                                     label=newlabel, formals= map #ty (map transparam params), result=transrt rt})
+                            | {name, params, body, pos, result=NONE} =>
+                                    S.enter(venv, name, Env.FunEntry{level=Translate.newLevel {parent=level, name=newlabel, formals=genEscapeList params},
+                                                                     label=newlabel, formals= map #ty (map transparam params), result=T.UNIT})
+                        end
                     val venv' = foldr enterFuncs venv fundeclist
                     fun checkfundec({name, params, body, pos, result}) = 
                         let 
+                            val newLevel = 
+                                (case S.look(venv', name) of
+                                     SOME(Env.FunEntry({level=level', label=_, formals=_, result=_})) => level'
+                                   | _ => Translate.newLevel {parent=Translate.outermost, name=Temp.newlabel(), formals=[]}
+                                   )
                             val result_ty = 
                                 (case result of
                                     SOME(rt, pos') => transrt rt
@@ -360,7 +373,7 @@ struct
                               S.enter(venv, name, Env.VarEntry{access=Translate.allocLocal level (!escape),
                                                                ty=ty, read_only=false})
                             val venv'' = foldl enterparam venv' params'
-                            val body' = transExp (venv'', tenv, body, level)
+                            val body' = transExp (venv'', tenv, body, newLevel)
                         in
                             if not (T.eq((#ty body'), result_ty))
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
