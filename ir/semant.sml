@@ -122,9 +122,9 @@ struct
                 let
                     fun helper((seqExp, pos), {stmlist=stmlist', ty=ty'}) =
                         let val {exp=exp'', ty=ty''} = trexp seqExp
-                        in {stmlist=(R.unNx exp'')::stmlist', ty=ty''}
+                        in {stmlist=stmlist'@[(R.unNx exp'')], ty=ty''}
                         end
-                    fun checkSequence sequence = foldr helper {stmlist=[], ty=T.UNIT} sequence
+                    fun checkSequence sequence = foldl helper {stmlist=[], ty=T.UNIT} sequence
                 in
                     {exp=R.Nx(Tr.SEQ(#stmlist (checkSequence expList))), ty= (#ty (checkSequence expList))}
                 end
