@@ -107,6 +107,7 @@ struct
 
     fun exp2loc (Tr.MEM exp') = Tr.MEMLOC exp'
       | exp2loc (Tr.TEMP temp') = Tr.TEMPLOC temp'
+      | exp2loc Tr.TODO = (Err.error 0 "todo"; Tr.TEMPLOC(Temp.newtemp()))
       | exp2loc _ = (Err.error 0 "Can't convert exp to loc"; Tr.TEMPLOC(Temp.newtemp()))
 
     fun assignIR (left, right) = Nx (Tr.MOVE (exp2loc (unEx left), unEx right))
