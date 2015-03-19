@@ -190,7 +190,7 @@ struct
           | trexp (A.BreakExp(pos)) =
                 ( 
                 checkInLoop(pos, "incorrect break");
-                {exp=R.Ex(Tr.TODO), ty=T.UNIT}
+                {exp=R.breakIR(break), ty=T.UNIT}
                 )
           | trexp (A.LetExp({decs, body, pos})) = 
                 let
