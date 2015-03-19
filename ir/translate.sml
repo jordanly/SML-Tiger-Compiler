@@ -1,5 +1,4 @@
 structure F = MipsFrame
-structure Err = ErrorMsg
 
 signature TRANSLATE = 
 sig
@@ -20,7 +19,8 @@ sig
     val ifIR : exp * exp * exp -> exp
     val assignIR : exp * exp -> exp
     val whileIR : exp * exp * Temp.label -> exp
-  val breakIR : Temp.label -> exp
+    val breakIR : Temp.label -> exp
+    val forIR : access * bool ref * exp * exp * exp -> exp
 end
 
 structure Translate =
@@ -78,14 +78,14 @@ struct
       | unCx (Ex (Tr.CONST 0)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(flabel), [flabel]))
       | unCx (Ex (Tr.CONST 1)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(tlabel), [tlabel]))
       | unCx (Ex e) = (fn(tlabel, flabel) => Tr.CJUMP(Tr.EQ, Tr.CONST 1, e, tlabel, flabel))
-      | unCx (Nx _) = (ErrorMsg.error 0 "Compiler error"; fn (a, b) => Tree.LABEL(Temp.newlabel()))
+      | unCx (Nx _) = (ErrorMsg.error 0 "Compiler error: unCx an Nx"; fn (a, b) => Tree.LABEL(Temp.newlabel()))
 
     fun unNx (Ex e) = Tr.EXP(e)
       | unNx (Nx n) = n
       | unNx (c) = unNx(Ex(unEx(c)))
 
-    (* Only handles calllevel = funlevel right now; doesn't calculate static links *)
-    fun simpleVar ((funlevel, fraccess), calllevel) = Ex(F.exp fraccess (Tr.TEMP(F.FP)))
+    (* TODO Only handles calllevel = funlevel right now; doesn't calculate static links *)
+    fun simpleVarIR ((funlevel, fraccess), calllevel) = Ex(F.exp (fraccess, Tr.TEMP F.FP))
 
     fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
@@ -130,4 +130,24 @@ struct
         end
 
     fun breakIR breaklabel = Nx(Tr.JUMP (Tr.NAME breaklabel, [breaklabel]))
+
+    fun forIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel) = 
+        let
+            val var = unEx(varEx)
+            val lo = unEx(loEx)
+            val hi = unEx(hiEx)
+            val body = unNx(bodyNx)
+            val bodylabel = Temp.newlabel()
+            val updatelabel = Temp.newlabel()
+        in
+            Nx(Tr.SEQ[Tr.MOVE(exp2loc var, lo),
+                        Tr.CJUMP(Tr.LE, var, hi, bodylabel, breaklabel),
+                        Tr.LABEL(bodylabel),
+                        body,
+                        Tr.CJUMP(Tr.LT, var, hi, updatelabel, breaklabel),
+                        Tr.LABEL(updatelabel),
+                        Tr.MOVE(exp2loc var, Tr.BINOP(Tr.PLUS, var, Tr.CONST 1)),
+                        Tr.JUMP(Tr.NAME(bodylabel), [bodylabel]),
+                        Tr.LABEL(breaklabel)])
+        end
 end

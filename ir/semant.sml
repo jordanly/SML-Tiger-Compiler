@@ -179,15 +179,28 @@ struct
                 )
           | trexp (A.ForExp({var, escape, lo, hi, body, pos})) = 
                 let
-                  val venv' = S.enter(venv, var, Env.VarEntry({access=Translate.allocLocal level true,
+                    val venv' = S.enter(venv, var, Env.VarEntry({access=Translate.allocLocal level true,
                                                                ty=T.INT, read_only=true}))
+                    val breakpoint = Temp.newlabel()
                 in
-                  checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
-                  checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
-                  incrementLoopDepth();
-                  checkTypesEqual(#ty (transExp(venv', tenv, body, level, break)), T.UNIT, pos, "for body must be no value");
-                  decrementLoopDepth();
-                  {exp=R.Ex(Tr.TODO), ty=T.UNIT}
+                    checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
+                    checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
+                    incrementLoopDepth();
+                    checkTypesEqual(#ty (transExp(venv', tenv, body, level, break)), T.UNIT, pos, "for body must be no value");
+                    decrementLoopDepth();
+                    case S.look(venv, var) of
+                        SOME x =>
+                            (case x of
+                                Env.VarEntry{access, ty, read_only} => {exp=R.forIR(R.simpleVarIR(access, level),
+                                                                                    escape,
+                                                                                    #exp (trexp lo),
+                                                                                    #exp (trexp hi),
+                                                                                    #exp (transExp(venv', tenv, body, level, breakpoint)),
+                                                                                    breakpoint),
+                                                                    ty=T.UNIT}
+                              | _ => (Err.error 0 "Compiler bug: ForExp var isn't VarEntry"; {exp=R.Ex(Tr.TODO), ty=T.UNIT})
+                            )
+                      | _ => (Err.error 0 "couldnt find forexp var"; {exp=R.Ex(Tr.TODO), ty=T.UNIT})
                 end
           | trexp (A.BreakExp(pos)) =
                 ( 
@@ -239,13 +252,13 @@ struct
                 end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
-                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.Ex(Tr.TODO), ty=ty}
+                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.simpleVarIR(access, level), ty=ty}
                   | SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}
                   | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =
                  (case trvar v of
-                    {exp=R.Ex(Tr.TODO), ty=T.RECORD(recGen, unique)} => 
+                    {exp=_, ty=T.RECORD(recGen, unique)} => 
                     let
                       val fields = recGen()
                       fun getFieldType ((fSymbol, fTy)::l, id, pos) = 

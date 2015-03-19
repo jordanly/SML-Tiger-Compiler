@@ -1,4 +1,5 @@
 structure Tr = Tree
+structure Err = ErrorMsg
 
 structure MipsFrame : FRAME = 
 struct
@@ -39,7 +40,7 @@ struct
               | false => InReg(Temp.newtemp())
         end
 
-    fun exp fraccess frameaddr = 
+    fun exp (fraccess, frameaddr) = 
         case fraccess of
             InFrame offset => Tr.MEM(Tr.BINOP(Tr.PLUS, frameaddr, Tr.CONST offset))
           | InReg temp => Tr.TEMP(temp)
