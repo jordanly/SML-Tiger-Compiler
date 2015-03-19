@@ -77,17 +77,23 @@ struct
                                    checkInt(trexp right, pos);
                                    {exp=R.Ex(Tr.BINOP(Tr.DIV, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)))), ty=T.INT})
                   | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                               {exp=R.Ex(Tr.TODO), ty=T.INT})
+                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.EQ, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
+                               ty=T.INT})
                   | A.NeqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                                {exp=R.Ex(Tr.TODO), ty=T.INT})
+                                {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.NE, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
+                                ty=T.INT})
                   | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Ex(Tr.TODO), ty=T.INT})
+                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.LT, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
+                               ty=T.INT})
                   | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Ex(Tr.TODO), ty=T.INT})
+                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.LE, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
+                               ty=T.INT})
                   | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Ex(Tr.TODO), ty=T.INT})
+                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.GT, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
+                               ty=T.INT})
                   | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Ex(Tr.TODO), ty=T.INT})
+                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.GE, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
+                               ty=T.INT})
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = 
                 (case S.look(tenv, typ) of
