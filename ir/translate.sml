@@ -19,7 +19,7 @@ sig
 	val relopIR : Tr.relop * exp * exp -> exp
 	val ifIR : exp * exp * exp -> exp
 	val assignIR : exp * exp -> exp
-	(* val whileIR : exp * exp -> exp *)
+	val whileIR : exp * exp * Temp.label -> exp
 end
 
 structure Translate =
@@ -112,4 +112,19 @@ struct
       | exp2loc _ = (Err.error 0 "Can't convert exp to loc"; Tr.TEMPLOC(Temp.newtemp()))
 
     fun assignIR (left, right) = Nx (Tr.MOVE (exp2loc (unEx left), unEx right))
+
+    fun whileIR (test, body, breaklabel) =
+    	let
+    		val testlabel = Temp.newlabel()
+    		val bodylabel = Temp.newlabel()
+    		val test = unCx test
+    		val body = unNx body
+    	in
+    		Nx(Tr.SEQ[Tr.LABEL testlabel,
+    				  test (bodylabel, breaklabel),
+    				  Tr.LABEL(bodylabel),
+    				  body,
+    				  Tr.JUMP (Tr.NAME testlabel, [testlabel]),
+    				  Tr.LABEL breaklabel])
+   		end
 end
