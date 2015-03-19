@@ -66,34 +66,28 @@ struct
                 (case oper of
                     A.PlusOp => (checkInt(trexp left, pos);
                                  checkInt(trexp right, pos);
-                                 {exp=R.Ex(Tr.BINOP(Tr.PLUS, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)))), ty=T.INT})
+                                 {exp=R.binopIR(Tr.PLUS, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.MinusOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
-                                  {exp=R.Ex(Tr.BINOP(Tr.MINUS, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)))), ty=T.INT})
+                                  {exp=R.binopIR(Tr.MINUS, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.TimesOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
-                                  {exp=R.Ex(Tr.BINOP(Tr.MUL, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)))), ty=T.INT})
+                                  {exp=R.binopIR(Tr.MUL, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.DivideOp => (checkInt(trexp left, pos); 
                                    checkInt(trexp right, pos);
-                                   {exp=R.Ex(Tr.BINOP(Tr.DIV, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)))), ty=T.INT})
+                                   {exp=R.binopIR(Tr.DIV, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.EQ, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
-                               ty=T.INT})
+                               {exp=R.relopIR(Tr.EQ, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.NeqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                                {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.NE, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
-                                ty=T.INT})
+                                {exp=R.relopIR(Tr.NE, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.LT, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
-                               ty=T.INT})
+                               {exp=R.relopIR(Tr.LT, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.LE, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
-                               ty=T.INT})
+                               {exp=R.relopIR(Tr.LE, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.GT, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
-                               ty=T.INT})
+                               {exp=R.relopIR(Tr.GT, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                   | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.Cx(fn (t, f) => Tr.CJUMP(Tr.GE, R.unEx(#exp (trexp left)), R.unEx(#exp (trexp right)), t, f)),
-                               ty=T.INT})
+                               {exp=R.relopIR(Tr.GE, #exp (trexp left), #exp (trexp left)), ty=T.INT})
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = 
                 (case S.look(tenv, typ) of
@@ -158,12 +152,14 @@ struct
                       SOME(elseExp) => 
                           (
                           case (#ty (trexp then'), #ty (trexp elseExp)) of
-                                (T.RECORD(_), NIL) => ()
-                              | (NIL, T.RECORD(_)) => ()
-                              | (tyA, tyB) => checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ")
+                                (T.RECORD(_), NIL) => {exp=R.Ex(Tr.TODO), ty=T.UNIT}
+                              | (NIL, T.RECORD(_)) => {exp=R.Ex(Tr.TODO), ty=T.UNIT}
+                              | (tyA, tyB) => (checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ");
+                                                {exp=R.ifIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)),
+                                                ty=(#ty (trexp then'))})
                           )
-                    | NONE => checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "error : if-then returns non unit");
-                {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))}
+                    | NONE => (checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "error : if-then returns non unit");
+                                {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))})
                 )
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
@@ -235,7 +231,7 @@ struct
                 end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
-                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.Ex(Tr.TODO), ty=ty}
+                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.simpleVar(access, () (* TODO *)), ty=ty}
                   | SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}
                   | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
                 )

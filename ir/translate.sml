@@ -11,7 +11,10 @@ sig
 	val formals : level -> access list
 	val allocLocal : level -> bool -> access
 
-	val simpleVar : access * level -> exp
+	val simpleVarIR : access * level -> exp
+	val binopIR : Tr.binop * exp * exp -> exp
+	val relopIR : Tr.relop * exp * exp -> exp
+	val ifIR : exp * exp * exp -> exp
 end
 
 structure Translate =
@@ -76,5 +79,25 @@ struct
       | unNx (c) = unNx(Ex(unEx(c)))
 
     (* Only handles calllevel = funlevel right now; doesn't calculate static links *)
-    fun simpleVar ((funlevel, fraccess), calllevel) = F.exp fraccess (Tr.TEMP(F.FP))
+    fun simpleVar ((funlevel, fraccess), calllevel) = Ex(F.exp fraccess (Tr.TEMP(F.FP)))
+
+    fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
+
+    fun relopIR (relop, left, right) = Cx(fn (t, f) => Tr.CJUMP(relop, unEx(left), unEx(right), t, f))
+
+    fun ifIR (test, then', else') =
+    	let
+    		val genstm = unCx(test)
+    		val e2 = unEx(then')
+    		val e3 = unEx(else')
+    		val t = Temp.newlabel()
+    		val f = Temp.newlabel()
+    		val join = Temp.newlabel()
+    	in
+    		Nx(Tr.SEQ [
+    			genstm(t, f),
+    			Tr.LABEL(t), Tr.EXP(e2), Tr.JUMP(Tr.NAME(join), [join]),
+    			Tr.LABEL(f), Tr.EXP(e3), Tr.JUMP(Tr.NAME(join), [join])
+    		])
+    	end
 end
