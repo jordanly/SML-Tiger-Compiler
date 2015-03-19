@@ -152,8 +152,8 @@ struct
                       SOME(elseExp) => 
                           (
                           case (#ty (trexp then'), #ty (trexp elseExp)) of
-                                (T.RECORD(_), NIL) => {exp=R.Ex(Tr.TODO), ty=T.UNIT}
-                              | (NIL, T.RECORD(_)) => {exp=R.Ex(Tr.TODO), ty=T.UNIT}
+                                (T.RECORD(_), NIL) => {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))}
+                              | (NIL, T.RECORD(_)) => {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))}
                               | (tyA, tyB) => (checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ");
                                                 {exp=R.ifIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)),
                                                 ty=(#ty (trexp then'))})
@@ -231,7 +231,7 @@ struct
                 end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
-                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.simpleVar(access, level), ty=ty}
+                    SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.Ex(Tr.TODO), ty=ty}
                   | SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}
                   | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
                 )
