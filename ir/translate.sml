@@ -45,7 +45,7 @@ struct
     val NIL = Ex(Tr.CONST 0)
     fun newLevel {parent, name, formals} = 
         let
-            val formals'= true::formals (* TODO Add static link *)
+            val formals'= true::formals
         in
             NONTOP({uniq = ref (), parent=parent, frame=F.newFrame {name=name, formals=formals'}})
         end
@@ -96,7 +96,18 @@ struct
       | unNx (c) = unNx(Ex(unEx(c)))
 
     (* TODO Only handles calllevel = funlevel right now; doesn't calculate static links *)
-    fun simpleVarIR ((funlevel, fraccess), calllevel) = Ex(F.exp (fraccess, Tr.TEMP F.FP))
+    fun simpleVarIR ((declevel, fraccess), uselevel) =
+        let 
+            fun followSLs TOPLEVEL TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
+              | followSLs TOPLEVEL _ bestguess = (Err.error 0 "Following static links failed"; bestguess)
+              | followSLs _ TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
+              | followSLs (declevel as NONTOP{uniq=uniqdec, parent=_, frame=_}) (uselevel as NONTOP{uniq=uniquse, parent=useparent, frame=_}) bestguess =
+                    if uniqdec = uniquse
+                    then bestguess
+                    else followSLs declevel useparent (Tr.MEM bestguess)
+        in 
+            Ex(F.exp (fraccess, followSLs declevel uselevel (Tr.MEM (Tr.TEMP F.FP))))
+        end
 
     fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
