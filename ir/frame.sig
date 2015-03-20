@@ -11,4 +11,6 @@ sig
     val allocLocal : frame -> bool -> access
     val printFrame : frame -> unit
     val printAccess : access -> unit
+
+    val externalCall: string * Tree.exp list -> Tree.exp
 end

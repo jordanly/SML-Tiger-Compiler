@@ -52,4 +52,8 @@ struct
         case fraccess of
             InFrame offset => Tr.MEM(Tr.BINOP(Tr.PLUS, frameaddr, Tr.CONST offset))
           | InReg temp => Tr.TEMP(temp)
+
+    fun externalCall (s, args) =
+      Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
+      
 end
