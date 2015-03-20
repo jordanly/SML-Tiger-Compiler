@@ -15,8 +15,7 @@ sig
     val exp2loc : Tr.exp -> Tr.loc
 
     val simpleVarIR : access * level -> exp
-    val binopIR : Tr.binop * exp * exp -> exp
-    val relopIR : Tr.relop * exp * exp -> exp
+    val intArithIR : Absyn.oper * exp * exp -> exp
     val ifIR : exp * exp * exp -> exp
     val assignIR : exp * exp -> exp
     val whileIR : exp * exp * Temp.label -> exp
@@ -96,6 +95,17 @@ struct
     fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
     fun relopIR (relop, left, right) = Cx(fn (t, f) => Tr.CJUMP(relop, unEx(left), unEx(right), t, f))
+
+    fun intArithIR (Absyn.PlusOp, left, right) = binopIR (Tr.PLUS, left, right)
+      | intArithIR (Absyn.MinusOp, left, right) = binopIR (Tr.MINUS, left, right)
+      | intArithIR (Absyn.TimesOp, left, right) = binopIR (Tr.MUL, left, right)
+      | intArithIR (Absyn.DivideOp, left, right) = binopIR (Tr.DIV, left, right)
+      | intArithIR (Absyn.EqOp, left, right) = relopIR (Tr.EQ, left, right)
+      | intArithIR (Absyn.NeqOp, left, right) = relopIR (Tr.NE, left, right)
+      | intArithIR (Absyn.LtOp, left, right) = relopIR (Tr.LT, left, right)
+      | intArithIR (Absyn.LeOp, left, right) = relopIR (Tr.GT, left, right)
+      | intArithIR (Absyn.GtOp, left, right) = relopIR (Tr.LE, left, right)
+      | intArithIR (Absyn.GeOp, left, right) = relopIR (Tr.GE, left, right)
 
     fun ifIR (test, then', else') =
         let
