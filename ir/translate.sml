@@ -23,6 +23,7 @@ sig
     val forIR : access * bool ref * exp * exp * exp -> exp
     val arrayIR : exp * exp -> exp
     val subscriptIR : exp * exp -> exp
+    val sequencingIR : exp list -> exp
 end
 
 structure Translate =
@@ -182,4 +183,8 @@ struct
                                 Tr.BINOP(Tr.MUL, index, Tr.CONST(F.wordSize)))),
                Tr.MEM(Tr.TEMP(addr))))
         end
+
+    fun sequencingIR [] = Ex (Tr.CONST 0)
+      | sequencingIR [exp] = exp
+      | sequencingIR (head :: l) = Ex (Tr.ESEQ (unNx head, unEx (sequencingIR l)))
 end
