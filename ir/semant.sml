@@ -69,25 +69,25 @@ struct
                                  {exp=R.binopIR(Tr.PLUS, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.MinusOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
-                                  {exp=R.binopIR(Tr.MINUS, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                                  {exp=R.binopIR(Tr.MINUS, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.TimesOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
-                                  {exp=R.binopIR(Tr.MUL, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                                  {exp=R.binopIR(Tr.MUL, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.DivideOp => (checkInt(trexp left, pos); 
                                    checkInt(trexp right, pos);
-                                   {exp=R.binopIR(Tr.DIV, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                                   {exp=R.binopIR(Tr.DIV, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.EQ, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                               {exp=R.relopIR(Tr.EQ, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.NeqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                                {exp=R.relopIR(Tr.NE, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                                {exp=R.relopIR(Tr.NE, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.LT, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                               {exp=R.relopIR(Tr.LT, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.LE, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                               {exp=R.relopIR(Tr.LE, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.GT, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                               {exp=R.relopIR(Tr.GT, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.GE, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                               {exp=R.relopIR(Tr.GE, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = 
                 (case S.look(tenv, typ) of
