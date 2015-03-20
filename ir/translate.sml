@@ -95,7 +95,6 @@ struct
       | unNx (Nx n) = n
       | unNx (c) = unNx(Ex(unEx(c)))
 
-    (* TODO Only handles calllevel = funlevel right now; doesn't calculate static links *)
     fun simpleVarIR ((declevel, fraccess), uselevel) =
         let 
             fun followSLs TOPLEVEL TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
