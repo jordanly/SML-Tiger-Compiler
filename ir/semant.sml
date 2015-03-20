@@ -59,8 +59,8 @@ struct
                 in
                   case S.look(venv, func) of
                       SOME(Env.FunEntry({level, label, formals, result})) => (checkArgs(formals, args, pos); {exp=R.Ex(Tr.TODO), ty=result})
-                    | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
-                    | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
+                    | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
+                    | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of
@@ -111,12 +111,12 @@ struct
                                           | NONE => (Err.error pos ("unknown type in record: " ^ S.name typ); ())
                                 in
                                     if List.length(recFormal) <> List.length(fields)
-                                    then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=R.Ex(Tr.TODO), ty=x})
+                                    then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=R.Ex(Tr.CONST 0), ty=x})
                                     else (foldr iterator () recFormal; {exp=R.Ex(Tr.TODO), ty=x})
                                 end
-                          | _ => (Err.error pos ("error : expected record type, not: " ^ S.name typ); {exp=R.Ex(Tr.TODO), ty=T.NIL})
+                          | _ => (Err.error pos ("error : expected record type, not: " ^ S.name typ); {exp=R.Ex(Tr.CONST 0), ty=T.NIL})
                         )
-                  | NONE => (Err.error pos ("error : invalid record type: " ^ S.name typ); {exp=R.Ex(Tr.TODO), ty=T.NIL})
+                  | NONE => (Err.error pos ("error : invalid record type: " ^ S.name typ); {exp=R.Ex(Tr.CONST 0), ty=T.NIL})
                 )
           | trexp (A.SeqExp(expList)) = 
                 let
@@ -162,7 +162,7 @@ struct
                                                 ty=(#ty (trexp then'))})
                           )
                     | NONE => (checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "error : if-then returns non unit");
-                                {exp=R.Ex(Tr.TODO), ty=(#ty (trexp then'))})
+                                {exp=R.Ex(Tr.CONST 0), ty=(#ty (trexp then'))})
                 )
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
@@ -198,9 +198,9 @@ struct
                                                                                     bodyexp,
                                                                                     breakpoint),
                                                                     ty=T.UNIT}
-                              | _ => (Err.error 0 "Compiler bug: ForExp var isn't VarEntry"; {exp=R.Ex(Tr.TODO), ty=T.UNIT})
+                              | _ => (Err.error 0 "Compiler bug: ForExp var isn't VarEntry"; {exp=R.Ex(Tr.CONST 0), ty=T.UNIT})
                             )
-                      | _ => (Err.error 0 "couldnt find forexp var"; {exp=R.Ex(Tr.TODO), ty=T.UNIT})
+                      | _ => (Err.error 0 "couldnt find forexp var"; {exp=R.Ex(Tr.CONST 0), ty=T.UNIT})
                 end
           | trexp (A.BreakExp(pos)) =
                 ( 
@@ -245,16 +245,16 @@ struct
                               {exp=R.Ex(Tr.TODO), ty=T.ARRAY(ty, unique)}
                             end
                             )
-                          | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
+                          | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                       )
-                    | NONE => (Err.error pos "No such type"; {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
+                    | NONE => (Err.error pos "No such type"; {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                   )
                 end
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.simpleVarIR(access, level), ty=ty}
                   | SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}
-                  | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
+                  | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =
                  (case trvar v of
@@ -272,7 +272,7 @@ struct
                     in
                       {exp=R.Ex(Tr.TODO), ty=getFieldType(fields, id, pos)}
                     end
-                  | {exp=_, ty=_} => (Err.error pos ("error : variable not record"); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
+                  | {exp=_, ty=_} => (Err.error pos ("error : variable not record"); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 )
           | trvar (A.SubscriptVar(v, subExp, pos)) = 
                 let
@@ -285,7 +285,7 @@ struct
                 in
                   (case trvar v of
                       {exp=R.Ex(Tr.TODO), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=R.Ex(Tr.TODO), ty=actualTy arrTy})
-                    | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=R.Ex(Tr.TODO), ty=T.BOTTOM})
+                    | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                   )
                 end
         in
