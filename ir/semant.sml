@@ -182,12 +182,12 @@ struct
                     val venv' = S.enter(venv, var, Env.VarEntry({access=Translate.allocLocal level true,
                                                                ty=T.INT, read_only=true}))
                     val breakpoint = Temp.newlabel()
+                    val _ = checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int")
+                    val _ = checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
+                    val {exp=bodyexp, ty=bodytype} = (incrementLoopDepth(); transExp(venv', tenv, body, level, breakpoint))
+                    val _ = decrementLoopDepth()
+                    val _ = checkTypesEqual(bodytype, T.UNIT, pos, "for body must be no value")
                 in
-                    checkTypesEqual(#ty (trexp lo), T.INT, pos, "error : lo expr is not int");
-                    checkTypesEqual(#ty (trexp hi), T.INT, pos, "error : hi expr is not int");
-                    incrementLoopDepth();
-                    checkTypesEqual(#ty (transExp(venv', tenv, body, level, break)), T.UNIT, pos, "for body must be no value");
-                    decrementLoopDepth();
                     case S.look(venv', var) of
                         SOME x =>
                             (case x of
@@ -195,7 +195,7 @@ struct
                                                                                     escape,
                                                                                     #exp (trexp lo),
                                                                                     #exp (trexp hi),
-                                                                                    #exp (transExp(venv', tenv, body, level, breakpoint)),
+                                                                                    bodyexp,
                                                                                     breakpoint),
                                                                     ty=T.UNIT}
                               | _ => (Err.error 0 "Compiler bug: ForExp var isn't VarEntry"; {exp=R.Ex(Tr.TODO), ty=T.UNIT})
