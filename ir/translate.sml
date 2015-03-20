@@ -22,6 +22,8 @@ sig
     val whileIR : exp * exp * Temp.label -> exp
     val breakIR : Temp.label -> exp
     val forIR : access * bool ref * exp * exp * exp -> exp
+    val arrayIR : exp * exp -> exp
+    val subscriptIR : exp * exp -> exp
 end
 
 structure Translate =
@@ -153,5 +155,21 @@ struct
                         Tr.MOVE(exp2loc var, Tr.BINOP(Tr.PLUS, var, Tr.CONST 1)),
                         Tr.JUMP(Tr.NAME(bodylabel), [bodylabel]),
                         Tr.LABEL(breaklabel)])
+        end
+
+    fun arrayIR (size, init) =
+        Ex(F.externalCall("initArray", [unEx(size), unEx(init)]))
+
+    fun subscriptIR (arrEx, indexEx) =
+        let
+            val addr = Temp.newtemp()
+            val arr = unEx arrEx
+            val index = unEx indexEx
+        in
+            Ex(Tr.ESEQ(
+               Tr.MOVE(Tr.TEMPLOC(addr),
+                       Tr.BINOP(Tr.PLUS, arr,
+                                Tr.BINOP(Tr.MUL, index, Tr.CONST(F.wordSize)))),
+               Tr.MEM(Tr.TEMP(addr))))
         end
 end
