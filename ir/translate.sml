@@ -20,10 +20,10 @@ sig
     val assignIR : exp * exp -> exp
     val whileIR : exp * exp * Temp.label -> exp
     val breakIR : Temp.label -> exp
-    val forIR : access * bool ref * exp * exp * exp -> exp
+    val forIR : exp * bool ref * exp * exp * exp * Temp.label -> exp
     val arrayIR : exp * exp -> exp
     val subscriptIR : exp * exp -> exp
-    val recordIR : exp list -> exp
+    (*val recordIR : exp list -> exp*)
     val fieldIR : exp * int -> exp
     val sequencingIR : exp list -> exp
     val nilIR : unit -> exp
@@ -50,12 +50,13 @@ struct
             NONTOP({uniq = ref (), parent=parent, frame=F.newFrame {name=name, formals=formals'}})
         end
 
-    fun formals {parent=parent', frame=frame'} = 
-        let
-            fun addLevel(f, l) = ({parent=parent', frame=frame'}, f)::l
-        in
-            foldl addLevel [] (F.formals frame')
-        end
+    fun formals TOPLEVEL = []
+      | formals (curlevel as NONTOP{uniq, parent, frame}) = 
+            let
+                fun addLevel (faccess, l) = (curlevel, faccess)::l
+            in
+                foldl addLevel [] (F.formals frame)
+            end
 
     fun printLevel level' =
       case level' of
