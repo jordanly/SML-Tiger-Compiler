@@ -40,6 +40,14 @@ struct
               | false => InReg(Temp.newtemp())
         end
 
+    fun printFrame {name=n, formals=f, numLocals=nl, curOffset=co} =
+        print ("numlocals = " ^ Int.toString(!nl) ^ " curOffset = " ^ Int.toString(!co) ^ "\n")
+
+    fun printAccess fraccess =
+        case fraccess of
+             InFrame offset => print ("inframe " ^ Int.toString(offset) ^ "\n")
+           | _ => print "temp\n"
+
     fun exp (fraccess, frameaddr) = 
         case fraccess of
             InFrame offset => Tr.MEM(Tr.BINOP(Tr.PLUS, frameaddr, Tr.CONST offset))

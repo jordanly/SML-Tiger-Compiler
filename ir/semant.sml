@@ -66,7 +66,7 @@ struct
                 (case oper of
                     A.PlusOp => (checkInt(trexp left, pos);
                                  checkInt(trexp right, pos);
-                                 {exp=R.binopIR(Tr.PLUS, #exp (trexp left), #exp (trexp left)), ty=T.INT})
+                                 {exp=R.binopIR(Tr.PLUS, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.MinusOp => (checkInt(trexp left, pos); 
                                   checkInt(trexp right, pos);
                                   {exp=R.binopIR(Tr.MINUS, #exp (trexp left), #exp (trexp left)), ty=T.INT})
@@ -444,7 +444,12 @@ struct
         end
 
     fun transProg (my_exp : A.exp) = 
-        #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, Translate.outermost, Temp.newlabel()))
+    let
+      val mainlabel = Temp.newlabel()
+      val mainlevel = Translate.newLevel {parent=Translate.outermost, name=mainlabel, formals=[]}
+    in
+        #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, mainlevel, mainlabel))
+    end
 end
 
 structure Main = 

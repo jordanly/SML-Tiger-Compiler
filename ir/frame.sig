@@ -9,4 +9,6 @@ sig
     val name : frame -> Temp.label
     val formals : frame -> access list
     val allocLocal : frame -> bool -> access
+    val printFrame : frame -> unit
+    val printAccess : access -> unit
 end

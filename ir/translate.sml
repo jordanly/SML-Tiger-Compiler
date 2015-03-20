@@ -54,7 +54,9 @@ struct
     fun printLevel level' =
       case level' of
            TOPLEVEL => print "Current level = TOPLEVEL\n"
-         | NONTOP({uniq=uniq', parent=parent', frame=frame'}) => print ("Level is NONTOP: " ^ Symbol.name (F.name frame') ^ "\n")
+         | NONTOP({uniq=uniq', parent=parent', frame=frame'}) => (print ("Level is NONTOP: " ^ Symbol.name (F.name frame') ^ "\n"); F.printFrame frame')
+    
+    fun printAccess (level, fAccess) = F.printAccess fAccess
 
     fun allocLocal level' escape' = 
       case level' of
