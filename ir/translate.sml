@@ -23,7 +23,11 @@ sig
     val forIR : access * bool ref * exp * exp * exp -> exp
     val arrayIR : exp * exp -> exp
     val subscriptIR : exp * exp -> exp
+    val recordIR : exp list -> exp
+    val fieldIR : exp * int -> exp
     val sequencingIR : exp list -> exp
+    val nilIR : unit -> exp
+    val intIR : int -> exp
 end
 
 structure Translate =
@@ -168,8 +172,8 @@ struct
                         Tr.LABEL(breaklabel)])
         end
 
-    fun arrayIR (size, init) =
-        Ex(F.externalCall("initArray", [unEx(size), unEx(init)]))
+    fun arrayIR (sizeEx, initEx) =
+        Ex(F.externalCall("initArray", [unEx(sizeEx), unEx(initEx)]))
 
     fun subscriptIR (arrEx, indexEx) =
         let
@@ -184,7 +188,30 @@ struct
                Tr.MEM(Tr.TEMP(addr))))
         end
 
+    (*fun recordIR (exps) =
+        let
+            val n = Tr.CONST(length exps)
+            val r = Temp.newtemp()
+            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("initRecord", [n]))
+            fun fieldInit (exp, elem) = Tr.MOVE(Tr.MEM(
+                                                    Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem))), 
+                                                    unEx exp)
+            fun instantiateFields ([], n) = [recordInit]
+              | instantiateFields (head :: l, n) = (fieldInit(head, n)) :: (instantiateFields (l, n-1))
+        in
+            Ex (Tr.ESEQ (seq(rev(instantiateFields(exps,(length(exps) - 1)))), Tr.TEMP(r)))
+        end*)
+
+    fun fieldIR (nameEx, elem) =
+        Ex(Tr.MEM(Tr.BINOP(
+                    Tr.PLUS, unEx nameEx, 
+                    Tr.BINOP(Tr.MUL, Tr.CONST(elem), Tr.CONST (F.wordSize)))))
+
     fun sequencingIR [] = Ex (Tr.CONST 0)
       | sequencingIR [exp] = exp
       | sequencingIR (head :: l) = Ex (Tr.ESEQ (unNx head, unEx (sequencingIR l)))
+
+    fun nilIR () = Ex (Tr.CONST 0)
+
+    fun intIR (n) = Ex (Tr.CONST n)
 end
