@@ -45,7 +45,7 @@ struct
     val NIL = Ex(Tr.CONST 0)
     fun newLevel {parent, name, formals} = 
         let
-            val formals'= true::formals (* Add static link *)
+            val formals'= true::formals (* TODO Add static link *)
         in
             NONTOP({uniq = ref (), parent=parent, frame=F.newFrame {name=name, formals=formals'}})
         end
@@ -117,15 +117,16 @@ struct
             val genstm = unCx(test)
             val e2 = unEx(then')
             val e3 = unEx(else')
+            val resulttemp = Temp.newtemp()
             val t = Temp.newlabel()
             val f = Temp.newlabel()
             val join = Temp.newlabel()
         in
-            Nx(Tr.SEQ [
+            Ex(Tr.ESEQ(Tr.SEQ[
                 genstm(t, f),
-                Tr.LABEL(t), Tr.EXP(e2), Tr.JUMP(Tr.NAME(join), [join]),
-                Tr.LABEL(f), Tr.EXP(e3), Tr.JUMP(Tr.NAME(join), [join])
-            ])
+                Tr.LABEL(t), Tr.MOVE(Tr.TEMPLOC(resulttemp), e2), Tr.JUMP(Tr.NAME(join), [join]),
+                Tr.LABEL(f), Tr.MOVE(Tr.TEMPLOC(resulttemp), e3), Tr.JUMP(Tr.NAME(join), [join])
+            ], Tr.TEMP(resulttemp)))
         end
 
     fun exp2loc (Tr.MEM exp') = Tr.MEMLOC exp'
