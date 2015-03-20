@@ -50,17 +50,19 @@ struct
           | trexp (A.StringExp(stringvalue, pos)) = {exp=R.Ex(Tr.TODO), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
                 let
-                  fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
-                                                                            then checkArgs(formalList, argList, pos)
-                                                                            else Err.error pos "error : formals and actuals have different types"
-                    | checkArgs ([], argExp::argList, pos) = Err.error pos "error : formals are fewer then actuals"
-                    | checkArgs (forTy::formalList, [], pos) = Err.error pos "error : formals are more then actuals"
-                    | checkArgs ([], [], pos) = ()
+                    fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
+                                                                              then checkArgs(formalList, argList, pos)
+                                                                              else Err.error pos "error : formals and actuals have different types"
+                      | checkArgs ([], argExp::argList, pos) = Err.error pos "error : formals are fewer then actuals"
+                      | checkArgs (forTy::formalList, [], pos) = Err.error pos "error : formals are more then actuals"
+                      | checkArgs ([], [], pos) = ()
+                    fun makearglist (a, b) = (#exp (trexp a))::b
+                    val argExpList = foldr makearglist [] args
                 in
-                  case S.look(venv, func) of
-                      SOME(Env.FunEntry({level, label, formals, result})) => (checkArgs(formals, args, pos); {exp=R.Ex(Tr.TODO), ty=result})
-                    | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
-                    | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
+                    case S.look(venv, func) of
+                        SOME(Env.FunEntry({level=declevel, label, formals, result})) => (checkArgs(formals, args, pos); {exp=R.callexpIR(declevel, level, label, argExpList), ty=result})
+                      | SOME(_) => (Err.error pos ("symbol not function " ^ S.name func); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
+                      | NONE => (Err.error pos ("no such function " ^ S.name func); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of

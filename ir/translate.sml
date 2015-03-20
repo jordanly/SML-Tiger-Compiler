@@ -95,18 +95,16 @@ struct
       | unNx (Nx n) = n
       | unNx (c) = unNx(Ex(unEx(c)))
 
-    fun simpleVarIR ((declevel, fraccess), uselevel) =
-        let 
-            fun followSLs TOPLEVEL TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
+    fun followSLs TOPLEVEL TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
               | followSLs TOPLEVEL _ bestguess = (Err.error 0 "Following static links failed"; bestguess)
               | followSLs _ TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
               | followSLs (declevel as NONTOP{uniq=uniqdec, parent=_, frame=_}) (uselevel as NONTOP{uniq=uniquse, parent=useparent, frame=_}) bestguess =
                     if uniqdec = uniquse
                     then bestguess
                     else followSLs declevel useparent (Tr.MEM bestguess)
-        in 
-            Ex(F.exp (fraccess, followSLs declevel uselevel (Tr.MEM (Tr.TEMP F.FP))))
-        end
+
+    fun simpleVarIR ((declevel, fraccess), uselevel) =
+        Ex(F.exp (fraccess, followSLs declevel uselevel (Tr.TEMP F.FP)))
 
     fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
@@ -226,4 +224,13 @@ struct
     fun nilIR () = Ex (Tr.CONST 0)
 
     fun intIR (n) = Ex (Tr.CONST n)
+
+    fun callexpIR (TOPLEVEL, calllevel, label, args) = (Err.error 0 "callexp with top level, error" ; Ex (Tr.TEMP F.FP))
+      | callexpIR (declevel as NONTOP{uniq, parent, frame}, calllevel, label, args) =
+        let
+            val sl = followSLs parent calllevel (Tr.TEMP F.FP)
+            val unExedArgs = map unEx args
+        in
+            Ex (Tr.CALL (Tr.NAME label, sl :: unExedArgs))
+        end
 end
