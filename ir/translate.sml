@@ -187,7 +187,7 @@ struct
         end
 
     fun arrayIR (sizeEx, initEx) =
-        Ex(F.externalCall("initArray", [unEx(sizeEx), unEx(initEx)]))
+        Ex(F.externalCall("initArray", [unEx sizeEx, unEx initEx]))
 
     fun subscriptIR (arrEx, indexEx) =
         let

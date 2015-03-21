@@ -244,7 +244,7 @@ struct
                             in
                               checkInt(trexp size, pos);
                               checkTypesEqual(#ty (trexp init), actualTy ty, pos, "error : initializing exp and array type differ");
-                              {exp=R.Ex(Tr.TODO), ty=T.ARRAY(ty, unique)}
+                              {exp=R.arrayIR(#exp (trexp size), #exp (trexp init)), ty=T.ARRAY(ty, unique)}
                             end
                             )
                           | _ => (Err.error pos "Not of ARRAY type in array creation"; {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
@@ -286,7 +286,7 @@ struct
                       | someTy => someTy
                 in
                   (case trvar v of
-                      {exp=R.Ex(Tr.TODO), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=R.Ex(Tr.TODO), ty=actualTy arrTy})
+                      {exp=R.Ex(Tr.TODO), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=R.subscriptIR(#exp (trvar v), #exp (trexp subExp)), ty=actualTy arrTy})
                     | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                   )
                 end
