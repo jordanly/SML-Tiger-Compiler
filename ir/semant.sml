@@ -213,7 +213,7 @@ struct
                 let
                     val curDepth = !loopDepth
                     val _ = setLoopDepth(0)
-                    val {venv=venv', tenv=tenv', exp=exp'} = transDec(venv, tenv, decs, level, break)
+                    val {venv=venv', tenv=tenv', expList=expList'} = transDec(venv, tenv, decs, level, break)
                     val _ = setLoopDepth(curDepth)
                 in
                     transExp(venv', tenv', body, level, break)
@@ -295,7 +295,7 @@ struct
         end
     and transDec(venv, tenv, decs, level, break) = 
         let fun
-            trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos})) =
+            trdec(venv, tenv, A.VarDec({name, escape, typ, init, pos}), expList) =
                 let
                   fun getType(SOME(ty)) = ty
                     | getType(NONE) = T.BOTTOM
@@ -319,8 +319,8 @@ struct
                             (case S.look(tenv, symbol) of
                                 SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init, level, break)), pos, "error : mismatched types in vardec");
                                            {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=actualTy ty, read_only=false})),
-                                            tenv=tenv, exp=createAssignExp()})
-                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv, exp=createAssignExp()})
+                                            tenv=tenv, expList=createAssignExp()::expList})
+                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv, expList=createAssignExp()::expList})
                             )
                       | NONE =>
                             let 
@@ -330,16 +330,16 @@ struct
                               then Err.error pos "error: initializing nil expressions not constrained by record type"
                               else ();
                               {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=ty, read_only=false})),
-                                                                      tenv=tenv, exp=createAssignExp()}
+                                                                      tenv=tenv, expList=createAssignExp()::expList}
                             end
                     )
                 end
-          | trdec(venv, tenv, A.TypeDec(tydeclist)) =
+          | trdec(venv, tenv, A.TypeDec(tydeclist), expList) =
                 let
                   fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
                   val temp_tenv = foldl maketemptydec tenv tydeclist
-                  fun foldtydec({name, ty, pos}, {venv, tenv, exp}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty)), exp=exp}
-                  val new_env = foldl foldtydec {venv=venv, tenv=tenv, exp=R.NIL} tydeclist
+                  fun foldtydec({name, ty, pos}, {venv, tenv, expList}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty)), expList=expList}
+                  val new_env = foldl foldtydec {venv=venv, tenv=tenv, expList=expList} tydeclist
 
                   fun checkIllegalCycle({name, ty, pos}, ()) = 
                   let
@@ -365,7 +365,7 @@ struct
                   foldl checkIllegalCycle () tydeclist;
                   new_env
                 end
-          | trdec(venv, tenv, A.FunctionDec(fundeclist)) =
+          | trdec(venv, tenv, A.FunctionDec(fundeclist), expList) =
                 let 
                     fun transrt rt =
                         (case S.look(tenv, rt) of 
@@ -424,12 +424,11 @@ struct
                 in
                     foldl checkDuplicates [] fundeclist;
                     foldr foldfundec () fundeclist;
-                    {venv=venv', tenv=tenv, exp=R.NIL}
+                    {venv=venv', tenv=tenv, expList=expList}
                 end
-            and folddec(dec, {venv, tenv, exp}) = trdec(venv, tenv, dec)
+            and folddec(dec, {venv, tenv, expList}) = trdec(venv, tenv, dec, expList)
         in
-            foldl folddec {venv=venv, tenv=tenv, exp=R.NIL} decs;
-            {venv=venv, tenv=tenv, exp=R.NIL}
+            foldl folddec {venv=venv, tenv=tenv, expList=[]} decs
         end
     and transTy(tenv, ty) =
         let fun
