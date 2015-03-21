@@ -28,6 +28,10 @@ sig
     val sequencingIR : exp list -> exp
     val nilIR : unit -> exp
     val intIR : int -> exp
+
+    val procEntryExit : {level: level, body: exp} -> unit
+    structure Frame : FRAME
+    val getResult : unit -> Frame.frag list
 end
 
 structure Translate =

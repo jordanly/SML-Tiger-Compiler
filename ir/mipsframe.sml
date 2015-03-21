@@ -6,7 +6,11 @@ struct
     datatype access = InFrame of int | InReg of Temp.temp
     type frame = {name: Temp.label, formals: access list,
                   numLocals: int ref, curOffset: int ref}
+    datatype frag = PROC of {body: Tree.stm, frame: frame}
+                  | STRING of Temp.label * string
+                           
     val FP = Temp.newtemp()
+    val RV = Temp.newtemp() (* TODO? *)
     val wordSize = 4
 
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
@@ -55,5 +59,7 @@ struct
 
     fun externalCall (s, args) =
       Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
+
+    fun procEntryExit1(frame', stm') = Tr.EXP(Tr.CONST 0) (* TODO *)
       
 end
