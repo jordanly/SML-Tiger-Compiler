@@ -213,7 +213,7 @@ struct
                 let
                     val curDepth = !loopDepth
                     val _ = setLoopDepth(0)
-                    val {venv=venv', tenv=tenv'} = transDec(venv, tenv, decs, level, break)
+                    val {venv=venv', tenv=tenv', exp=exp'} = transDec(venv, tenv, decs, level, break)
                     val _ = setLoopDepth(curDepth)
                 in
                     transExp(venv', tenv', body, level, break)
@@ -304,14 +304,23 @@ struct
                         T.NAME(name, tyRef) => actualTy(getType(S.look(tenv, name)))
                       | someTy => someTy
                   val access' = Translate.allocLocal level (!escape)
+                  fun createAssignExp() =
+                      let
+                        (* TODO i think it should only be simplevar in decs? *)
+                        val left = R.simpleVarIR(access', level)
+                        val right = #exp (transExp(venv, tenv, init, level, break))
+                      in
+                        R.assignIR(left, right)
+                      end
                 in
                     (
                     case typ of
                         SOME(symbol, pos) =>
                             (case S.look(tenv, symbol) of
                                 SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init, level, break)), pos, "error : mismatched types in vardec");
-                                           {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=actualTy ty, read_only=false})), tenv=tenv})
-                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv})
+                                           {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=actualTy ty, read_only=false})),
+                                            tenv=tenv, exp=createAssignExp()})
+                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv, exp=createAssignExp()})
                             )
                       | NONE =>
                             let 
@@ -320,7 +329,8 @@ struct
                               if T.eq(ty, T.NIL)
                               then Err.error pos "error: initializing nil expressions not constrained by record type"
                               else ();
-                              {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=ty, read_only=false})), tenv=tenv}
+                              {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=ty, read_only=false})),
+                                                                      tenv=tenv, exp=createAssignExp()}
                             end
                     )
                 end
@@ -328,8 +338,8 @@ struct
                 let
                   fun maketemptydec ({name, ty, pos}, tenv') = S.enter(tenv', name, T.BOTTOM)
                   val temp_tenv = foldl maketemptydec tenv tydeclist
-                  fun foldtydec({name, ty, pos}, {venv, tenv}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty))}
-                  val new_env = foldl foldtydec {venv=venv, tenv=tenv} tydeclist
+                  fun foldtydec({name, ty, pos}, {venv, tenv, exp}) = {venv=venv, tenv=S.enter(tenv, name, transTy(temp_tenv, ty)), exp=exp}
+                  val new_env = foldl foldtydec {venv=venv, tenv=tenv, exp=R.NIL} tydeclist
 
                   fun checkIllegalCycle({name, ty, pos}, ()) = 
                   let
@@ -414,11 +424,12 @@ struct
                 in
                     foldl checkDuplicates [] fundeclist;
                     foldr foldfundec () fundeclist;
-                    {venv=venv', tenv=tenv}
+                    {venv=venv', tenv=tenv, exp=R.NIL}
                 end
-            and folddec(dec, {venv, tenv}) = trdec(venv, tenv, dec)
+            and folddec(dec, {venv, tenv, exp}) = trdec(venv, tenv, dec)
         in
-            foldl folddec {venv=venv, tenv=tenv} decs
+            foldl folddec {venv=venv, tenv=tenv, exp=R.NIL} decs;
+            {venv=venv, tenv=tenv, exp=R.NIL}
         end
     and transTy(tenv, ty) =
         let fun
