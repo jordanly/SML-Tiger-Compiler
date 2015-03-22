@@ -24,7 +24,7 @@ sig
     val forIR : exp * bool ref * exp * exp * exp * Temp.label -> exp
     val arrayIR : exp * exp -> exp
     val subscriptIR : exp * exp -> exp
-    (*val recordIR : exp list -> exp*)
+    val recordIR : exp list -> exp
     val fieldIR : exp * int -> exp
     val sequencingIR : exp list -> exp
     val nilIR : unit -> exp
@@ -194,19 +194,24 @@ struct
                Tr.MEM(Tr.TEMP(addr))))
         end
 
-    (*fun recordIR (exps) =
+    fun recordIR (exps) =
         let
-            val n = Tr.CONST(length exps)
+            val n = length exps
             val r = Temp.newtemp()
-            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("initRecord", [n]))
-            fun fieldInit (exp, elem) = Tr.MOVE(Tr.MEM(
-                                                    Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem))), 
+            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("initRecord", [Tr.CONST n]))
+            fun fieldInit (exp, elem) = Tr.MOVE((Tr.MEMLOC(
+                                                    Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem)))), 
                                                     unEx exp)
-            fun instantiateFields ([], n) = [recordInit]
-              | instantiateFields (head :: l, n) = (fieldInit(head, n)) :: (instantiateFields (l, n-1))
+            fun instantiateFields ([]) = [recordInit]
+              | instantiateFields (head :: l) = (fieldInit(head, n - 1 - length l)) :: (instantiateFields (l))
+            fun convert ([]) = Tr.EXP(Tr.CONST 0)
+              | convert ([s]) = s
+              | convert (f::t) = Tr.SEQ([f, convert(t)])
         in
-            Ex (Tr.ESEQ (seq(rev(instantiateFields(exps,(length(exps) - 1)))), Tr.TEMP(r)))
-        end*)
+            Ex(Tr.ESEQ(
+                convert(instantiateFields(exps)), 
+                Tr.TEMP(r)))
+        end
 
     fun fieldIR (nameEx, elem) =
         Ex(Tr.MEM(Tr.BINOP(
