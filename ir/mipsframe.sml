@@ -59,6 +59,7 @@ struct
             InFrame offset => Tr.MEM(Tr.BINOP(Tr.PLUS, frameaddr, Tr.CONST offset))
           | InReg temp => Tr.TEMP(temp)
 
+    (* TODO account for Tiger vs. C distinctions *)
     fun externalCall (s, args) =
       Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
 

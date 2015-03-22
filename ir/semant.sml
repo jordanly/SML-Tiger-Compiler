@@ -288,7 +288,7 @@ struct
                       | someTy => someTy
                 in
                   (case trvar v of
-                      {exp=R.Ex(Tr.TODO), ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=R.subscriptIR(#exp (trvar v), #exp (trexp subExp)), ty=actualTy arrTy})
+                      {exp=_, ty=T.ARRAY(arrTy, unique)} => (checkInt(trexp subExp, pos); {exp=R.subscriptIR(#exp (trvar v), #exp (trexp subExp)), ty=actualTy arrTy})
                     | {exp=_, ty=_} => (Err.error pos ("requires array"); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                   )
                 end
