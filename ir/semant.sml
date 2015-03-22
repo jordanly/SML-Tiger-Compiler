@@ -257,8 +257,8 @@ struct
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.simpleVarIR(access, level), ty=ty}
-                  | SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}
-                  | NONE => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
+                  (*| SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}*) (* Testing to see if this is unnecessary *)
+                  | _ => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =
                  (case trvar v of
@@ -308,7 +308,6 @@ struct
                   val access' = Translate.allocLocal level (!escape)
                   fun createAssignExp() =
                       let
-                        (* TODO i think it should only be simplevar in decs? *)
                         val left = R.simpleVarIR(access', level)
                         val right = #exp (transExp(venv, tenv, init, level, break))
                       in

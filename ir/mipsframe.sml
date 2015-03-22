@@ -16,10 +16,9 @@ struct
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
     fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
     
-    (* Where to put instruction to copy stack pointer to frame pointer ? *)
+    (* TODO Where to put instruction to copy stack pointer to frame pointer ? *)
     fun newFrame {name, formals} = 
         let
-            (* TODO handle false escapes? *)
             fun allocFormals(offset, [], allocList) = allocList
               | allocFormals(offset, curFormal::l, allocList) = 
                   (

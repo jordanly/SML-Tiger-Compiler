@@ -75,7 +75,7 @@ struct
     fun allocLocal level' escape' = 
       case level' of
            NONTOP({uniq=uniq', parent=parent', frame=frame'}) => (NONTOP({uniq=uniq', parent=parent', frame=frame'}), F.allocLocal frame' escape')
-         | TOPLEVEL => (outermost, F.allocLocal (F.newFrame {name=Temp.newlabel(), formals=[]}) escape') (* TODO error? *)
+         | TOPLEVEL => (Err.error 0 "impossible"; (outermost, F.allocLocal (F.newFrame {name=Temp.newlabel(), formals=[]}) escape'))
 
     fun unEx (Ex e) = e 
       | unEx (Cx genstm) = 
