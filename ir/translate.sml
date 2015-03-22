@@ -228,9 +228,23 @@ struct
 
     fun stringIR(lit) = 
         let
-          val lab = Temp.newlabel()
+          fun checkFragLit(frag) =
+            case frag of 
+                 F.PROC(_) => false
+               | F.STRING(lab', lit') => String.compare(lit', lit) = EQUAL
+          fun genFragLabel() =
+            case List.find checkFragLit (!fragList) of
+                 SOME(F.STRING(lab', lit')) => lab'
+               | NONE => 
+                   let
+                     val lab' = Temp.newlabel()
+                   in
+                      fragList := F.STRING(lab', lit)::(!fragList);
+                      F.STRING(lab', lit)::(!fragList);
+                      lab'
+                   end
+          val lab = genFragLabel()
         in
-          fragList := F.STRING(lab, lit)::(!fragList);
           Ex(Tree.NAME(lab))
         end
 
