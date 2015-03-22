@@ -215,8 +215,10 @@ struct
                     val _ = setLoopDepth(0)
                     val {venv=venv', tenv=tenv', expList=expList'} = transDec(venv, tenv, decs, level, break)
                     val _ = setLoopDepth(curDepth)
+                    val bodyExpty = transExp(venv', tenv', body, level, break)
+                    val newBody = R.concatExpList(expList', #exp bodyExpty)
                 in
-                    transExp(venv', tenv', body, level, break)
+                    {exp=newBody, ty=(#ty bodyExpty)}
                 end
           | trexp (A.ArrayExp({typ, size, init, pos})) = 
                 let

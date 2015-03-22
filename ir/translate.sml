@@ -249,5 +249,14 @@ struct
           fragList := F.PROC({body=treeBody, frame=levelFrame})::(!fragList);
           ()
         end
+        
     fun getResult() = !fragList
+
+    fun concatExpList(expList, body as exp') =
+        let
+          fun createExpListStm(a::l) = unNx(a)::createExpListStm(l)
+            | createExpListStm([]) = []
+        in
+          Ex(Tr.ESEQ(Tr.SEQ(createExpListStm expList), unEx(exp')))
+        end
 end
