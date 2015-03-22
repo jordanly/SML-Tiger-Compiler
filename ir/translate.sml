@@ -33,6 +33,7 @@ sig
 
     val procEntryExit : {level: level, body: exp} -> unit
     val getResult : unit -> F.frag list
+    val resetFragList : unit -> unit
 end
 
 structure Translate =
@@ -246,11 +247,12 @@ struct
               | NONTOP({uniq=_, parent=_, frame=frame'}) => frame'
           val treeBody = unNx body'
         in
-          fragList := F.PROC({body=treeBody, frame=levelFrame})::(!fragList);
-          ()
+          fragList := F.PROC({body=treeBody, frame=levelFrame})::(!fragList)
         end
         
     fun getResult() = !fragList
+
+    fun resetFragList() = fragList := []
 
     fun concatExpList(expList, body as exp') =
         let

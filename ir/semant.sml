@@ -462,8 +462,10 @@ struct
     let
       val mainlabel = Temp.newlabel()
       val mainlevel = Translate.newLevel {parent=Translate.outermost, name=mainlabel, formals=[]}
+      val mainexp = #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, mainlevel, mainlabel))
     in
-        #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, mainlevel, mainlabel))
+      R.procEntryExit {level=mainlevel, body=mainexp};
+      R.getResult()
     end
 end
 

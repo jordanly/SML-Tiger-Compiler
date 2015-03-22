@@ -4,4 +4,12 @@ print "================ AST ==================\n";
 print "============ Type-checking ============\n";
 Main.compile "k1.tig";
 print "================ IR ==================\n";
-Printtree.printtree(TextIO.stdOut, R.unNx (Main.compile "k1.tig"))
+
+let
+    val _ = Translate.resetFragList()
+    val fragList = Main.compile "k1.tig"
+    fun printFrag(MipsFrame.PROC({body=body', frame=frame'})) = (MipsFrame.printFrame frame'; Printtree.printtree(TextIO.stdOut, body'); print "\n")
+      | printFrag(MipsFrame.STRING(label', lit)) = print ("Label: " ^ (Symbol.name label') ^ " with string " ^ lit ^ "\n")
+in
+    app printFrag fragList
+end

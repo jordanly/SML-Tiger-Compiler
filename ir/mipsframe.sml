@@ -45,7 +45,10 @@ struct
         end
 
     fun printFrame {name=n, formals=f, numLocals=nl, curOffset=co} =
+        (
+        print ("FRAME with name = " ^ (Symbol.name n) ^ "\n");
         print ("numlocals = " ^ Int.toString(!nl) ^ " curOffset = " ^ Int.toString(!co) ^ "\n")
+        )
 
     fun printAccess fraccess =
         case fraccess of
