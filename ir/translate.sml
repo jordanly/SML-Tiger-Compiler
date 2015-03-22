@@ -237,6 +237,17 @@ struct
             Ex (Tr.CALL (Tr.NAME label, sl :: unExedArgs))
         end
 
-    fun procEntryExit({level=level', body=body'}) = ()
+    fun procEntryExit({level=level', body=body'}) = 
+        let
+          val levelFrame =
+            case level' of
+                TOPLEVEL => (Err.error 0 "Fundec should not happen in outermost";   
+                             F.newFrame {name=Temp.newlabel(), formals=[]})
+              | NONTOP({uniq=_, parent=_, frame=frame'}) => frame'
+          val treeBody = unNx body'
+        in
+          fragList := F.PROC({body=treeBody, frame=levelFrame})::(!fragList);
+          ()
+        end
     fun getResult() = !fragList
 end

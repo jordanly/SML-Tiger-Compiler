@@ -412,6 +412,7 @@ struct
                             val venv'' = foldl enterparam venv' params'
                             val body' = transExp (venv'', tenv, body, newLevel, break)
                         in
+                            R.procEntryExit {level=newLevel, body=(#exp body')};
                             if not (T.eq((#ty body'), result_ty))
                             then Err.error pos ("Function body type doesn't match return type in function " ^ S.name name)
                             else ()
