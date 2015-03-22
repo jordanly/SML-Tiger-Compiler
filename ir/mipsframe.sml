@@ -13,21 +13,26 @@ struct
     val RV = Temp.newtemp() (* TODO? *)
     val wordSize = 4
 
+    val ARGREGS = 4 (* registers allocated for arguments in mips *)
+
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
     fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
     
     (* TODO Where to put instruction to copy stack pointer to frame pointer ? *)
     fun newFrame {name, formals} = 
         let
-            fun allocFormals(offset, [], allocList) = allocList
-              | allocFormals(offset, curFormal::l, allocList) = 
+            fun allocFormals(offset, [], allocList, numRegs) = allocList
+              | allocFormals(offset, curFormal::l, allocList, numRegs) = 
                   (
                   case curFormal of
-                       true => allocFormals(offset + wordSize, l, (InFrame offset)::allocList)
-                     | false => allocFormals(offset, l, (InReg(Temp.newtemp()))::allocList)
+                       true => allocFormals(offset + wordSize, l, (InFrame offset)::allocList, numRegs)
+                     | false => 
+                         if numRegs < ARGREGS
+                         then allocFormals(offset, l, (InReg(Temp.newtemp()))::allocList, numRegs + 1)
+                         else allocFormals(offset + wordSize, l, (InFrame offset)::allocList, numRegs)
                   )
         in
-            {name=name, formals=allocFormals(0, formals, []),
+            {name=name, formals=allocFormals(0, formals, [], 0),
             numLocals=ref 0, curOffset=ref 0}
         end
 
