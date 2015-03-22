@@ -24,8 +24,8 @@ struct
               | allocFormals(offset, curFormal::l, allocList) = 
                   (
                   case curFormal of
-                       true => (InFrame offset)::allocFormals(offset + wordSize, l, allocList)
-                     | false => (InReg(Temp.newtemp()))::allocFormals(offset, l, allocList)
+                       true => allocFormals(offset + wordSize, l, (InFrame offset)::allocList)
+                     | false => allocFormals(offset, l, (InReg(Temp.newtemp()))::allocList)
                   )
         in
             {name=name, formals=allocFormals(0, formals, []),

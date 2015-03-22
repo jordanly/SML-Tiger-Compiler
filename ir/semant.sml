@@ -408,10 +408,15 @@ struct
                                   | NONE => T.UNIT
                                 )
                             val params' = map transparam params
-                            fun enterparam ({name, escape, ty, pos}, venv) = 
-                              S.enter(venv, name, Env.VarEntry{access=Translate.allocLocal level (!escape),
-                                                               ty=ty, read_only=false})
-                            val venv'' = foldl enterparam venv' params'
+                            val allocatedFormals = R.formals newLevel
+                            (* Hacky workaround since we already alloced formals we want to get
+                            * their access so we use the index as we traverse. Starts at one
+                            * since 0th index is static link by default
+                            *)
+                            fun enterparam ({name, escape, ty, pos}, (venv, curIndex)) = 
+                              (S.enter(venv, name, Env.VarEntry{access=List.nth(allocatedFormals, curIndex),
+                                                               ty=ty, read_only=false}), curIndex + 1)
+                            val venv'' = #1 (foldl enterparam (venv', 1) params')
                             val body' = transExp (venv'', tenv, body, newLevel, break)
                         in
                             R.procEntryExit {level=newLevel, body=(#exp body')};
