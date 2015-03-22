@@ -248,7 +248,7 @@ struct
           Ex(Tree.NAME(lab))
         end
 
-    fun callexpIR (TOPLEVEL, calllevel, label, args) = (Err.error 0 "callexp with top level, error" ; Ex (Tr.TEMP F.FP))
+    fun callexpIR (TOPLEVEL, calllevel, label, args) = Ex (Tr.TEMP F.FP)
       | callexpIR (declevel as NONTOP{uniq, parent, frame}, calllevel, label, args) =
         let
             val sl = followSLs parent calllevel (Tr.TEMP F.FP)
