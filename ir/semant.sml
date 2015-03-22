@@ -114,7 +114,7 @@ struct
                                 in
                                     if List.length(recFormal) <> List.length(fields)
                                     then (Err.error pos ("record list is wrong length: " ^ S.name typ); {exp=R.Ex(Tr.CONST 0), ty=x})
-                                    else (foldr iterator () recFormal; {exp=R.Ex(Tr.TODO), ty=x})
+                                    else (foldr iterator () recFormal; {exp=R.recordIR(map #exp (map trexp (map #2 fields))), ty=x})
                                 end
                           | _ => (Err.error pos ("error : expected record type, not: " ^ S.name typ); {exp=R.Ex(Tr.CONST 0), ty=T.NIL})
                         )
@@ -273,8 +273,10 @@ struct
                                   | NONE => (Err.error pos "type error in record"; T.BOTTOM)
                             else getFieldType(l, id, pos)
                         | getFieldType ([], id, pos) = (Err.error pos "no such field"; T.BOTTOM)
+                      fun getIndex ([], id, cur) = cur
+                        | getIndex (h :: t, id, cur) = if h = id then cur else getIndex(t, id, cur + 1)
                     in
-                      {exp=R.Ex(Tr.TODO), ty=getFieldType(fields, id, pos)}
+                      {exp=R.fieldIR(#exp (trvar v), getIndex(map #1 fields, id, 0)), ty=getFieldType(fields, id, pos)}
                     end
                   | {exp=_, ty=_} => (Err.error pos ("error : variable not record"); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 )
