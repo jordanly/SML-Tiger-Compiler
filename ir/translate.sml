@@ -29,10 +29,10 @@ sig
     val sequencingIR : exp list -> exp
     val nilIR : unit -> exp
     val intIR : int -> exp
+    val stringIR : string -> exp
 
     val procEntryExit : {level: level, body: exp} -> unit
-    structure Frame : FRAME
-    val getResult : unit -> Frame.frag list
+    val getResult : unit -> F.frag list
 end
 
 structure Translate =
@@ -46,6 +46,7 @@ struct
       | Nx of Tree.stm
       | Cx of Temp.label * Temp.label -> Tree.stm
 
+    val fragList = ref [] : F.frag list ref
     val outermost = TOPLEVEL
     val NIL = Ex(Tr.CONST 0)
     fun newLevel {parent, name, formals} = 
@@ -219,6 +220,14 @@ struct
 
     fun intIR (n) = Ex (Tr.CONST n)
 
+    fun stringIR(lit) = 
+        let
+          val lab = Temp.newlabel()
+        in
+          fragList := F.STRING(lab, lit)::(!fragList);
+          Ex(Tree.NAME(lab))
+        end
+
     fun callexpIR (TOPLEVEL, calllevel, label, args) = (Err.error 0 "callexp with top level, error" ; Ex (Tr.TEMP F.FP))
       | callexpIR (declevel as NONTOP{uniq, parent, frame}, calllevel, label, args) =
         let
@@ -227,4 +236,7 @@ struct
         in
             Ex (Tr.CALL (Tr.NAME label, sl :: unExedArgs))
         end
+
+    fun procEntryExit({level=level', body=body'}) = ()
+    fun getResult() = !fragList
 end

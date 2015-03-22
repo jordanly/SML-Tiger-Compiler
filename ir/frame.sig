@@ -4,7 +4,7 @@ sig
     type access
     datatype frag = PROC of {body: Tree.stm, frame: frame}
                   | STRING of Temp.label * string
-    
+            
     val FP : Temp.temp
     val RV : Temp.temp
     val wordSize : int

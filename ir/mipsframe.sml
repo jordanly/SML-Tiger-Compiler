@@ -60,6 +60,6 @@ struct
     fun externalCall (s, args) =
       Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
 
-    fun procEntryExit1(frame', stm') = Tr.EXP(Tr.CONST 0) (* TODO *)
+    fun procEntryExit1(frame', stm') = stm'
       
 end

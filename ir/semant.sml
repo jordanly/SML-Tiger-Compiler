@@ -47,7 +47,7 @@ struct
             trexp (A.VarExp(var)) = trvar var
           | trexp (A.NilExp) = {exp=R.NIL, ty=T.NIL}
           | trexp (A.IntExp(intvalue)) = {exp=R.Ex(Tr.CONST intvalue), ty=T.INT}
-          | trexp (A.StringExp(stringvalue, pos)) = {exp=R.Ex(Tr.TODO), ty=T.STRING}
+          | trexp (A.StringExp(stringvalue, pos)) = {exp=R.stringIR(stringvalue), ty=T.STRING}
           | trexp (A.CallExp({func, args, pos})) = 
                 let
                     fun checkArgs (forTy::formalList, argExp::argList, pos) = if T.eq(forTy, #ty (trexp argExp))
