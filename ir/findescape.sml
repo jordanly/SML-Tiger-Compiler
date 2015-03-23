@@ -22,7 +22,7 @@ struct
           | trexp(A.NilExp) = ()
           | trexp(A.IntExp(_)) = ()
           | trexp(A.StringExp(_)) = ()
-          | trexp(A.CallExp(_)) = ()
+          | trexp(A.CallExp {func, args, pos}) = app trexp args
           | trexp(A.OpExp {left, oper, right, pos}) = (trexp left; trexp right)
           | trexp(A.RecordExp {fields, typ, pos}) = 
               let
