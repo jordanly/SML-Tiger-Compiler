@@ -21,6 +21,7 @@ sig
 
     and loc = TEMPLOC of Temp.temp
         | MEMLOC of exp
+        | ESEQLOC of stm * exp
 
     and binop = PLUS | MINUS | MUL | DIV 
         | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
@@ -55,6 +56,7 @@ struct
 
     and loc = TEMPLOC of Temp.temp
         | MEMLOC of exp
+        | ESEQLOC of stm * exp
 
     and binop = PLUS | MINUS | MUL | DIV 
         | AND | OR | LSHIFT | RSHIFT | ARSHIFT | XOR
