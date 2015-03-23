@@ -1,4 +1,5 @@
 structure F = MipsFrame
+structure T = Types
 
 signature TRANSLATE = 
 sig
@@ -115,7 +116,15 @@ struct
 
     fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
-    fun relopIR (relop, left, right) = Cx(fn (t, f) => Tr.CJUMP(relop, unEx(left), unEx(right), t, f))
+    (* ty mostly for comparing if STRING *)
+    fun relopIR (relop, left, right, ty) = 
+        case (ty,relop) of
+            (T.STRING, Tr.EQ) => Ex(F.externalCall("stringEqual", [unEx left, unEx right]))
+          | (T.STRING, Tr.LE) => Ex(F.externalCall("stringLE", [unEx left, unEx right]))
+          | (T.STRING, Tr.LT) => Ex(F.externalCall("stringLT", [unEx left, unEx right]))
+          | (T.STRING, Tr.GE) => Ex(F.externalCall("stringGE", [unEx left, unEx right]))
+          | (T.STRING, Tr.GT) => Ex(F.externalCall("stringGT", [unEx left, unEx right]))
+          | _        => Cx(fn (t, f) => Tr.CJUMP(relop, unEx(left), unEx(right), t, f))
 
     fun ifIR (test, then', else') =
         let

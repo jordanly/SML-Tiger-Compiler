@@ -1,5 +1,4 @@
 structure A = Absyn
-structure T = Types
 structure S = Symbol
 
 structure Env :> ENV = 

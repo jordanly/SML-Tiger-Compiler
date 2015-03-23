@@ -79,17 +79,35 @@ struct
                                    checkInt(trexp right, pos);
                                    {exp=R.binopIR(Tr.DIV, #exp (trexp left), #exp (trexp right)), ty=T.INT})
                   | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.EQ, #exp (trexp left), #exp (trexp right)), ty=T.INT})
+                                let val {exp=exp', ty=ty'} = trexp left
+                                in {exp=R.relopIR(Tr.EQ, exp', #exp (trexp right), ty'), ty=T.INT}
+                                end
+                              ) 
                   | A.NeqOp => (checkEqualityOp(trexp left, trexp right, pos);
-                                {exp=R.relopIR(Tr.NE, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.LT, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.LE, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.GT, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
-                               {exp=R.relopIR(Tr.GE, #exp (trexp left), #exp (trexp right)), ty=T.INT})
+                                let val {exp=exp', ty=ty'} = trexp left
+                                in {exp=R.relopIR(Tr.NE, exp', #exp (trexp right), ty'), ty=T.INT}
+                                end
+                              ) 
+                  | A.LtOp => (checkEqualityOp(trexp left, trexp right, pos);
+                                let val {exp=exp', ty=ty'} = trexp left
+                                in {exp=R.relopIR(Tr.LT, exp', #exp (trexp right), ty'), ty=T.INT}
+                                end
+                              ) 
+                  | A.LeOp => (checkEqualityOp(trexp left, trexp right, pos);
+                                let val {exp=exp', ty=ty'} = trexp left
+                                in {exp=R.relopIR(Tr.LE, exp', #exp (trexp right), ty'), ty=T.INT}
+                                end
+                              ) 
+                  | A.GtOp => (checkEqualityOp(trexp left, trexp right, pos);
+                                let val {exp=exp', ty=ty'} = trexp left
+                                in {exp=R.relopIR(Tr.GT, exp', #exp (trexp right), ty'), ty=T.INT}
+                                end
+                              ) 
+                  | A.GeOp => (checkEqualityOp(trexp left, trexp right, pos);
+                                let val {exp=exp', ty=ty'} = trexp left
+                                in {exp=R.relopIR(Tr.GE, exp', #exp (trexp right), ty'), ty=T.INT}
+                                end
+                              ) 
                 )
           | trexp (A.RecordExp({fields, typ, pos})) = 
                 (case S.look(tenv, typ) of
