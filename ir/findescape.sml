@@ -81,12 +81,32 @@ struct
       end
   and traverseDecs(env:escEnv, d:depth, s:Absyn.dec list): escEnv = 
       let
-        fun trdec(A.FunctionDec(fundec)) = S.empty (* TODO *)
-          | trdec(A.VarDec {name, escape, typ, init, pos}) = S.empty (* TODO *)
-          | trdec(A.TypeDec(typedec)) = S.empty (* TODO *)
+        (* TODO does mutual recursion matter for this? *)
+        fun trdec(A.FunctionDec(fundecs)) =
+            let
+              fun addParamToEnv({name=name', escape=escape', typ=_, pos=_}, env) =
+                S.enter(env, name', (d + 1, escape'))
+              fun evalFundec {name=_, params=params', result=_, body=body', pos=_} =
+                  let
+                    val env' = foldl addParamToEnv env params'
+                  in
+                    traverseExp(env', d + 1, body')
+                  end
+            in
+              app evalFundec fundecs;
+              env
+            end
+          | trdec(A.VarDec {name, escape, typ, init, pos}) =
+              let
+                val env' = S.enter(env, name, (d, escape))
+              in
+                traverseExp(env', d, init);
+                env'
+              end
+          | trdec(A.TypeDec(typedecs)) = env (* TODO nothing to do here? *)
         and foldDecs (dec, env') = trdec dec
       in
         foldl foldDecs env s
       end
-  fun findEscape(prog: Absyn.exp): unit = () (* TODO *)
+  fun findEscape(prog: Absyn.exp): unit = traverseExp(S.empty, 0, prog)
 end
