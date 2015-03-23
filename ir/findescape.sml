@@ -62,11 +62,14 @@ struct
               )
           | trexp(A.WhileExp {test, body, pos}) = (trexp test; trexp body)
           | trexp(A.ForExp {var, escape, lo, hi, body, pos}) =
-              ( (* TODO how does escape mean here *)
-                (* TODO fix: traverseVar(env, d, var); *)
-                trexp lo;
-                trexp hi;
-                trexp body
+              (
+                let
+                  val env' = S.enter(env, var, (d, escape))
+                in
+                  traverseExp(env', d, lo);
+                  traverseExp(env', d, hi);
+                  traverseExp(env', d, body)
+                end
               )
           | trexp(A.BreakExp pos) = ()
           | trexp(A.LetExp {decs, body, pos}) = 
