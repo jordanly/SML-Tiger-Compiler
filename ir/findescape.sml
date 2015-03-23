@@ -10,9 +10,20 @@ struct
  
   fun traverseVar(env:escEnv, d:depth, s:Absyn.var) : unit =
       let
-        fun trvar(A.SimpleVar(sym,pos)) = () (* TODO *)
-          | trvar(A.FieldVar(var, sym,pos)) = () (* TODO *)
-          | trvar(A.SubscriptVar(var, exp, pos)) = () (* TODO *)
+        fun trvar(A.SimpleVar(sym,pos)) =
+              (
+                case S.look(env, sym) of
+                     SOME(d', escape') => if d' < d
+                                          then escape' := true
+                                          else ()
+                   | _ => ()
+              )
+          | trvar(A.FieldVar(var, sym, pos)) = trvar var
+          | trvar(A.SubscriptVar(var, exp, pos)) =
+              (
+                trvar var;
+                traverseExp(env, d, exp)
+              )
       in
         trvar s
       end
