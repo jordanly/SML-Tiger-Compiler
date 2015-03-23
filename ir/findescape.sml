@@ -78,13 +78,12 @@ struct
               in
                 traverseExp(env', d, body)
               end
-          | trexp(A.ArrayExp {typ, size, init, pos}) = trexp init
+          | trexp(A.ArrayExp {typ, size, init, pos}) = (trexp size; trexp init)
       in
         trexp s
       end
   and traverseDecs(env:escEnv, d:depth, s:Absyn.dec list): escEnv = 
       let
-        (* TODO does mutual recursion matter for this? *)
         fun trdec(A.FunctionDec(fundecs)) =
             let
               fun addParamToEnv({name=name', escape=escape', typ=_, pos=_}, env) =
@@ -106,7 +105,7 @@ struct
                 traverseExp(env', d, init);
                 env'
               end
-          | trdec(A.TypeDec(typedecs)) = env (* TODO nothing to do here? *)
+          | trdec(A.TypeDec(typedecs)) = env
         and foldDecs (dec, env') = trdec dec
       in
         foldl foldDecs env s
