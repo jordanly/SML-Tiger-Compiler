@@ -244,7 +244,7 @@ struct
           fun genFragLabel() =
             case List.find checkFragLit (!fragList) of
                  SOME(F.STRING(lab', lit')) => lab'
-               | NONE => 
+               | _ => 
                    let
                      val lab' = Temp.newlabel()
                    in
