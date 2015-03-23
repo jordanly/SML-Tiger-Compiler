@@ -11,5 +11,6 @@ let
     fun printFrag(MipsFrame.PROC({body=body', frame=frame'})) = (MipsFrame.printFrame frame'; Printtree.printtree(TextIO.stdOut, body'); print "\n")
       | printFrag(MipsFrame.STRING(label', lit)) = print ("Label: " ^ (Symbol.name label') ^ " with string " ^ lit ^ "\n")
 in
-    app printFrag fragList
+    app printFrag fragList;
+    fragList
 end
