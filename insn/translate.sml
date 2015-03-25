@@ -146,7 +146,8 @@ struct
             Ex(Tr.ESEQ(seq[
                 genstm(t, f),
                 Tr.LABEL(t), Tr.MOVE(Tr.TEMPLOC(resulttemp), e2), Tr.JUMP(Tr.NAME(join), [join]),
-                Tr.LABEL(f), Tr.MOVE(Tr.TEMPLOC(resulttemp), e3), Tr.JUMP(Tr.NAME(join), [join])
+                Tr.LABEL(f), Tr.MOVE(Tr.TEMPLOC(resulttemp), e3), Tr.JUMP(Tr.NAME(join), [join]),
+                Tr.LABEL(join)
             ], Tr.TEMP(resulttemp)))
         end
 
