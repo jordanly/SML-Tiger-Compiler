@@ -8,6 +8,7 @@ structure MipsGen : CODEGEN =
 struct
   structure Frame = MipsFrame
   structure A = Assem
+  structure T = Tree
   fun codegen (frame) (stm: Tree.stm) : Assem.instr list =
       let
         val ilist = ref (nil: A.instr list)
@@ -19,9 +20,36 @@ struct
               gen t; t
             end
 
-        fun munchStm() = ()
-        and munchExp() = Temp.newtemp()
+        fun munchStm(T.SEQ(s1, s2)) = (munchStm s1; munchStm s2) (* TODO *)
+          | munchStm(T.EXP e1) =(munchExp e1; ())
+          | munchStm(_) = ()
+        and munchExp(T.CONST i) =
+              result(fn r => emit(
+                     A.OPER {assem="addi `d0, r0, " ^ Int.toString i ^ "\n",
+                             src=[], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.PLUS, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="addi `d0, `s0, " ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.PLUS, T.CONST i, e1)) =
+              result(fn r => emit(
+                     A.OPER {assem="addi `d0, `s0, " ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.PLUS, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="add `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(_) = Temp.newtemp()
       in
+        munchStm stm;
         rev(!ilist)
       end
 end
