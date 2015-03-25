@@ -133,7 +133,21 @@ struct
           | (T.STRING, Tr.GT) => Ex(F.externalCall("stringGT", [unEx left, unEx right]))
           | _        => Cx(fn (t, f) => Tr.CJUMP(relop, unEx(left), unEx(right), t, f))
 
-    fun ifIR (test, then', else') =
+    fun ifthenIR(test, then') =
+        let
+            val genstm = unCx(test)
+            val thenExp = unEx(then')
+            val t = Temp.newlabel()
+            val join = Temp.newlabel()
+        in
+            Ex(Tr.ESEQ(seq[
+                genstm(t, join),
+                Tr.LABEL(t), Tr.EXP(thenExp),
+                Tr.LABEL(join)
+            ], Tr.CONST 0))
+        end
+
+    fun ifthenelseIR (test, then', else') =
         let
             val genstm = unCx(test)
             val e2 = unEx(then')

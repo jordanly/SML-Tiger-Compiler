@@ -175,14 +175,14 @@ struct
                       SOME(elseExp) => 
                           (
                           case (#ty (trexp then'), #ty (trexp elseExp)) of
-                                (T.RECORD(_), NIL) => {exp=R.ifIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)), ty=(#ty (trexp then'))}
-                              | (NIL, T.RECORD(_)) => {exp=R.ifIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)), ty=(#ty (trexp elseExp))}
+                                (T.RECORD(_), NIL) => {exp=R.ifthenelseIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)), ty=(#ty (trexp then'))}
+                              | (NIL, T.RECORD(_)) => {exp=R.ifthenelseIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)), ty=(#ty (trexp elseExp))}
                               | (tyA, tyB) => (checkTypesEqual(tyA, tyB, pos, "error : types of then - else differ");
-                                                {exp=R.ifIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)),
+                                                {exp=R.ifthenelseIR(#exp (trexp test), #exp (trexp then'), #exp (trexp elseExp)),
                                                 ty=(#ty (trexp then'))})
                           )
                     | NONE => (checkTypesEqual(#ty (trexp then'), T.UNIT, pos, "error : if-then returns non unit");
-                                {exp=R.Ex(Tr.CONST 0), ty=(#ty (trexp then'))})
+                                {exp=R.ifthenIR(#exp (trexp test), #exp (trexp then')), ty=(#ty (trexp then'))})
                 )
           | trexp (A.WhileExp({test, body, pos})) = 
                 (
