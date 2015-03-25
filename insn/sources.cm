@@ -27,7 +27,7 @@ assem.sml
 flowgraph.sml
 graph.sig
 graph.sml
-(* main.sml *)
+main.sml
 (* runtime.c ? *)
 
 $/smlnj-lib.cm

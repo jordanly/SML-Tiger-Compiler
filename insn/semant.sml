@@ -493,8 +493,3 @@ struct
       R.getResult()
     end
 end
-
-structure Main = 
-struct
-    fun compile fileName = Semant.transProg (Parse.parse(fileName))
-end
