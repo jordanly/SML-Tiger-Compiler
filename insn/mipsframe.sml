@@ -17,6 +17,7 @@ struct
 
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
     fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
+    fun string(lab, s) = "TODO implement " ^ (Symbol.name lab) ^ " : " ^ s ^ "\n"
     
     fun newFrame {name, formals} = 
         let

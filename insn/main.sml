@@ -1,23 +1,25 @@
-structure MainTODO = struct (* TODO figure out how this plays nicely with other parts *)
+structure Main = struct (* TODO figure out how this plays nicely with other parts *)
 
     structure Tr = Translate
-    structure F = Frame
-    structure R = RegAlloc
+    structure F = MipsFrame
+    (* structure R = RegAlloc *)
 
     fun getsome (SOME x) = x
 
     fun emitproc out (F.PROC{body,frame}) =
-        let val _ = print ("emit " ^ Frame.name frame ^ "\n")
-            (* val _ = Printtree.printtree(out,body); *)
+        let val _ = print ("emit " ^ S.name (F.name frame) ^ "\n")
+            val _ = print "======= PRE-CANON ========\n"
+            val _ = Printtree.printtree(out,body);
             val stms = Canon.linearize body
-            (* val _ = app (fn s => Printtree.printtree(out,s)) stms; *)
+            val _ = print "======= POST-CANON =======\n"
+            val _ = app (fn s => Printtree.printtree(out,s)) stms;
             val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
-            val instrs =   List.concat(map (Mips.codegen frame) stms') 
+            val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
             val format0 = Assem.format(Temp.makestring)
         in 
             app (fn i => TextIO.output(out,format0 i)) instrs
         end
-        | emitproc out (F.STRING(lab,s)) = TextIO.output(out,F.string(lab,s))
+        | emitproc out (F.STRING(lab,s)) = TextIO.output(out, F.string(lab,s))
 
    fun withOpenFile fname f = 
         let
@@ -29,10 +31,10 @@ structure MainTODO = struct (* TODO figure out how this plays nicely with other 
    fun compile filename = 
         let
             val absyn = Parse.parse filename
-            val frags = (FindEscape.prog absyn; Semant.transProg absyn)
+            val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
         in 
             withOpenFile (filename ^ ".s") 
-            (fn out => (app (emitproc out) frags))
+            (fn out => (app (emitproc TextIO.stdOut) frags))
        end
 end
 

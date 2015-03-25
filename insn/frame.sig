@@ -15,6 +15,7 @@ sig
     val allocLocal : frame -> bool -> access
     val printFrame : frame -> unit
     val printAccess : access -> unit
+    val string : (Temp.label * string) -> string
 
     val externalCall : string * Tree.exp list -> Tree.exp
     val procEntryExit1 : frame * Tree.stm -> Tree.stm
