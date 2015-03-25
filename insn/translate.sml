@@ -97,6 +97,7 @@ struct
                         Tr.TEMP r) 
             end 
       | unEx (Nx (s as Tr.EXP(e))) = e
+      | unEx (Nx (Tr.SEQ(stm, Tr.EXP laste))) = Tr.ESEQ(stm, laste)
       | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0)
 
     fun unCx (Cx c) = c
