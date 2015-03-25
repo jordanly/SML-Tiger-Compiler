@@ -220,13 +220,13 @@ struct
                                                     Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem)))), 
                                                     unEx exp)
             fun instantiateFields ([]) = [recordInit]
-              | instantiateFields (head :: l) = (setField(head, n - 1 - length l)) :: (instantiateFields (l))
+              | instantiateFields (head :: l) = (setField(head, length l)) :: (instantiateFields (l))
             fun convert ([]) = Tr.EXP(Tr.CONST 0)
               | convert ([s]) = s
               | convert (f::t) = seq([f, convert(t)])
         in
             Ex(Tr.ESEQ(
-                convert(instantiateFields(exps)), 
+                convert(rev(instantiateFields(exps))),  
                 Tr.TEMP(r)))
         end
 
