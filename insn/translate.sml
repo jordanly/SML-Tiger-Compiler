@@ -96,7 +96,8 @@ struct
                             Tr.LABEL t], 
                         Tr.TEMP r) 
             end 
-      | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0)
+      | unEx (Nx (s as Tr.EXP(e))) = e
+      | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 37)
 
     fun unCx (Cx c) = c
       | unCx (Ex (Tr.CONST 0)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(flabel), [flabel]))
