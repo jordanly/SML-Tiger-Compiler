@@ -21,7 +21,11 @@ struct
             end
 
         fun munchStm(T.SEQ(s1, s2)) = (munchStm s1; munchStm s2) (* TODO *)
-          | munchStm(T.EXP e1) =(munchExp e1; ())
+          | munchStm(T.EXP e1) = (munchExp e1; ())
+          | munchStm(T.LABEL lab) = 
+              emit(
+                A.LABEL {assem=Symbol.name lab ^ ":\n", lab=lab}
+              )
           | munchStm(_) = ()
         and munchExp(T.CONST i) =
               result(fn r => emit(
@@ -44,6 +48,19 @@ struct
           | munchExp(T.BINOP(T.PLUS, e1, e2)) =
               result(fn r => emit(
                      A.OPER {assem="add `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.MINUS, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="addi `d0, `s0, -" ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.MINUS, T.CONST i, e1)) = Temp.newtemp() (* TODO *)
+          | munchExp(T.BINOP(T.MINUS, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="sub, `d0, `s0, `s1\n",
                              src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
                              )
                     )
