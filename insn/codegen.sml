@@ -78,7 +78,55 @@ struct
           | munchExp(T.BINOP(T.MINUS, T.CONST i, e1)) = Temp.newtemp() (* TODO *)
           | munchExp(T.BINOP(T.MINUS, e1, e2)) =
               result(fn r => emit(
-                     A.OPER {assem="sub, `d0, `s0, `s1\n",
+                     A.OPER {assem="sub `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.MUL, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="mult `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.DIV, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="div `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.AND, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="andi `d0, `s0, " ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.AND, T.CONST i, e1)) =
+              result(fn r => emit(
+                     A.OPER {assem="andi `d0, `s0, " ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.AND, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="and `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.OR, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="ori `d0, `s0, " ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.OR, T.CONST i, e1)) =
+              result(fn r => emit(
+                     A.OPER {assem="ori `d0, `s0, " ^ Int.toString i ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.OR, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="or `d0, `s0, `s1\n",
                              src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
                              )
                     )
