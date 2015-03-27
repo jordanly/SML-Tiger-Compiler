@@ -86,7 +86,7 @@ struct
     | do_stm(Tr.MOVE(Tr.MEMLOC e,b)) = 
 	       reorder_stm([e,b],fn[e,b]=>Tr.MOVE(Tr.MEMLOC e,b))
     | do_stm(Tr.MOVE(Tr.ESEQLOC(s,e),b)) = 
-	       do_stm(Tr.SEQ(s,Tr.MOVE(R.exp2loc e,b)))
+	       do_stm(Tr.SEQ(s,Tr.MOVE(e,b)))
     | do_stm(Tr.EXP(Tr.CALL(e,el))) = 
 	       reorder_stm(e::el,fn e::el => Tr.EXP(Tr.CALL(e,el)))
     | do_stm(Tr.EXP e) = 
