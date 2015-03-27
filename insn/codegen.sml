@@ -61,6 +61,49 @@ struct
               emit(
                 A.LABEL {assem=Symbol.name lab ^ ":\n", lab=lab}
               )
+            (* Verify "fall through = false label" assumption for all CJUMPs*)
+          | munchStm(T.CJUMP(T.EQ, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="beq `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.NE, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bne `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.LT, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="blt `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.GT, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bgt `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.LE, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="ble `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.GE, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bge `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
           | munchStm(_) = ()
         and munchExp(T.CONST i) =
               result(fn r => emit(
