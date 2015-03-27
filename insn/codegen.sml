@@ -46,6 +46,16 @@ struct
                 A.MOVE {assem="move `d0, `s0\n",
                         src=munchExp e1, dst=t1}
               )
+          | munchStm(T.MOVE(T.ESEQLOC(s1, T.MEMLOC(e1)), e2)) = 
+              (munchStm s1; emit(
+                A.MOVE {assem="sw `s0, (`d0)\n",
+                        src=munchExp e2, dst=munchExp e1}
+              ))
+          | munchStm(T.MOVE(T.ESEQLOC(s1, T.TEMPLOC(t1)), e1)) = 
+              (munchStm s1; emit(
+                A.MOVE {assem="move `d0, `s0\n",
+                        src=munchExp e1, dst=t1}
+              ))
           | munchStm(T.EXP e1) = (munchExp e1; ())
           | munchStm(T.LABEL lab) = 
               emit(
