@@ -32,6 +32,7 @@ structure Main = struct
    fun compile filename = 
         let
             val absyn = Parse.parse filename
+            val _ = print "======== Syntax Errors (if any) ========\n";
             val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
         in 
             withOpenFile (filename ^ ".s") 
