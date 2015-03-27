@@ -208,6 +208,9 @@ struct
                              src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
                              )
                     )
+          | munchExp(T.TEMP(t1)) = t1
+          | munchExp(T.ESEQ(s1, e1)) = (munchStm s1; munchExp e1)
+          | munchExp(T.NAME(l1)) = (Err.error 0 "tried to munch T.NAME"; Temp.newtemp())
           | munchExp(_) = Temp.newtemp()
       in
         munchStm stm;
