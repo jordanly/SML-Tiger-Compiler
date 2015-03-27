@@ -26,6 +26,16 @@ struct
                 A.OPER {assem="j " ^ Symbol.name lab ^ "\n",
                         src=[], dst=[], jump=SOME(l)}
               )
+          | munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) =
+              emit(
+                A.MOVE {assem="sw `s0, " ^ Int.toString i ^ "(`d0)\n",
+                        src=munchExp e2, dst=munchExp e1}
+              )
+          | munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, T.CONST i, e1)), e2)) =
+              emit(
+                A.MOVE {assem="sw `s0, " ^ Int.toString i ^ "(`d0)\n",
+                        src=munchExp e2, dst=munchExp e1}
+              )
           | munchStm(T.MOVE(T.MEMLOC(e1), e2)) =
               emit(
                 A.MOVE {assem="sw `s0, (`d0)\n",

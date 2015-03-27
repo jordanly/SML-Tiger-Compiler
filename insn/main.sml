@@ -13,6 +13,7 @@ structure Main = struct (* TODO figure out how this plays nicely with other part
             val stms = Canon.linearize body
             val _ = print "======= POST-CANON =======\n"
             val _ = app (fn s => Printtree.printtree(out,s)) stms;
+            val _ = print "======= EMIT =======\n"
             val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
             val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
             val format0 = Assem.format(Temp.makestring)
