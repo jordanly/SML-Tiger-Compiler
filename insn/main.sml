@@ -1,4 +1,4 @@
-structure Main = struct (* TODO figure out how this plays nicely with other parts *)
+structure Main = struct
 
     structure Tr = Translate
     structure F = MipsFrame
@@ -7,13 +7,13 @@ structure Main = struct (* TODO figure out how this plays nicely with other part
     fun getsome (SOME x) = x
 
     fun emitproc out (F.PROC{body,frame}) =
-        let val _ = print ("emit " ^ S.name (F.name frame) ^ "\n")
-            val _ = print "======= PRE-CANON ========\n"
+        let val _ = print "======= PRE-CANON ========\n"
             val _ = Printtree.printtree(out,body);
             val stms = Canon.linearize body
             val _ = print "======= POST-CANON =======\n"
             val _ = app (fn s => Printtree.printtree(out,s)) stms;
             val _ = print "======= EMIT =======\n"
+            val _ = print ("emit " ^ S.name (F.name frame) ^ "\n")
             val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
             val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
             val format0 = Assem.format(Temp.makestring)
@@ -38,6 +38,3 @@ structure Main = struct (* TODO figure out how this plays nicely with other part
             (fn out => (app (emitproc TextIO.stdOut) frags))
        end
 end
-
-
-
