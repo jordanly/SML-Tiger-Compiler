@@ -21,6 +21,21 @@ struct
             end
 
         fun munchStm(T.SEQ(s1, s2)) = (munchStm s1; munchStm s2) (* TODO *)
+          | munchStm(T.JUMP(T.NAME(lab), l)) =
+              emit(
+                A.OPER {assem="j " ^ Symbol.name lab ^ "\n",
+                        src=[], dst=[], jump=SOME(l)}
+              )
+          | munchStm(T.MOVE(T.MEMLOC(e1), e2)) =
+              emit(
+                A.MOVE {assem="sw `s0, (`d0)\n",
+                        src=munchExp e2, dst=munchExp e1}
+              )
+          | munchStm(T.MOVE(T.TEMPLOC(t1), e1)) = 
+              emit(
+                A.MOVE {assem="move `d0, `s0\n",
+                        src=munchExp e1, dst=t1}
+              )
           | munchStm(T.EXP e1) = (munchExp e1; ())
           | munchStm(T.LABEL lab) = 
               emit(
