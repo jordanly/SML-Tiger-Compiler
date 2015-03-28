@@ -231,7 +231,7 @@ struct
         let
             val n = length exps
             val r = Temp.newtemp()
-            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("initRecord", [Tr.CONST n]))
+            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("allocRecord", [Tr.CONST n]))
             fun setField (exp, elem) = Tr.MOVE((Tr.MEMLOC(
                                                     Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem)))), 
                                                     unEx exp)
@@ -250,10 +250,6 @@ struct
         Ex(Tr.MEM(Tr.BINOP(
                     Tr.PLUS, unEx nameEx, 
                     Tr.BINOP(Tr.MUL, Tr.CONST(elem), Tr.CONST (F.wordSize)))))
-
-    fun sequencingIR [] = Ex (Tr.CONST 0)
-      | sequencingIR [exp] = exp
-      | sequencingIR (head :: l) = Ex (Tr.ESEQ (unNx head, unEx (sequencingIR l)))
 
     fun nilIR () = Ex (Tr.CONST 0)
 
