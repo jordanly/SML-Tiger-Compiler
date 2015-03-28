@@ -138,6 +138,12 @@ struct
                              src=[munchExp e1], dst=[r], jump=NONE}
                              )
                     )
+          | munchExp(T.MEM(T.BINOP(T.MINUS, e1, T.CONST i))) =
+              result(fn r => emit(
+                     A.OPER {assem="lw `d0, " ^ (Int.toString (~i)) ^ "(`s0)" ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
           | munchExp(T.MEM(e1)) =
               result(fn r => emit(
                      A.OPER {assem="lw `d0, 0(`s0)\n",
@@ -164,11 +170,10 @@ struct
                     )
           | munchExp(T.BINOP(T.MINUS, e1, T.CONST i)) =
               result(fn r => emit(
-                     A.OPER {assem="addi `d0, `s0, -" ^ Int.toString i ^ "\n",
+                     A.OPER {assem="addi `d0, `s0, " ^ (Int.toString (~i)) ^ "\n",
                              src=[munchExp e1], dst=[r], jump=NONE}
                              )
                     )
-          | munchExp(T.BINOP(T.MINUS, T.CONST i, e1)) = Temp.newtemp() (* TODO *)
           | munchExp(T.BINOP(T.MINUS, e1, e2)) =
               result(fn r => emit(
                      A.OPER {assem="sub `d0, `s0, `s1\n",
