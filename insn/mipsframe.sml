@@ -84,6 +84,15 @@ struct
     fun externalCall (s, args) =
       Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
 
-    fun procEntryExit1(frame', stm') = stm'
+    fun seq[] = Tr.EXP(Tr.CONST 0)
+      | seq[stm] = stm
+      | seq(stm::stms) = Tr.SEQ(stm,seq(stms))  
+
+    fun procEntryExit1(frame' : frame, stm : Tr.stm) = 
+        let
+          val label' = name frame' 
+        in
+          seq [Tr.LABEL(label'), stm]
+        end
       
 end

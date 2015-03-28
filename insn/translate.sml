@@ -292,9 +292,10 @@ struct
                 TOPLEVEL => (Err.error 0 "Fundec should not happen in outermost";   
                              F.newFrame {name=Temp.newlabel(), formals=[]})
               | NONTOP({uniq=_, parent=_, frame=frame'}) => frame'
-          val treeBody = unNx body'
+          val treeBody = F.procEntryExit1(levelFrame, unNx body')
+          val treeBody' = Tr.MOVE(Tr.TEMPLOC(F.RV), unEx (Nx treeBody))
         in
-          fragList := F.PROC({body=treeBody, frame=levelFrame})::(!fragList)
+          fragList := F.PROC({body=treeBody', frame=levelFrame})::(!fragList)
         end
         
     fun getResult() = !fragList
