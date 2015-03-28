@@ -20,6 +20,17 @@ struct
               gen t; t
             end
 
+        fun relopToStr T.EQ = "beq"
+          | relopToStr T.NE = "bne"
+          | relopToStr T.LT = "blt"
+          | relopToStr T.GT = "bgt"
+          | relopToStr T.LE = "ble"
+          | relopToStr T.GE = "bge"
+          | relopToStr T.ULT = "bltu"
+          | relopToStr T.UGT = "bgtu"
+          | relopToStr T.ULE = "bleu"
+          | relopToStr T.UGE = "bgeu"
+
         fun munchStm(T.SEQ(s1, s2)) = (munchStm s1; munchStm s2) (* TODO *)
           | munchStm(T.JUMP(T.NAME(lab), l)) =
               emit(
@@ -72,72 +83,9 @@ struct
                 A.LABEL {assem=Symbol.name lab ^ ":\n", lab=lab}
               )
             (* Verify "fall through = false label" assumption for all CJUMPs*)
-          | munchStm(T.CJUMP(T.EQ, e1, e2, l1, l2)) =
+          | munchStm(T.CJUMP(relop, e1, e2, l1, l2)) =
                 emit(
-                    A.OPER {assem="beq `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.NE, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bne `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.LT, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="blt `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.GT, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bgt `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.LE, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="ble `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.GE, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bge `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.ULT, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bltu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.UGT, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bgtu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.ULE, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bleu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
-                            dst=[],
-                            src=[munchExp e1, munchExp e2],
-                            jump=SOME [l1, l2]}
-                )
-          | munchStm(T.CJUMP(T.UGE, e1, e2, l1, l2)) =
-                emit(
-                    A.OPER {assem="bgeu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                    A.OPER {assem=(relopToStr relop) ^ " `s0, `s1, " ^ Symbol.name l1 ^ "\n",
                             dst=[],
                             src=[munchExp e1, munchExp e2],
                             jump=SOME [l1, l2]}
