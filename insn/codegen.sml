@@ -105,12 +105,14 @@ struct
                 A.MOVE {assem="move `d0, `s0\n",
                         src=munchExp e1, dst=t1}
               ))
+          | munchStm(T.MOVE(T.ESEQLOC(s1, e1loc as T.ESEQLOC _), e1)) = 
+              (munchStm s1; munchStm(T.MOVE(e1loc, e1)))
           | munchStm(T.EXP e1) = (munchExp e1; ())
           | munchStm(T.LABEL lab) = 
               emit(
                 A.LABEL {assem=Symbol.name lab ^ ":\n", lab=lab}
               )
-            (* Verify "fall through = false label" assumption for all CJUMPs*)
+          (* CJUMPs *)
           | munchStm(T.CJUMP(relop, e1, e2, l1, l2)) =
                 emit(
                     A.OPER {assem=(relopToStr relop) ^ " `s0, `s1, " ^ Symbol.name l1 ^ "\n",
@@ -118,7 +120,6 @@ struct
                             src=[munchExp e1, munchExp e2],
                             jump=SOME [l1, l2]}
                 )
-          | munchStm(_) = ()
         and munchExp(T.CONST i) =
               result(fn r => emit(
                      A.OPER {assem="addi `d0, r0, " ^ Int.toString i ^ "\n",
