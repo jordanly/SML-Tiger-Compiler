@@ -8,7 +8,6 @@ sig
             
     val FP : Temp.temp
     val RV : Temp.temp
-    val registers : register list
     val tempMap : register Temp.Table.table
     val makestring : Temp.temp -> register
     val wordSize : int

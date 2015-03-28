@@ -10,16 +10,91 @@ struct
     datatype frag = PROC of {body: Tree.stm, frame: frame}
                   | STRING of Temp.label * string
                            
-    val FP = Temp.newtemp()
-    val RV = Temp.newtemp() (* TODO? *)
-    val registers = [] (* TODO *)
+    val R0 = Temp.newtemp() (* zero register *)
+    val AT = Temp.newtemp() (* assembler temporary, reserved *)
+
+    val RV = Temp.newtemp() (* return value *)
+    val V1 = Temp.newtemp()
+
+    val A0 = Temp.newtemp() (* args *)
+    val A1 = Temp.newtemp()
+    val A2 = Temp.newtemp()
+    val A3 = Temp.newtemp()
+
+    val T0 = Temp.newtemp()
+    val T1 = Temp.newtemp()
+    val T2 = Temp.newtemp()
+    val T3 = Temp.newtemp()
+    val T4 = Temp.newtemp()
+    val T5 = Temp.newtemp()
+    val T6 = Temp.newtemp()
+    val T7 = Temp.newtemp()
+
+    val S0 = Temp.newtemp()
+    val S1 = Temp.newtemp()
+    val S2 = Temp.newtemp()
+    val S3 = Temp.newtemp()
+    val S4 = Temp.newtemp()
+    val S5 = Temp.newtemp()
+    val S6 = Temp.newtemp()
+    val S7 = Temp.newtemp()
+
+    val T8 = Temp.newtemp()
+    val T9 = Temp.newtemp()
+
+    val K0 = Temp.newtemp() (* reserved for kernel *)
+    val K1 = Temp.newtemp()
+
+    val GP = Temp.newtemp()
+    val SP = Temp.newtemp()
+    val FP = Temp.newtemp() (* frame pointer *)
+    val RA = Temp.newtemp() (* return address *)
+
+    val specialregs = [
+        (R0, "R0"),
+        (AT, "AT"), 
+        (RV, "RV"),
+        (V1, "V1"),
+        (K0, "K0"),
+        (K1, "K1"),
+        (GP, "GP"),
+        (SP, "SP"),
+        (FP, "FP"),
+        (RA, "RA")
+    ]
+    val argregs = [
+        (A0, "A0"),
+        (A1, "A1"),
+        (A2, "A2"),
+        (A3, "A3")
+    ]
+    val calleesaves = [
+        (S0, "S0"),
+        (S1, "S1"),
+        (S2, "S2"),
+        (S3, "S3"),
+        (S4, "S4"),
+        (S5, "S5"),
+        (S6, "S6"),
+        (S7, "S7")
+    ]
+    val callersaves = [
+        (T0, "T0"),
+        (T1, "T1"),
+        (T2, "T2"),
+        (T3, "T3"),
+        (T4, "T4"),
+        (T5, "T5"),
+        (T6, "T6"),
+        (T7, "T7"),
+        (T8, "T8"),
+        (T9, "T9")
+    ]
+
     val tempMap = 
         let
             fun addtotable ((t, s), table) = Temp.Table.enter(table, t, s)
-            val toadd = [
-                (FP, "FP"),
-                (RV, "RV")
-            ]
+            val toadd = specialregs @ argregs @ calleesaves @ callersaves
         in
             foldr addtotable Temp.Table.empty toadd
         end
