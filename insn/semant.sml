@@ -275,7 +275,6 @@ struct
         and trvar (A.SimpleVar(id, pos)) = 
                 (case S.look(venv, id) of
                     SOME(Env.VarEntry({access, ty, read_only=_})) => {exp=R.simpleVarIR(access, level), ty=ty}
-                  (*| SOME(Env.FunEntry({level, label, formals, result})) => {exp=R.Ex(Tr.TODO), ty=result}*) (* Testing to see if this is unnecessary *)
                   | _ => (Err.error pos ("error: undeclared variable " ^ S.name id); {exp=R.Ex(Tr.CONST 0), ty=T.BOTTOM})
                 )
           | trvar (A.FieldVar(v, id, pos)) =

@@ -167,7 +167,6 @@ struct
 
     fun exp2loc (Tr.MEM exp') = Tr.MEMLOC exp'
       | exp2loc (Tr.TEMP temp') = Tr.TEMPLOC temp'
-      | exp2loc Tr.TODO = (Err.error 0 "todo"; Tr.TEMPLOC(Temp.newtemp()))
       | exp2loc (Tr.ESEQ (stm', exp' as Tr.MEM(_))) = Tr.ESEQLOC(stm', exp2loc exp')
       | exp2loc (Tr.ESEQ (stm', exp' as Tr.TEMP(_))) = Tr.ESEQLOC(stm', exp2loc exp')
       | exp2loc _ = (Err.error 0 "Can't convert exp to loc"; Tr.TEMPLOC(Temp.newtemp()))

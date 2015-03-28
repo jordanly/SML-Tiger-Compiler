@@ -259,7 +259,6 @@ struct
           | munchExp(T.ESEQ(s1, e1)) = (munchStm s1; munchExp e1)
           | munchExp(T.NAME(l1)) = (Err.error 0 "tried to munch T.NAME"; Temp.newtemp())
           | munchExp(T.CALL _) = Temp.newtemp() (* TODO *)
-          | munchExp(T.TODO) = (Err.error 0 "tried to munch T.TODO"; Temp.newtemp())
       in
         munchStm stm;
         rev(!ilist)
