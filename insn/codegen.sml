@@ -114,6 +114,34 @@ struct
                             src=[munchExp e1, munchExp e2],
                             jump=SOME [l1, l2]}
                 )
+          | munchStm(T.CJUMP(T.ULT, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bltu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.UGT, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bgtu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.ULE, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bleu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
+          | munchStm(T.CJUMP(T.UGE, e1, e2, l1, l2)) =
+                emit(
+                    A.OPER {assem="bgeu `s0, `s1, " ^ Symbol.name l1 ^ "\n",
+                            dst=[],
+                            src=[munchExp e1, munchExp e2],
+                            jump=SOME [l1, l2]}
+                )
           | munchStm(_) = ()
         and munchExp(T.CONST i) =
               result(fn r => emit(
