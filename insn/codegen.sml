@@ -28,18 +28,23 @@ struct
               )
           | munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) =
               emit(
-                A.MOVE {assem="sw `s0, " ^ Int.toString i ^ "(`d0)\n",
-                        src=munchExp e2, dst=munchExp e1}
+                A.OPER {assem="sw `s0, " ^ (Int.toString i) ^ "(`s1)\n",
+                        src=[munchExp e2, munchExp e1], dst=[], jump=NONE}
               )
           | munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, T.CONST i, e1)), e2)) =
               emit(
-                A.MOVE {assem="sw `s0, " ^ Int.toString i ^ "(`d0)\n",
-                        src=munchExp e2, dst=munchExp e1}
+                A.OPER {assem="sw `s0, " ^ (Int.toString i) ^ "(`s1)\n",
+                        src=[munchExp e2, munchExp e1], dst=[], jump=NONE}
+              )
+          | munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.MINUS, e1, T.CONST i)), e2)) = 
+              emit(
+                A.OPER {assem="sw `s0, " ^ (Int.toString (~i)) ^ "(`s1)\n",
+                        src=[munchExp e2, munchExp e1], dst=[], jump=NONE}
               )
           | munchStm(T.MOVE(T.MEMLOC(e1), e2)) =
               emit(
-                A.MOVE {assem="sw `s0, (`d0)\n",
-                        src=munchExp e2, dst=munchExp e1}
+                A.OPER {assem="sw `s0, 0(`s1)\n",
+                        src=[munchExp e2, munchExp e1], dst=[], jump=NONE}
               )
           | munchStm(T.MOVE(T.TEMPLOC(t1), e1)) = 
               emit(
