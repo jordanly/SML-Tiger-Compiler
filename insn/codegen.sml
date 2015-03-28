@@ -228,10 +228,38 @@ struct
                              src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
                              )
                     )
+          | munchExp(T.BINOP(T.LSHIFT, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="sll `d0, `s0, " ^ (Int.toString i) ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.LSHIFT, e1, e2)) = (Err.error 0 "tried to create sll with non-constant shift amount"; Temp.newtemp())
+          | munchExp(T.BINOP(T.RSHIFT, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="srl `d0, `s0, " ^ (Int.toString i) ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.RSHIFT, e1, e2)) = (Err.error 0 "tried to create srl with non-constant shift amount"; Temp.newtemp())
+          | munchExp(T.BINOP(T.ARSHIFT, e1, T.CONST i)) =
+              result(fn r => emit(
+                     A.OPER {assem="sra `d0, `s0, " ^ (Int.toString i) ^ "\n",
+                             src=[munchExp e1], dst=[r], jump=NONE}
+                             )
+                    )
+          | munchExp(T.BINOP(T.ARSHIFT, e1, e2)) = (Err.error 0 "tried to create sra with non-constant shift amount"; Temp.newtemp())
+          | munchExp(T.BINOP(T.XOR, e1, e2)) =
+              result(fn r => emit(
+                     A.OPER {assem="sll `d0, `s0, `s1\n",
+                             src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
+                             )
+                    )
           | munchExp(T.TEMP(t1)) = t1
           | munchExp(T.ESEQ(s1, e1)) = (munchStm s1; munchExp e1)
           | munchExp(T.NAME(l1)) = (Err.error 0 "tried to munch T.NAME"; Temp.newtemp())
-          | munchExp(_) = Temp.newtemp()
+          | munchExp(T.CALL _) = Temp.newtemp() (* TODO *)
+          | munchExp(T.TODO) = (Err.error 0 "tried to munch T.TODO"; Temp.newtemp())
       in
         munchStm stm;
         rev(!ilist)
