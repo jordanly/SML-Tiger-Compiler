@@ -14,7 +14,7 @@ structure Main = struct
             val _ = print ("emit " ^ S.name (F.name frame) ^ "\n")
             val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
             val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
-            val format0 = Assem.format(Temp.makestring)
+            val format0 = Assem.format(F.makestring)
         in 
             app (fn i => TextIO.output(out,format0 i)) instrs
         end

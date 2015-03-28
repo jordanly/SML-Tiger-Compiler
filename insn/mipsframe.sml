@@ -3,6 +3,7 @@ structure Err = ErrorMsg
 
 structure MipsFrame : FRAME = 
 struct
+    type register = string
     datatype access = InFrame of int | InReg of Temp.temp
     type frame = {name: Temp.label, formals: access list,
                   numLocals: int ref, curOffset: int ref}
@@ -11,6 +12,21 @@ struct
                            
     val FP = Temp.newtemp()
     val RV = Temp.newtemp() (* TODO? *)
+    val registers = [] (* TODO *)
+    val tempMap = 
+        let
+            fun addtotable ((t, s), table) = Temp.Table.enter(table, t, s)
+            val toadd = [
+                (FP, "FP"),
+                (RV, "RV")
+            ]
+        in
+            foldr addtotable Temp.Table.empty toadd
+        end
+    fun makestring t = (* replacement for temp.makestring *)
+        case Temp.Table.look(tempMap, t) of
+             SOME(r) => r
+           | NONE => Temp.makestring t
     val wordSize = 4
 
     val ARGREGS = 4 (* registers allocated for arguments in mips *)

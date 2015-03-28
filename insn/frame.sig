@@ -1,5 +1,6 @@
 signature FRAME = 
 sig
+    type register = string
     type frame
     type access
     datatype frag = PROC of {body: Tree.stm, frame: frame}
@@ -7,6 +8,9 @@ sig
             
     val FP : Temp.temp
     val RV : Temp.temp
+    val registers : register list
+    val tempMap : register Temp.Table.table
+    val makestring : Temp.temp -> register
     val wordSize : int
     val exp : access * Tree.exp -> Tree.exp
     val newFrame : {name: Temp.label, formals: bool list} -> frame
