@@ -31,7 +31,7 @@ struct
           | relopToStr T.ULE = "bleu"
           | relopToStr T.UGE = "bgeu"
 
-        fun munchStm(T.SEQ(s1, s2)) = (munchStm s1; munchStm s2) (* TODO *)
+        fun munchStm(T.SEQ(s1, s2)) = (munchStm s1; munchStm s2)
           | munchStm(T.JUMP(T.NAME(lab), l)) =
               emit(
                 A.OPER {assem="j " ^ Symbol.name lab ^ "\n",
@@ -42,6 +42,7 @@ struct
                 A.OPER {assem="jr `j0\n",
                        src=[munchExp e1], dst=[], jump=SOME(labelList)}
               )
+          (* MEMLOC moves *)
           | munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, e1, T.CONST i)), e2)) =
               emit(
                 A.OPER {assem="sw `s0, " ^ (Int.toString i) ^ "(`s1)\n",
@@ -62,11 +63,38 @@ struct
                 A.OPER {assem="sw `s0, 0(`s1)\n",
                         src=[munchExp e2, munchExp e1], dst=[], jump=NONE}
               )
+          (* TEMPLOC moves *)
+          | munchStm(T.MOVE(T.TEMPLOC(t1), T.MEM(T.BINOP(T.PLUS, e1, T.CONST i)))) = 
+              emit(
+                A.OPER {assem="lw `d0, " ^ (Int.toString i) ^ "(`s0)\n",
+                        src=[munchExp e1], dst=[t1], jump=NONE}
+              )
+          | munchStm(T.MOVE(T.TEMPLOC(t1), T.MEM(T.BINOP(T.PLUS, T.CONST i, e1)))) = 
+              emit(
+                A.OPER {assem="lw `d0, " ^ (Int.toString i) ^ "(`s0)\n",
+                        src=[munchExp e1], dst=[t1], jump=NONE}
+              )
+          | munchStm(T.MOVE(T.TEMPLOC(t1), T.MEM(T.BINOP(T.MINUS, e1, T.CONST i)))) = 
+              emit(
+                A.OPER {assem="lw `d0, " ^ (Int.toString (~i)) ^ "(`s0)\n",
+                        src=[munchExp e1], dst=[t1], jump=NONE}
+              )
+          | munchStm(T.MOVE(T.TEMPLOC(t1), T.NAME(lab))) = 
+              emit(
+                A.OPER {assem="la `d0, " ^ (Symbol.name lab) ^ "\n",
+                        src=[], dst=[t1], jump=NONE}
+              )
+          | munchStm(T.MOVE(T.TEMPLOC(t1), T.CONST i)) = 
+              emit(
+                A.OPER {assem="li `d0, " ^ (Int.toString i) ^ "\n",
+                        src=[], dst=[t1], jump=NONE}
+              )
           | munchStm(T.MOVE(T.TEMPLOC(t1), e1)) = 
               emit(
                 A.MOVE {assem="move `d0, `s0\n",
                         src=munchExp e1, dst=t1}
               )
+          (* ESEQLOC moves *)
           | munchStm(T.MOVE(T.ESEQLOC(s1, T.MEMLOC(e1)), e2)) = 
               (munchStm s1; emit(
                 A.MOVE {assem="sw `s0, (`d0)\n",
