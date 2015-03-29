@@ -162,6 +162,8 @@ struct
     fun seq[] = Tr.EXP(Tr.CONST 0)
       | seq[stm] = stm
       | seq(stm::stms) = Tr.SEQ(stm,seq(stms))  
+    
+    fun getRegisterTemps rList = map (fn (t, r) => t) rList
 
     fun procEntryExit1(frame' : frame, stm : Tr.stm) = 
         let
@@ -169,5 +171,16 @@ struct
         in
           seq [Tr.LABEL(label'), stm]
         end
+
+    fun procEntryExit2(frame, body) = 
+        body @
+        [Assem.OPER {assem="",
+                 src=getRegisterTemps (specialregs @ calleesaves),
+                 dst=[], jump=SOME[]}
+        ]
       
+    fun procEntryExit3(frame' : frame, body) =
+        {prolog = "PROCEDURE " ^ Symbol.name (name frame') ^ "\n",
+         body = body,
+         epilog = "END " ^ Symbol.name (name frame') ^ "\n"}
 end
