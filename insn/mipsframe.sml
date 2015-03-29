@@ -119,7 +119,7 @@ struct
                        true => allocFormals(offset + wordSize, l, (InFrame offset)::allocList, numRegs)
                      | false => 
                          if numRegs < ARGREGS
-                         then allocFormals(offset, l, (InReg(Temp.newtemp()))::allocList, numRegs + 1)
+                         then allocFormals(offset + wordSize, l, (InReg(Temp.newtemp()))::allocList, numRegs + 1)
                          else allocFormals(offset + wordSize, l, (InFrame offset)::allocList, numRegs)
                   )
         in

@@ -258,7 +258,25 @@ struct
           | munchExp(T.TEMP(t1)) = t1
           | munchExp(T.ESEQ(s1, e1)) = (munchStm s1; munchExp e1)
           | munchExp(T.NAME(l1)) = (Err.error 0 "tried to munch T.NAME"; Temp.newtemp())
-          | munchExp(T.CALL _) = Temp.newtemp() (* TODO *)
+          | munchExp(T.CALL(T.NAME(n1), args)) = 
+              result(fn r => emit(
+                     A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
+                             src=munchArgs(0, args, 0), dst=[(* TODO make calldefs *)],
+                             jump=NONE}
+                             )
+                    )
+        and munchArgs(i, [], offset) = []
+          | munchArgs(i, a::l, offset) =
+              let
+                val argTemp = Temp.newtemp()
+                fun moveArgToTemp arg = munchStm(T.MOVE(T.TEMPLOC(argTemp), arg))
+                fun moveArgToFrame(arg, offset) =
+                  munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, T.TEMP(F.SP), T.CONST offset)), arg))
+              in
+                if i < 4
+                then (moveArgToTemp a; argTemp::munchArgs(i + 1, l, offset))
+                else (moveArgToFrame(a, offset); munchArgs(i + 1, l, offset - 4))
+              end
       in
         munchStm stm;
         rev(!ilist)
