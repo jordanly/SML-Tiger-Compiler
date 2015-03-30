@@ -1,0 +1,2 @@
+/* if 0 then _ else _ => JUMP not CJUMP */
+if 0 then 3 else 4

@@ -146,8 +146,9 @@ struct
                 Tr.LABEL(join)
             ], Tr.CONST 0))
         end
-
-    fun ifthenelseIR (test, then', else') =
+    fun ifthenelseIR (Ex(Tr.CONST 0), then', else') = Ex(unEx(else'))
+      | ifthenelseIR (Ex(Tr.CONST 1), then', else') = Ex(unEx(then'))
+      | ifthenelseIR (test, then', else') =
         let
             val genstm = unCx(test)
             val e2 = unEx(then')

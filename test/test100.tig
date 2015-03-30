@@ -1,0 +1,2 @@
+/* Two string literals with same value get allocated same label */
+"hello" = "hello" 
