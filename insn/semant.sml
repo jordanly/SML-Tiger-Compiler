@@ -142,11 +142,11 @@ struct
                 let
                     fun helper((seqExp, pos), {stmlist=stmlist', ty=ty'}) =
                         let val {exp=exp'', ty=ty''} = trexp seqExp
-                        in {stmlist=stmlist'@[(R.unNx exp'')], ty=ty''}
+                        in {stmlist=stmlist'@[exp''], ty=ty''}
                         end
                     fun checkSequence sequence = foldl helper {stmlist=[], ty=T.UNIT} sequence
                 in
-                    {exp=R.Nx(R.seq(#stmlist (checkSequence expList))), ty= (#ty (checkSequence expList))}
+                    {exp=R.Ex(R.eseq(#stmlist (checkSequence expList))), ty= (#ty (checkSequence expList))}
                 end
           | trexp (A.AssignExp({var, exp, pos})) = 
                 let

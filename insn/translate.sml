@@ -54,7 +54,7 @@ struct
 
     fun seq[] = Tr.EXP(Tr.CONST 0)
       | seq[stm] = stm
-      | seq(stm::stms) = Tr.SEQ(stm,seq(stms))  
+      | seq(stm::stms) = Tr.SEQ(stm,seq(stms))
 
     fun newLevel {parent, name, formals} = 
         let
@@ -109,6 +109,10 @@ struct
     fun unNx (Ex e) = Tr.EXP(e)
       | unNx (Nx n) = n
       | unNx (c) = unNx(Ex(unEx(c)))
+
+    fun eseq[] = Tr.CONST 0
+      | eseq[ex] = unEx ex
+      | eseq(stm::stms) = Tr.ESEQ(unNx stm, eseq(stms))
 
     fun followSLs TOPLEVEL TOPLEVEL bestguess = (Err.error 0 "Following static links failed"; bestguess)
               | followSLs TOPLEVEL _ bestguess = (Err.error 0 "Following static links failed"; bestguess)
