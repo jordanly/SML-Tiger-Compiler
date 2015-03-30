@@ -19,3 +19,6 @@ Notes:
 	Piazza that we did not have to implement this function for that phase:
 	https://piazza.com/class/i4ab28jtiig3jq?cid=98. We therefore believe that
 	those points were incorrectly deducted.
+
++ We have again not fully implemented the procEntryExit functions (and therefore
+    also the "view shift"). See https://piazza.com/class/i4ab28jtiig3jq?cid=116.
