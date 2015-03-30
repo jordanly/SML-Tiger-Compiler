@@ -98,7 +98,7 @@ struct
             end 
       | unEx (Nx (s as Tr.EXP(e))) = e
       | unEx (Nx (Tr.SEQ(stm, Tr.EXP laste))) = Tr.ESEQ(stm, laste)
-      | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0)
+      | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 37)
 
     fun unCx (Cx c) = c
       | unCx (Ex (Tr.CONST 0)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(flabel), [flabel]))
@@ -276,7 +276,7 @@ struct
           Ex(Tree.NAME(lab))
         end
 
-    fun callexpIR (TOPLEVEL, calllevel, label, args) = Ex (Tr.TEMP F.FP)
+    fun callexpIR (TOPLEVEL, calllevel, label, args) = Ex (Tr.CALL (Tr.NAME label, map unEx args))
       | callexpIR (declevel as NONTOP{uniq, parent, frame}, calllevel, label, args) =
         let
             val sl = followSLs parent calllevel (Tr.TEMP F.FP)
