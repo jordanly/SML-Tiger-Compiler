@@ -1,6 +1,7 @@
 .DS_Store
-*/.cm/
+*/.cm/*
 */k1.tig
 */tiger.grm.desc
 */tiger.grm.sml
 */tiger.lex.sml
+*.s
