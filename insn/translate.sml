@@ -68,7 +68,7 @@ struct
             let
                 fun addLevel (faccess, l) = (curlevel, faccess)::l
             in
-                foldl addLevel [] (F.formals frame)
+                foldr addLevel [] (F.formals frame)
             end
 
     fun printLevel level' =

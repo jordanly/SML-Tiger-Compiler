@@ -115,11 +115,11 @@ struct
               | allocFormals(offset, curFormal::l, allocList, numRegs) = 
                   (
                   case curFormal of
-                       true => allocFormals(offset + wordSize, l, (InFrame offset)::allocList, numRegs)
+                       true => (InFrame offset)::allocFormals(offset + wordSize, l, allocList, numRegs)
                      | false => 
                          if numRegs < ARGREGS
-                         then allocFormals(offset + wordSize, l, (InReg(Temp.newtemp()))::allocList, numRegs + 1)
-                         else allocFormals(offset + wordSize, l, (InFrame offset)::allocList, numRegs)
+                         then (InReg(Temp.newtemp()))::allocFormals(offset + wordSize, l, allocList, numRegs + 1)
+                         else (InFrame offset)::allocFormals(offset + wordSize, l, allocList, numRegs)
                   )
         in
             {name=name, formals=allocFormals(0, formals, [], 0),
@@ -154,6 +154,12 @@ struct
             InFrame offset => Tr.MEM(Tr.BINOP(Tr.PLUS, frameaddr, Tr.CONST offset))
           | InReg temp => Tr.TEMP(temp)
 
+    fun exp2loc (Tr.MEM exp') = Tr.MEMLOC exp'
+      | exp2loc (Tr.TEMP temp') = Tr.TEMPLOC temp'
+      | exp2loc (Tr.ESEQ (stm', exp' as Tr.MEM(_))) = Tr.ESEQLOC(stm', exp2loc exp')
+      | exp2loc (Tr.ESEQ (stm', exp' as Tr.TEMP(_))) = Tr.ESEQLOC(stm', exp2loc exp')
+      | exp2loc _ = (Err.error 0 "Can't convert exp to loc"; Tr.TEMPLOC(Temp.newtemp()))
+
     (* TODO account for Tiger vs. C distinctions *)
     fun externalCall (s, args) =
       Tr.CALL(Tr.NAME(Temp.namedlabel s), args)
@@ -166,9 +172,18 @@ struct
 
     fun procEntryExit1(frame' : frame, stm : Tr.stm) = 
         let
-          val label' = name frame' 
+          val label' = name frame'
+          val argTemps = getRegisterTemps argregs
+          fun moveArgs([], seqList, offset) = seqList
+            | moveArgs(a::access, seqList, offset) =
+                (
+                if offset < 4
+                then Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP (List.nth(argTemps, offset)))::moveArgs(access, seqList, offset + 1)
+                else Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.CONST 0)::moveArgs(access, seqList, offset + 1)
+                )
+          val moveStms = moveArgs(formals frame', [], 0)
         in
-          seq [Tr.LABEL(label'), stm]
+          seq ([Tr.LABEL(label')] @ moveStms @ [stm])
         end
 
     fun procEntryExit2(frame, body) = 
