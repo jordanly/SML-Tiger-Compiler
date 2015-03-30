@@ -264,7 +264,7 @@ struct
               in
                 result(fn r => emit(
                       A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
-                              src=munchArgs(0, args, 0), dst=calldefs,
+                              src=munchArgs(0, args, 16), dst=calldefs,
                               jump=NONE}
                               )
                       )
@@ -279,7 +279,7 @@ struct
               in
                 if i < 4
                 then (moveArgToTemp a; argTemp::munchArgs(i + 1, l, offset))
-                else (moveArgToFrame(a, offset); munchArgs(i + 1, l, offset - 4))
+                else (moveArgToFrame(a, offset); munchArgs(i + 1, l, offset + 4))
               end
       in
         munchStm stm;

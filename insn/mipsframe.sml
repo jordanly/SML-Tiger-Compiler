@@ -104,12 +104,11 @@ struct
            | NONE => Temp.makestring t
     val wordSize = 4
 
-    val ARGREGS = 4 (* registers allocated for arguments in mips *)
-
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
     fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
     fun string(lab, s) = "TODO implement " ^ (Symbol.name lab) ^ " : " ^ s ^ "\n"
     
+    val ARGREGS = 4 (* registers allocated for arguments in mips *)
     fun newFrame {name, formals} = 
         let
             fun allocFormals(offset, [], allocList, numRegs) = allocList
