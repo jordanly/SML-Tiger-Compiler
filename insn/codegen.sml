@@ -259,12 +259,16 @@ struct
           | munchExp(T.ESEQ(s1, e1)) = (munchStm s1; munchExp e1)
           | munchExp(T.NAME(l1)) = (Err.error 0 "tried to munch T.NAME"; Temp.newtemp())
           | munchExp(T.CALL(T.NAME(n1), args)) = 
-              result(fn r => emit(
-                     A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
-                             src=munchArgs(0, args, 0), dst=[(* TODO make calldefs *)],
-                             jump=NONE}
-                             )
-                    )
+              let
+                val calldefs = F.RA::F.RV::(F.getRegisterTemps F.calleesaves)
+              in
+                result(fn r => emit(
+                      A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
+                              src=munchArgs(0, args, 0), dst=calldefs,
+                              jump=NONE}
+                              )
+                      )
+              end
         and munchArgs(i, [], offset) = []
           | munchArgs(i, a::l, offset) =
               let
