@@ -5,14 +5,14 @@ IR
 	CONST + CONST => CONST not BINOP (test103.tig)
 	CONST - CONST => CONST not BINOP (test104.tig)
 	CONST * CONST => CONST not BINOP (test105.tig)
-	CONST / CONST => CONST not BINOP (test105.tig)
-	CONST = CONST => JUMP not CJUMP
-	CONST <> CONST => JUMP not CJUMP
-	CONST < CONST => JUMP not CJUMP
-	CONST <= CONST => JUMP not CJUMP
-	CONST > CONST => JUMP not CJUMP
-	CONST >= CONST => JUMP not CJUMP
-	WHILE 0 => nothing
+	CONST / CONST => CONST not BINOP (test106.tig)
+	CONST = CONST => JUMP not CJUMP (test107.tig) NOT DONE
+	CONST <> CONST => JUMP not CJUMP (test108.tig) NOT DONE
+	CONST < CONST => JUMP not CJUMP (test109.tig) NOT DONE
+	CONST <= CONST => JUMP not CJUMP (test110.tig) NOT DONE
+	CONST > CONST => JUMP not CJUMP (test111.tig) NOT DONE
+	CONST >= CONST => JUMP not CJUMP (test112.tig) NOT DONE
+	WHILE 0 => nothing (test113.tig) NOT DONE
 	WHILE 1 => JUMP not CJUMP at end
 	ARRAY[0] => doesn't generate mult instruction
 	FOR with low > hi => Nothing

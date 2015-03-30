@@ -1,0 +1,2 @@
+/* WHILE 0 => nothing */
+(while 0 do (); 3)
