@@ -1,12 +1,11 @@
 Extra Credit (We need to generate test cases for these)
 IR
 	if 0 then _ else _ => JUMP not CJUMP (test101.tig)
-	if 1 then _ else _ => JUMP not CJUMP
-	CONST + CONST => CONST not BINOP
-	CONST - CONST => CONST not BINOP
-	CONST - CONST => CONST not BINOP
-	CONST * CONST => CONST not BINOP
-	CONST / CONST => CONST not BINOP
+	if 1 then _ else _ => JUMP not CJUMP (test102.tig)
+	CONST + CONST => CONST not BINOP (test103.tig)
+	CONST - CONST => CONST not BINOP (test104.tig)
+	CONST * CONST => CONST not BINOP (test105.tig)
+	CONST / CONST => CONST not BINOP (test105.tig)
 	CONST = CONST => JUMP not CJUMP
 	CONST <> CONST => JUMP not CJUMP
 	CONST < CONST => JUMP not CJUMP

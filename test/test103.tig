@@ -1,0 +1,2 @@
+/*CONST + CONST => CONST not BINOP*/
+3 + 3
