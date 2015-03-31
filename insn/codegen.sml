@@ -274,6 +274,7 @@ struct
                               )
                       )
               end
+          | munchExp(T.CALL(_, _)) = (Err.error 0 "T.CALL must have NAME as the exp"; Temp.newtemp())
         and munchArgs(i, [], offset) = []
           | munchArgs(i, a::l, offset) =
               let
