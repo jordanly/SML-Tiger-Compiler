@@ -116,10 +116,7 @@ struct
                   (
                   case curFormal of
                        true => (InFrame offset)::allocFormals(offset + wordSize, l, allocList, index + 1)
-                     | false => 
-                         if index < ARGREGS
-                         then (InReg(Temp.newtemp()))::allocFormals(offset + wordSize, l, allocList, index + 1)
-                         else (InFrame offset)::allocFormals(offset + wordSize, l, allocList, index + 1)
+                     | false => (InReg(Temp.newtemp()))::allocFormals(offset + wordSize, l, allocList, index + 1)
                   )
         in
             {name=name, formals=allocFormals(0, formals, [], 0),
@@ -182,9 +179,15 @@ struct
                     let
                       val temp = Temp.newtemp()
                     in
-                      printAccess a;
-                      Tr.MOVE(Tr.TEMPLOC temp, (exp(a, Tr.TEMP FP)))::
-                      Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP temp)::moveArgs(access, seqList, offset + 1)
+                      case a of 
+                           InFrame off => moveArgs(access, seqList, offset + 1)
+                             (* do nothing? already in correct place 
+                              Tr.MOVE(Tr.TEMPLOC temp, (exp(a, Tr.TEMP FP)))::
+                              Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP temp)::
+                              moveArgs(access, seqList, offset + 1) *)
+                         | InReg te => 
+                             (* load from frame into temp reg *)
+                             Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP te)::moveArgs(access, seqList, offset + 1)
                     end
           val moveStms = moveArgs(formals frame', [], 0)
         in
