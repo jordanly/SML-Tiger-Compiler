@@ -84,7 +84,7 @@ struct
       end
   and traverseDecs(env:escEnv, d:depth, s:Absyn.dec list): escEnv = 
       let
-        fun trdec(A.FunctionDec(fundecs)) =
+        fun trdec(A.FunctionDec(fundecs), env) =
             let
               fun addParamToEnv({name=name', escape=escape', typ=_, pos=_}, env) =
                 S.enter(env, name', (d + 1, escape'))
@@ -98,15 +98,15 @@ struct
               app evalFundec fundecs;
               env
             end
-          | trdec(A.VarDec {name, escape, typ, init, pos}) =
+          | trdec(A.VarDec {name, escape, typ, init, pos}, env) =
               let
                 val env' = S.enter(env, name, (d, escape))
               in
                 traverseExp(env', d, init);
                 env'
               end
-          | trdec(A.TypeDec(typedecs)) = env
-        and foldDecs (dec, env') = trdec dec
+          | trdec(A.TypeDec(typedecs), env) = env
+        and foldDecs (dec, env') = trdec(dec, env')
       in
         foldl foldDecs env s
       end
