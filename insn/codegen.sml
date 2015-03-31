@@ -257,7 +257,12 @@ struct
                     )
           | munchExp(T.TEMP(t1)) = t1
           | munchExp(T.ESEQ(s1, e1)) = (munchStm s1; munchExp e1)
-          | munchExp(T.NAME(l1)) = (Err.error 0 "tried to munch T.NAME"; Temp.newtemp())
+          | munchExp(T.NAME(l1)) = 
+              result(fn r => emit(
+                     A.OPER {assem="la `d0, " ^ (Symbol.name l1) ^ "\n",
+                        src=[], dst=[r], jump=NONE}
+                    )
+              )
           | munchExp(T.CALL(T.NAME(n1), args)) = 
               let
                 val calldefs = F.RA::F.RV::(F.getRegisterTemps F.calleesaves)

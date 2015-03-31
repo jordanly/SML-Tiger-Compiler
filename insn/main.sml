@@ -6,12 +6,12 @@ structure Main = struct
 
     fun emitproc out (F.PROC{body,frame}) =
             let val _ = print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n")
-                val _ = print "=== PRE-CANON ===\n"
+                val _ = print ("=== PRE-CANON " ^ S.name (F.name frame) ^ " ===\n")
                 val _ = Printtree.printtree(out,body);
                 val stms = Canon.linearize body
-                val _ = print "=== POST-CANON ===\n"
+                val _ = print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n")
                 val _ = app (fn s => Printtree.printtree(out,s)) stms;
-                val _ = print "=== EMIT ===\n"
+                val _ = print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n")
                 
                 val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
