@@ -272,7 +272,9 @@ struct
         and munchArgs(i, [], offset) = []
           | munchArgs(i, a::l, offset) =
               let
-                val argTemp = #1 (List.nth(F.argregs, i))
+                val argTemp = if i < 4
+                              then List.nth ((F.getRegisterTemps F.argregs), i)
+                              else Temp.newtemp() (* not used *)
                 fun moveArgToTemp arg = munchStm(T.MOVE(T.TEMPLOC(argTemp), arg))
                 fun moveArgToFrame(arg, offset) =
                   munchStm(T.MOVE(T.MEMLOC(T.BINOP(T.PLUS, T.TEMP(F.SP), T.CONST offset)), arg))

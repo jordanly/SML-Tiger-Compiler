@@ -111,15 +111,15 @@ struct
     val ARGREGS = 4 (* registers allocated for arguments in mips *)
     fun newFrame {name, formals} = 
         let
-            fun allocFormals(offset, [], allocList, numRegs) = allocList
-              | allocFormals(offset, curFormal::l, allocList, numRegs) = 
+            fun allocFormals(offset, [], allocList, index) = allocList
+              | allocFormals(offset, curFormal::l, allocList, index) = 
                   (
                   case curFormal of
-                       true => (InFrame offset)::allocFormals(offset + wordSize, l, allocList, numRegs)
+                       true => (InFrame offset)::allocFormals(offset + wordSize, l, allocList, index + 1)
                      | false => 
-                         if numRegs < ARGREGS
-                         then (InReg(Temp.newtemp()))::allocFormals(offset + wordSize, l, allocList, numRegs + 1)
-                         else (InFrame offset)::allocFormals(offset + wordSize, l, allocList, numRegs)
+                         if index < ARGREGS
+                         then (InReg(Temp.newtemp()))::allocFormals(offset + wordSize, l, allocList, index + 1)
+                         else (InFrame offset)::allocFormals(offset + wordSize, l, allocList, index + 1)
                   )
         in
             {name=name, formals=allocFormals(0, formals, [], 0),
@@ -176,11 +176,16 @@ struct
           val argTemps = getRegisterTemps argregs
           fun moveArgs([], seqList, offset) = seqList
             | moveArgs(a::access, seqList, offset) =
-                (
                 if offset < 4
                 then Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP (List.nth(argTemps, offset)))::moveArgs(access, seqList, offset + 1)
-                else Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.CONST 0)::moveArgs(access, seqList, offset + 1)
-                )
+                else 
+                    let
+                      val temp = Temp.newtemp()
+                    in
+                      printAccess a;
+                      Tr.MOVE(Tr.TEMPLOC temp, (exp(a, Tr.TEMP FP)))::
+                      Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP temp)::moveArgs(access, seqList, offset + 1)
+                    end
           val moveStms = moveArgs(formals frame', [], 0)
         in
           seq ([Tr.LABEL(label')] @ moveStms @ [stm])
