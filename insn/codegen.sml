@@ -267,12 +267,15 @@ struct
               let
                 val calldefs = F.RA::F.RV::(F.getRegisterTemps F.calleesaves)
               in
-                result(fn r => emit(
-                      A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
-                              src=munchArgs(0, args, 16), dst=calldefs,
-                              jump=NONE}
-                              )
-                      )
+                emit(
+                  A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
+                          src=munchArgs(0, args, 16), dst=calldefs,
+                          jump=NONE}
+                );
+
+                (* A call will always move it's return to RV
+                   Therefore, return RV not a new teamp *)
+                F.RV
               end
           | munchExp(T.CALL(_, _)) = (Err.error 0 "T.CALL must have NAME as the exp"; Temp.newtemp())
         and munchArgs(i, [], offset) = []
