@@ -97,8 +97,8 @@ struct
           (* ESEQLOC moves *)
           | munchStm(T.MOVE(T.ESEQLOC(s1, T.MEMLOC(e1)), e2)) = 
               (munchStm s1; emit(
-                A.MOVE {assem="sw `s0, (`d0)\n",
-                        src=munchExp e2, dst=munchExp e1}
+                A.OPER {assem="sw `s0, (`d0)\n",
+                        src=[munchExp e2], dst=[munchExp e1], jump=NONE}
               ))
           | munchStm(T.MOVE(T.ESEQLOC(s1, T.TEMPLOC(t1)), e1)) = 
               (munchStm s1; emit(
