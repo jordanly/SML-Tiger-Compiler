@@ -183,7 +183,8 @@ struct
 
     fun assignIR (left, right) = Nx (Tr.MOVE (exp2loc (unEx left), unEx right))
 
-    fun whileIR (test, body, breaklabel) =
+    fun whileIR (Ex (Tr.CONST 0), _, _) = Ex(Tr.CONST 0)
+      | whileIR (test, body, breaklabel) =
         let
             val testlabel = Temp.newlabel()
             val bodylabel = Temp.newlabel()

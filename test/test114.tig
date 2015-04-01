@@ -1,0 +1,2 @@
+/* WHILE 0 => nothing */
+(while 1 do flush(); 3)
