@@ -126,7 +126,11 @@ struct
     fun simpleVarIR ((declevel, fraccess), uselevel) =
         Ex(F.exp (fraccess, followSLs declevel uselevel (Tr.TEMP F.FP)))
 
-    fun binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
+    fun binopIR (Tr.PLUS, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a + b))
+      | binopIR (Tr.MINUS, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a - b))
+      | binopIR (Tr.MUL, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a * b))
+      | binopIR (Tr.DIV, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a div b))
+      | binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
     (* ty mostly for comparing if STRING *)
     fun relopIR (relop, left, right, ty) = 
@@ -151,8 +155,9 @@ struct
                 Tr.LABEL(join)
             ], Tr.CONST 0))
         end
-
-    fun ifthenelseIR (test, then', else') =
+    fun ifthenelseIR (Ex(Tr.CONST 0), then', else') = Ex(unEx(else'))
+      | ifthenelseIR (Ex(Tr.CONST 1), then', else') = Ex(unEx(then'))
+      | ifthenelseIR (test, then', else') =
         let
             val genstm = unCx(test)
             val e2 = unEx(then')
