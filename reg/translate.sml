@@ -241,18 +241,19 @@ struct
     fun arrayIR (sizeEx, initEx) =
         Ex(F.externalCall("initArray", [unEx sizeEx, unEx initEx]))
 
-    fun subscriptIR (arrEx, indexEx) =
-        let
-            val addr = Temp.newtemp()
-            val arr = unEx arrEx
-            val index = unEx indexEx
-        in
-            Ex(Tr.ESEQ(
-               Tr.MOVE(Tr.TEMPLOC(addr),
-                       Tr.BINOP(Tr.PLUS, arr,
-                                Tr.BINOP(Tr.MUL, index, Tr.CONST(F.wordSize)))),
-               Tr.MEM(Tr.TEMP(addr))))
-        end
+    fun subscriptIR (arrEx, Ex (Tr.CONST 0)) = Ex(Tr.MEM(unEx arrEx))
+      | subscriptIR (arrEx, indexEx) =
+            let
+                val addr = Temp.newtemp()
+                val arr = unEx arrEx
+                val index = unEx indexEx
+            in
+                Ex(Tr.ESEQ(
+                   Tr.MOVE(Tr.TEMPLOC(addr),
+                           Tr.BINOP(Tr.PLUS, arr,
+                                    Tr.BINOP(Tr.MUL, index, Tr.CONST(F.wordSize)))),
+                   Tr.MEM(Tr.TEMP(addr))))
+            end
 
     fun recordIR (exps) =
         let

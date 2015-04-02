@@ -11,7 +11,7 @@ Dead-code elimination / Code simplification
 	WHILE 1 => JUMP not CJUMP at end (test114.tig)
 	FOR with low > hi => (test115.tig)
 	FOR with low = hi => no jumps (test116.tig, test117.tig)
-	ARRAY[0] => doesn't generate mult instruction NOT DONE
+	ARRAY[0] => doesn't generate mult instruction (test118.tig)
 	mult by power of 2 => LSHIFT NOT DONE
 	divide by power of 2 => ARSHIFT NOT DONE
 	UMINUS UMINUS exp => exp NOT DONE

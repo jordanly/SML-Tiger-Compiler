@@ -1,0 +1,7 @@
+/* ARRAY[0] => doesn't generate mult instruction */
+let
+	type intarray = array of int
+	var my_arr := intarray [10] of 0
+in
+	my_arr[0]
+end
