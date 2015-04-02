@@ -9,8 +9,8 @@ Dead-code elimination / Code simplification
 	if 1 then _ else _ => JUMP not CJUMP (test102.tig)
 	WHILE 0 => no code or labels (test113.tig)
 	WHILE 1 => JUMP not CJUMP at end (test114.tig)
-	FOR with low > hi => Nothing NOT DONE
-	FOR with low = hi => no jumps NOT DONE
+	FOR with low > hi => (test115.tig)
+	FOR with low = hi => no jumps (test116.tig, test117.tig)
 	ARRAY[0] => doesn't generate mult instruction NOT DONE
 	mult by power of 2 => LSHIFT NOT DONE
 	divide by power of 2 => ARSHIFT NOT DONE

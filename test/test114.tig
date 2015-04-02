@@ -1,2 +1,2 @@
-/* WHILE 0 => nothing */
+/* WHILE 0 => no code or labels */
 (while 1 do flush(); 3)

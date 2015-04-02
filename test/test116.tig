@@ -1,0 +1,2 @@
+/* FOR with low = hi => no jumps */
+for i:=10 to 10 do i := i + 1

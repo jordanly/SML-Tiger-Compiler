@@ -201,7 +201,7 @@ struct
 
     fun breakIR breaklabel = Nx(Tr.JUMP (Tr.NAME breaklabel, [breaklabel]))
 
-    fun forIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel) = 
+    fun fullForIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel) = 
         let
             val var = unEx(varEx)
             val lo = unEx(loEx)
@@ -220,6 +220,23 @@ struct
                         Tr.JUMP(Tr.NAME(bodylabel), [bodylabel]),
                         Tr.LABEL(breaklabel)])
         end
+
+    fun forIR (varEx, escape, loEx as Ex (Tr.CONST loval), hiEx as Ex (Tr.CONST hival), bodyNx, breaklabel) = 
+            if loval > hival then Ex (Tr.CONST 37)
+            else if loval = hival
+                then
+                    let
+                        val var = unEx(varEx)
+                        val lo = unEx(loEx)
+                        val body = unNx(bodyNx)
+                    in
+                        Nx(seq[Tr.MOVE(exp2loc var, lo),
+                                    body,
+                                    Tr.LABEL(breaklabel)])
+                    end
+            else 
+                fullForIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel)
+      | forIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel) = fullForIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel)
 
     fun arrayIR (sizeEx, initEx) =
         Ex(F.externalCall("initArray", [unEx sizeEx, unEx initEx]))

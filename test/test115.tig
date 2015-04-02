@@ -1,0 +1,2 @@
+/* FOR with low > hi => nothing */
+for i:=12 to 10 do flush()
