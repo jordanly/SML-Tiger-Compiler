@@ -1,0 +1,11 @@
+CM.make "sources.cm";
+let
+	val r1 = Temp.newtemp()
+	val r2 = Temp.newtemp()
+	val r3 = Temp.newtemp()
+	val assemlist = [Assem.OPER{assem="insn1", dst=[r1], src=[r2], jump=NONE},
+					 Assem.OPER{assem="insn2", dst=[r1], src=[r1, r2], jump=NONE},
+					 Assem.MOVE{assem="move3", dst=r1, src=r2}]
+in
+	MakeGraph.flowgraph assemlist
+end

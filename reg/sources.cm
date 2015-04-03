@@ -36,6 +36,7 @@ assem.sml
 flowgraph.sml
 graph.sig
 graph.sml
+makegraph.sml
 
 (* Misc. *)
 (* runtime.c ? *)
