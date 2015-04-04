@@ -1,0 +1,6 @@
+/* mult by power of 2 => LSHIFT not MULT */
+let
+	var a := 3
+in
+	a * 4
+end

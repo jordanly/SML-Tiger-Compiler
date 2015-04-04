@@ -52,6 +52,16 @@ struct
     val outermost = TOPLEVEL
     val NIL = Ex(Tr.CONST 0)
 
+    (* Only returns perfect integers or NONE *)
+    fun logBase2 0 = NONE
+      | logBase2 1 = SOME 0
+      | logBase2 n =
+            if n mod 2 = 0
+            then case logBase2 (n div 2) of
+                    SOME x => SOME (x + 1)
+                  | NONE => NONE
+            else NONE
+
     fun seq[] = Tr.EXP(Tr.CONST 0)
       | seq[stm] = stm
       | seq(stm::stms) = Tr.SEQ(stm,seq(stms))
@@ -129,6 +139,16 @@ struct
     fun binopIR (Tr.PLUS, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a + b))
       | binopIR (Tr.MINUS, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a - b))
       | binopIR (Tr.MUL, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a * b))
+      | binopIR (binop as Tr.MUL, left as Ex(Tr.CONST a), right) =
+            (case logBase2 a of
+                SOME lg_a => Ex(Tr.BINOP(Tr.LSHIFT, unEx(right), Tr.CONST(lg_a)))
+              | NONE => Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
+            )
+      | binopIR (binop as Tr.MUL, left, right as Ex(Tr.CONST b)) =
+            (case logBase2 b of
+                SOME lg_b => Ex(Tr.BINOP(Tr.LSHIFT, unEx(left), Tr.CONST(lg_b)))
+              | NONE => Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
+            )
       | binopIR (Tr.DIV, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a div b))
       | binopIR (binop, left, right) = Ex(Tr.BINOP(binop, unEx(left), unEx(right)))
 
