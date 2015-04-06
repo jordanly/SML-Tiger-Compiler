@@ -122,7 +122,7 @@ struct
                 )
         and munchExp(T.CONST i) =
               result(fn r => emit(
-                     A.OPER {assem="addi `d0, r0, " ^ Int.toString i ^ "\n",
+                     A.OPER {assem="li `d0, " ^ Int.toString i ^ "\n",
                              src=[], dst=[r], jump=NONE}
                              )
                     )
