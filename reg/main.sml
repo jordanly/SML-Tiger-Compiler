@@ -7,21 +7,23 @@ structure Main = struct
     fun emitproc out (F.PROC{body,frame}) =
             let val _ = print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n")
                 val _ = print ("=== PRE-CANON " ^ S.name (F.name frame) ^ " ===\n")
-                val _ = Printtree.printtree(out,body);
+                val _ = Printtree.printtree(TextIO.stdOut,body);
                 val stms = Canon.linearize body
                 val _ = print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n")
-                val _ = app (fn s => Printtree.printtree(out,s)) stms;
+                val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                 val _ = print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n")
                 
                 val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
                 val format0 = Assem.format(F.makestring)
             in 
-                app (fn i => TextIO.output(out,format0 i)) instrs
+                (app (fn i => TextIO.output(out,format0 i)) instrs;
+                    app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs)
             end
       | emitproc out (F.STRING(lab,s)) =
             (
                 print ("========== Fragment:  " ^ (S.name lab) ^ " ==========\n");
+                TextIO.output(TextIO.stdOut, F.string(lab,s));
                 TextIO.output(out, F.string(lab,s))
             )
 
@@ -39,6 +41,6 @@ structure Main = struct
             val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
         in 
             withOpenFile (filename ^ ".s") 
-            (fn out => (app (emitproc TextIO.stdOut) frags))
+            (fn out => (app (emitproc out) frags))
        end
 end
