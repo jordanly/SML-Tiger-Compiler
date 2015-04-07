@@ -109,7 +109,7 @@ struct
       | unEx (Nx (s as Tr.EXP(e))) = e
       | unEx (Nx (Tr.SEQ(stm, Tr.SEQ stms))) = Tr.ESEQ(stm, unEx (Nx (Tr.SEQ stms)))
       | unEx (Nx (Tr.SEQ(stm, Tr.EXP laste))) = Tr.ESEQ(stm, laste)
-      | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 37)
+      | unEx (Nx s) = Tr.ESEQ(s, Tr.CONST 0)
 
     fun unCx (Cx c) = c
       | unCx (Ex (Tr.CONST 0)) = (fn(tlabel, flabel) => Tr.JUMP(Tr.NAME(flabel), [flabel]))
@@ -242,7 +242,7 @@ struct
         end
 
     fun forIR (varEx, escape, loEx as Ex (Tr.CONST loval), hiEx as Ex (Tr.CONST hival), bodyNx, breaklabel) = 
-            if loval > hival then Ex (Tr.CONST 37)
+            if loval > hival then Ex (Tr.CONST 0)
             else if loval = hival
                 then
                     let
