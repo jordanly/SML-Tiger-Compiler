@@ -19,8 +19,8 @@ structure Main = struct
 
                 val _ = print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n")
                 val flowgraph = MakeGraph.makeFlowgraph instrs
-                fun printGraphNode (id, node) = Int.toString id
-                val _ = G.printGraph printGraphNode flowgraph
+                fun printGraphNode (id, node) = id
+                val _ = FlowGraph.printGraph printGraphNode flowgraph
             in 
                 app (fn i => TextIO.output(out,format0 i)) instrs
             end
