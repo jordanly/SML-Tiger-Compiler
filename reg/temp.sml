@@ -6,6 +6,8 @@ struct
     val temps = ref 100
     val compare = Int.compare
 
+    fun currentTemp () = !temps
+
     fun reset () = 
 	let val () = temps := 100
 	    val () = labelCount := 0
