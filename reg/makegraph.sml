@@ -8,17 +8,60 @@ structure FlowGraph =
 structure MakeGraph =
 struct
     structure A = Assem
-    val stmNum = ref 0
-    fun getStmNum () = 
-        (stmNum := !stmNum + 1; !stmNum)
-    fun makeFlowgraph assemlist = 
+
+    fun assemID stmNum assem = "stm" ^ (Int.toString stmNum) ^ " - " ^ assem
+
+    fun makeFlowgraphNodes assemlist = 
         let
-            fun addStm (oper as A.OPER{assem,dst,src,jump}, graph) = FlowGraph.addNode(graph, "stm" ^ Int.toString (getStmNum()) ^ " - " ^ assem, oper)
-              | addStm (label as A.LABEL{assem,lab}, graph) = FlowGraph.addNode(graph, Symbol.name lab, label)
-              | addStm (move as A.MOVE{assem,dst,src}, graph) = FlowGraph.addNode(graph, "stm" ^ Int.toString (getStmNum()) ^ " - " ^ assem, move)
+            val stmNum = ref 0
+            fun getStmNum () = !stmNum
+            fun incStmNum () = stmNum := !stmNum + 1        
+            fun addStm (oper as A.OPER{assem,dst,src,jump}, graph) = (incStmNum(); FlowGraph.addNode(graph, assemID (getStmNum()) assem, oper))
+              | addStm (label as A.LABEL{assem,lab}, graph) = (incStmNum(); FlowGraph.addNode(graph, Symbol.name lab, label))
+              | addStm (move as A.MOVE{assem,dst,src}, graph) = (incStmNum(); FlowGraph.addNode(graph, assemID (getStmNum()) assem, move))
         in
             foldl addStm FlowGraph.empty assemlist
         end
+
+    fun addFlowgraphEdges (graph, assemlist) = 
+        let
+            val stmNum = ref 0
+            fun getStmNum () = !stmNum
+            fun incStmNum () = stmNum := !stmNum + 1  
+
+            (* Third arg represents fall-through instruction:
+               SOME nodeID if previous assembly instruction can
+               fall through to this one, or NONE otherwise *)
+            fun addEdgeHelper (graph, [], _) = graph
+              | addEdgeHelper (graph, a::l, NONE) =
+                    (incStmNum();
+                    case a of
+                        A.OPER{assem,dst,src,jump=NONE} => addEdgeHelper(graph, l, SOME (assemID (getStmNum()) assem))
+                      | A.OPER{assem,dst,src,jump=SOME jumplist} => 
+                            let
+                                val graph' = foldl
+                                            (fn (label, graph) => FlowGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
+                                            graph
+                                            jumplist
+                                handle NoSuchNode => Err.impossible "can't find node" (* TODO: Debug why there are no edges being added *)      
+                            in
+                                addEdgeHelper(graph', l, NONE)
+                            end
+                      | A.LABEL{assem,lab} => addEdgeHelper(graph, l, SOME (Symbol.name lab))
+                      | A.MOVE{assem,dst,src} => addEdgeHelper(graph, l, SOME (assemID (getStmNum()) assem))
+                    )
+              | addEdgeHelper (graph, a::l, SOME x) = graph
+                    (*(incStmNum();
+                    case a of
+                        A.OPER{assem,dst,src,jump} => 
+                      | A.LABEL{assem,lab} => 
+                      | A.MOVE{assem,dst,src} =>
+                    )*)
+        in
+            addEdgeHelper(graph, assemlist, NONE)
+        end
+
+    fun makeFlowgraph assemlist = addFlowgraphEdges (makeFlowgraphNodes assemlist, assemlist)
 end
 
 (* Useful later for liveness analysis *)
