@@ -12,13 +12,17 @@ structure Main = struct
                 val _ = print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n")
                 val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                 val _ = print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n")
-                
-                val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
-                val instrs =   List.concat(map (MipsGen.codegen frame) stms') 
                 val format0 = Assem.format(F.makestring)
+                val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
+                val instrs =   List.concat(map (MipsGen.codegen frame) stms')
+                val _ = app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs
+
+                val _ = print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n")
+                val flowgraph = MakeGraph.makeFlowgraph instrs
+                fun printGraphNode (id, node) = Int.toString id
+                val _ = G.printGraph printGraphNode flowgraph
             in 
-                (app (fn i => TextIO.output(out,format0 i)) instrs;
-                    app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs)
+                app (fn i => TextIO.output(out,format0 i)) instrs
             end
       | emitproc out (F.STRING(lab,s)) =
             (
