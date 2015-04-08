@@ -9,7 +9,7 @@ structure MakeGraph =
 struct
     structure A = Assem
 
-    fun assemID stmNum assem = "stm" ^ (Int.toString stmNum) ^ " - " ^ assem
+    fun assemID stmNum assem = "line" ^ (Int.toString stmNum) ^ " - " ^ assem
 
     fun makeFlowgraphNodes assemlist = 
         let
@@ -43,20 +43,40 @@ struct
                                             (fn (label, graph) => FlowGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
                                             graph
                                             jumplist
-                                handle NoSuchNode => Err.impossible "can't find node" (* TODO: Debug why there are no edges being added *)      
+                                handle NoSuchNode => Err.impossible "can't find node" (* TODO *) 
                             in
                                 addEdgeHelper(graph', l, NONE)
                             end
                       | A.LABEL{assem,lab} => addEdgeHelper(graph, l, SOME (Symbol.name lab))
                       | A.MOVE{assem,dst,src} => addEdgeHelper(graph, l, SOME (assemID (getStmNum()) assem))
                     )
-              | addEdgeHelper (graph, a::l, SOME x) = graph
-                    (*(incStmNum();
+              | addEdgeHelper (graph, a::l, SOME fallthroughpred) =
+                    (incStmNum();
                     case a of
-                        A.OPER{assem,dst,src,jump} => 
-                      | A.LABEL{assem,lab} => 
+                        A.OPER{assem,dst,src,jump=NONE} =>
+                            let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
+                            in addEdgeHelper(graph', l, SOME (assemID (getStmNum()) assem))
+                            end
+                      | A.OPER{assem,dst,src,jump=SOME jumplist} => 
+                            let
+                                val graph' = foldl
+                                            (fn (label, graph) => FlowGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
+                                            graph
+                                            jumplist
+                                val graph'' = FlowGraph.addEdge(graph', {from=fallthroughpred, to=assemID (getStmNum()) assem})
+                                handle NoSuchNode => Err.impossible "can't find node" (* TODO: Debug why there are no edges being added *)      
+                            in
+                                addEdgeHelper(graph'', l, NONE)
+                            end
+                      | A.LABEL{assem,lab} =>
+                            let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=Symbol.name lab})
+                            in addEdgeHelper(graph', l, SOME (Symbol.name lab))
+                            end
                       | A.MOVE{assem,dst,src} =>
-                    )*)
+                            let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
+                            in addEdgeHelper(graph, l, SOME (assemID (getStmNum()) assem))
+                            end
+                    )
         in
             addEdgeHelper(graph, assemlist, NONE)
         end
