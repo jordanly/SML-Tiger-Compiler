@@ -8,17 +8,17 @@ structure Main = struct
             let val _ = print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n")
                 val _ = print ("=== PRE-CANON " ^ S.name (F.name frame) ^ " ===\n")
                 val _ = Printtree.printtree(TextIO.stdOut,body);
-                val stms = Canon.linearize body
+                val stms : Tree.stm list = Canon.linearize body
                 val _ = print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n")
                 val _ = app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                 val _ = print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n")
                 val format0 = Assem.format(F.makestring)
-                val stms' = Canon.traceSchedule(Canon.basicBlocks stms)
-                val instrs =   List.concat(map (MipsGen.codegen frame) stms')
+                val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
+                val instrs : Assem.instr list =   List.concat(map (MipsGen.codegen frame) stms')
                 val _ = app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs
 
                 val _ = print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n")
-                val flowgraph = MakeGraph.makeFlowgraph instrs
+                val flowgraph : Assem.instr FlowGraph.graph = MakeGraph.makeFlowgraph instrs
                 fun printGraphNode (id, node) = id
                 val _ = FlowGraph.printGraph printGraphNode flowgraph
             in 
@@ -40,9 +40,9 @@ structure Main = struct
 
    fun compile filename = 
         let
-            val absyn = Parse.parse filename
+            val absyn : Absyn.exp = Parse.parse filename
             val _ = print "======== Syntax Errors (if any) ========\n";
-            val frags = (FindEscape.findEscape absyn; Semant.transProg absyn)
+            val frags : MipsFrame.frag list= (FindEscape.findEscape absyn; Semant.transProg absyn)
         in 
             withOpenFile (filename ^ ".s") 
             (fn out => (app (emitproc out) frags))
