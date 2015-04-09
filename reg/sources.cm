@@ -33,7 +33,6 @@ canon.sml
 assem.sml
 
 (* Register allocation *)
-(*flowgraph.sml*)
 funcgraph.sig
 funcgraph.sml
 makegraph.sml

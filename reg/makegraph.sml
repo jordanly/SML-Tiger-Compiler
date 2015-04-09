@@ -1,4 +1,4 @@
-structure FlowGraph =
+structure StrKeyGraph =
     FuncGraph(
         struct
             type ord_key = string
@@ -9,18 +9,22 @@ structure MakeGraph =
 struct
     structure A = Assem
 
-    fun assemID stmNum assem = "line" ^ (Int.toString stmNum) ^ " - " ^ assem
+    datatype graphentry = ENTRY of
+            {def: Temp.temp list,
+             use: Temp.temp list}
+
+    fun assemID stmNum assem = "stm" ^ (Int.toString stmNum) (*^ " - " ^ assem*)
 
     fun makeFlowgraphNodes assemlist = 
         let
             val stmNum = ref 0
             fun getStmNum () = !stmNum
             fun incStmNum () = stmNum := !stmNum + 1        
-            fun addStm (oper as A.OPER{assem,dst,src,jump}, graph) = (incStmNum(); FlowGraph.addNode(graph, assemID (getStmNum()) assem, oper))
-              | addStm (label as A.LABEL{assem,lab}, graph) = (incStmNum(); FlowGraph.addNode(graph, Symbol.name lab, label))
-              | addStm (move as A.MOVE{assem,dst,src}, graph) = (incStmNum(); FlowGraph.addNode(graph, assemID (getStmNum()) assem, move))
+            fun addStm (oper as A.OPER{assem,dst,src,jump}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, assemID (getStmNum()) assem, ENTRY{def=dst, use=src}))
+              | addStm (label as A.LABEL{assem,lab}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, Symbol.name lab, ENTRY{def=[], use=[]}))
+              | addStm (move as A.MOVE{assem,dst,src}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, assemID (getStmNum()) assem, ENTRY{def=[dst], use=[src]}))
         in
-            foldl addStm FlowGraph.empty assemlist
+            foldl addStm StrKeyGraph.empty assemlist
         end
 
     fun addFlowgraphEdges (graph, assemlist) = 
@@ -40,7 +44,7 @@ struct
                       | A.OPER{assem,dst,src,jump=SOME jumplist} => 
                             let
                                 val graph' = foldl
-                                            (fn (label, graph) => FlowGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
+                                            (fn (label, graph) => StrKeyGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
                                             graph
                                             jumplist
                                 handle NoSuchNode => Err.impossible "can't find node" (* TODO *) 
@@ -54,26 +58,26 @@ struct
                     (incStmNum();
                     case a of
                         A.OPER{assem,dst,src,jump=NONE} =>
-                            let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
+                            let val graph' = StrKeyGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
                             in addEdgeHelper(graph', l, SOME (assemID (getStmNum()) assem))
                             end
                       | A.OPER{assem,dst,src,jump=SOME jumplist} => 
                             let
                                 val graph' = foldl
-                                            (fn (label, graph) => FlowGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
+                                            (fn (label, graph) => StrKeyGraph.addEdge(graph, {from=assemID (getStmNum()) assem, to=Symbol.name label}))
                                             graph
                                             jumplist
-                                val graph'' = FlowGraph.addEdge(graph', {from=fallthroughpred, to=assemID (getStmNum()) assem})
+                                val graph'' = StrKeyGraph.addEdge(graph', {from=fallthroughpred, to=assemID (getStmNum()) assem})
                                 handle NoSuchNode => Err.impossible "can't find node" (* TODO: Debug why there are no edges being added *)      
                             in
                                 addEdgeHelper(graph'', l, NONE)
                             end
                       | A.LABEL{assem,lab} =>
-                            let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=Symbol.name lab})
+                            let val graph' = StrKeyGraph.addEdge(graph, {from=fallthroughpred, to=Symbol.name lab})
                             in addEdgeHelper(graph', l, SOME (Symbol.name lab))
                             end
                       | A.MOVE{assem,dst,src} =>
-                            let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
+                            let val graph' = StrKeyGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
                             in addEdgeHelper(graph', l, SOME (assemID (getStmNum()) assem))
                             end
                     )
