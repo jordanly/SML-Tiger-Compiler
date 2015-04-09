@@ -9,7 +9,7 @@ structure MakeGraph =
 struct
     structure A = Assem
 
-    datatype graphentry = ENTRY of
+    type graphentry =
             {def: Temp.temp list,
              use: Temp.temp list}
 
@@ -20,9 +20,9 @@ struct
             val stmNum = ref 0
             fun getStmNum () = !stmNum
             fun incStmNum () = stmNum := !stmNum + 1        
-            fun addStm (oper as A.OPER{assem,dst,src,jump}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, assemID (getStmNum()) assem, ENTRY{def=dst, use=src}))
-              | addStm (label as A.LABEL{assem,lab}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, Symbol.name lab, ENTRY{def=[], use=[]}))
-              | addStm (move as A.MOVE{assem,dst,src}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, assemID (getStmNum()) assem, ENTRY{def=[dst], use=[src]}))
+            fun addStm (oper as A.OPER{assem,dst,src,jump}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, assemID (getStmNum()) assem, {def=dst, use=src}))
+              | addStm (label as A.LABEL{assem,lab}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, Symbol.name lab, {def=[], use=[]}))
+              | addStm (move as A.MOVE{assem,dst,src}, graph) = (incStmNum(); StrKeyGraph.addNode(graph, assemID (getStmNum()) assem, {def=[dst], use=[src]}))
         in
             foldl addStm StrKeyGraph.empty assemlist
         end

@@ -19,7 +19,7 @@ structure Main = struct
 
                 val _ = print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n")
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
-                fun printGraphNode (id, node as MakeGraph.ENTRY{def, use}) =
+                fun printGraphNode (id, node as {def, use}) =
                     id ^ "(def: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp) "" def)
                     ^ ", use: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp) "" use) ^ ")"
                 val _ = StrKeyGraph.printGraph printGraphNode flowgraph
