@@ -297,7 +297,7 @@ struct
     fun fieldIR (nameEx, elem) =
         Ex(Tr.MEM(Tr.BINOP(
                     Tr.PLUS, unEx nameEx, 
-                    Tr.BINOP(Tr.MUL, Tr.CONST(elem), Tr.CONST (F.wordSize)))))
+                    Tr.CONST(elem * F.wordSize))))
 
     fun nilIR () = Ex (Tr.CONST 0)
 
