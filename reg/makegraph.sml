@@ -74,7 +74,7 @@ struct
                             end
                       | A.MOVE{assem,dst,src} =>
                             let val graph' = FlowGraph.addEdge(graph, {from=fallthroughpred, to=assemID (getStmNum()) assem})
-                            in addEdgeHelper(graph, l, SOME (assemID (getStmNum()) assem))
+                            in addEdgeHelper(graph', l, SOME (assemID (getStmNum()) assem))
                             end
                     )
         in
