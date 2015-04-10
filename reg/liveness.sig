@@ -1,12 +1,13 @@
 signature LIVENESS =
 sig
     structure TempKeyGraph : FUNCGRAPH
+    structure FlowNodeTempMap : ORD_MAP
     type igraphentry = {}
 
     val interferenceGraph :
             MakeGraph.graphentry StrKeyGraph.graph ->
                 igraphentry TempKeyGraph.graph *
-                string StrKeyGraph.node Temp.Map.map
+                Temp.temp list FlowNodeTempMap.map
 
     val show : TextIO.outstream * igraphentry TempKeyGraph.graph -> unit
 end
