@@ -38,6 +38,7 @@ funcgraph.sml
 makegraph.sml
 liveness.sig
 liveness.sml
+(* color.sml *)
 
 (* Misc. *)
 (* runtime.c ? *)

@@ -1,0 +1,13 @@
+CM.make "sources.cm";
+structure TG = Liveness.TempKeyGraph;
+val g1 = TG.empty;
+val g2 = TG.addNode(g1, 100, {});
+val g3 = TG.addNode(g2, 101, {});
+val g4 = TG.addNode(g3, 102, {});
+val g5 = TG.addNode(g4, 103, {});
+val g6 = TG.addNode(g5, 104, {});
+val g7 = TG.doubleEdge(g6, 100, 101);
+val finalgraph = g7;
+fun printGraphNode (id, node) = Int.toString id;
+val _ = TG.printGraph printGraphNode finalgraph;
+(* val (post_alloc, spilllist) = Color.color{finalgraph, } *)
