@@ -36,6 +36,8 @@ assem.sml
 funcgraph.sig
 funcgraph.sml
 makegraph.sml
+liveness.sig
+liveness.sml
 
 (* Misc. *)
 (* runtime.c ? *)
