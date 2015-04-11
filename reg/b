@@ -1,3 +1,4 @@
+(* Use "sml < b" at terminal to test reg allocation in isolation *)
 CM.make "sources.cm";
 structure TG = TempKeyGraph;
 (* Make temps *)
@@ -6,8 +7,9 @@ val t2 = Temp.newtemp();
 val t3 = Temp.newtemp();
 val t4 = Temp.newtemp();
 val t5 = Temp.newtemp();
+val templist = [t1, t2, t3, t4, t5];
 
-(* Make final graph *)
+(* Make interference graph *)
 val g1 = TG.empty;
 val g2 = TG.addNode(g1, t1, {});
 val g3 = TG.addNode(g2, t2, {});
@@ -20,7 +22,7 @@ val g9 = TG.doubleEdge(g8, t1, t4);
 val g10 = TG.doubleEdge(g9, t1, t5);
 val finalgraph = g10;
 
-(* Print final graph *)
+(* Print interference graph *)
 fun printGraphNode (id, node) = Int.toString id;
 val _ = TG.printGraph printGraphNode finalgraph;
 
@@ -28,7 +30,12 @@ val _ = TG.printGraph printGraphNode finalgraph;
 structure TT = Temp.Table;
 val alloc1 = TT.empty;
 val alloc2 = TT.enter (alloc1, t1, "S0");
+fun printAlloc alloc temp = (print ("\n" ^ Temp.makestring temp ^ " - ");
+	case (TT.look(alloc, temp)) of
+		SOME reg => print reg
+      | NONE => ());
 val initalloc = alloc2;
+app (printAlloc initalloc) templist;
 
 (* Make spill cost calculation function *)
 fun spillCost x = 1;
@@ -37,4 +44,5 @@ fun spillCost x = 1;
 val reglist = ["S0", "S1"];
 
 (* Color *)
-val (post_alloc, spilllist) = Color.color{igraph=finalgraph, initial=initalloc, spillCost = spillCost, registers = reglist}
+val (post_alloc, spilllist) = Color.color{igraph=finalgraph, initial=initalloc, spillCost = spillCost, registers = reglist};
+app (printAlloc post_alloc) templist
