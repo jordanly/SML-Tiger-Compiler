@@ -30,10 +30,10 @@ val _ = TG.printGraph printGraphNode finalgraph;
 structure TT = Temp.Table;
 val alloc1 = TT.empty;
 val alloc2 = TT.enter (alloc1, t1, "S0");
-fun printAlloc alloc temp = (print ("\n" ^ Temp.makestring temp ^ " - ");
+fun printAlloc alloc temp = (print (Temp.makestring temp ^ " - ");
 	case (TT.look(alloc, temp)) of
 		SOME reg => print reg
-      | NONE => ());
+      | NONE => (); print "\n");
 val initalloc = alloc2;
 app (printAlloc initalloc) templist;
 
