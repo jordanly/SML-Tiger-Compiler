@@ -9,5 +9,6 @@ sig
                 igraphentry TempKeyGraph.graph *
                 Temp.temp list FlowNodeTempMap.map
 
+    val printGraphNode : TempKeyGraph.nodeID * 'Z -> string
     val show : TextIO.outstream * igraphentry TempKeyGraph.graph -> unit
 end

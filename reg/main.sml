@@ -24,6 +24,7 @@ structure Main = struct
                     ^ " -- use: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp ^ ", ") "" use)
                     ^ " -- ismove: " ^ (Bool.toString ismove) ^ ")"
                 val _ = StrKeyGraph.printGraph printGraphNode flowgraph
+                val igraph = Liveness.interferenceGraph flowgraph
             in 
                 app (fn i => TextIO.output(out,format0 i)) instrs
             end
