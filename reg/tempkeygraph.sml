@@ -1,0 +1,1 @@
+structure TempKeyGraph = FuncGraph(Temp.TempOrd)

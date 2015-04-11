@@ -1,6 +1,5 @@
 signature LIVENESS =
 sig
-    structure TempKeyGraph : FUNCGRAPH
     structure FlowNodeTempMap : ORD_MAP
     type igraphentry = {}
 

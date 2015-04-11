@@ -1,13 +1,40 @@
 CM.make "sources.cm";
-structure TG = Liveness.TempKeyGraph;
+structure TG = TempKeyGraph;
+(* Make temps *)
+val t1 = Temp.newtemp();
+val t2 = Temp.newtemp();
+val t3 = Temp.newtemp();
+val t4 = Temp.newtemp();
+val t5 = Temp.newtemp();
+
+(* Make final graph *)
 val g1 = TG.empty;
-val g2 = TG.addNode(g1, 100, {});
-val g3 = TG.addNode(g2, 101, {});
-val g4 = TG.addNode(g3, 102, {});
-val g5 = TG.addNode(g4, 103, {});
-val g6 = TG.addNode(g5, 104, {});
-val g7 = TG.doubleEdge(g6, 100, 101);
-val finalgraph = g7;
+val g2 = TG.addNode(g1, t1, {});
+val g3 = TG.addNode(g2, t2, {});
+val g4 = TG.addNode(g3, t3, {});
+val g5 = TG.addNode(g4, t4, {});
+val g6 = TG.addNode(g5, t5, {});
+val g7 = TG.doubleEdge(g6, t1, t3);
+val g8 = TG.doubleEdge(g7, t1, t2);
+val g9 = TG.doubleEdge(g8, t1, t4);
+val g10 = TG.doubleEdge(g9, t1, t5);
+val finalgraph = g10;
+
+(* Print final graph *)
 fun printGraphNode (id, node) = Int.toString id;
 val _ = TG.printGraph printGraphNode finalgraph;
-(* val (post_alloc, spilllist) = Color.color{finalgraph, } *)
+
+(* Make initial allocation *)
+structure TT = Temp.Table;
+val alloc1 = TT.empty;
+val alloc2 = TT.enter (alloc1, t1, "S0");
+val initalloc = alloc2;
+
+(* Make spill cost calculation function *)
+fun spillCost x = 1;
+
+(* Make register list *)
+val reglist = ["S0", "S1"];
+
+(* Color *)
+val (post_alloc, spilllist) = Color.color{igraph=finalgraph, initial=initalloc, spillCost = spillCost, registers = reglist}

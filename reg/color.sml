@@ -1,15 +1,17 @@
 signature COLOR = 
 sig
-    structure Frame : Frame
+    structure Frame : FRAME
     type allocation = Frame.register Temp.Table.table
-    val color: {igraph: igraphentry TempKeyGraph.graph, 
+    val color: {igraph: Liveness.igraphentry TempKeyGraph.graph, 
                 initial: allocation,
-                spillCost: igraphentry -> int,
+                spillCost: Liveness.igraphentry -> int,
                 registers: Frame.register list}
                 -> allocation * Temp.temp list
 end
 
 structure Color : COLOR = 
 struct
-    color {igraph, initial, spillCost, registers} = (initial, [])
+    structure Frame = MipsFrame
+    type allocation = Frame.register Temp.Table.table
+    fun color {igraph, initial, spillCost, registers} = (initial, [])
 end

@@ -1,6 +1,5 @@
 structure Liveness : LIVENESS =
 struct
-    structure TempKeyGraph = FuncGraph(Temp.TempOrd)
     structure FlowNodeTempMap = SplayMapFn(
                                   struct
                                     type ord_key = string
