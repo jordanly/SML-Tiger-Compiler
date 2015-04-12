@@ -58,7 +58,7 @@ struct
                                     registers=registers}
                 in
                     case findColor(igraph, simplifiableID, tempAlloc, registers) of
-                        SOME foundcolor => (print ("found " ^ foundcolor); (TT.enter(tempAlloc, simplifiableID, foundcolor), spilllist))
+                        SOME foundcolor => (TT.enter(tempAlloc, simplifiableID, foundcolor), spilllist)
                       | NONE =>  (tempAlloc, simplifiableID::spilllist)
                 end
           | NONE => (initial, []) (* Can't simplify, TODO *)
