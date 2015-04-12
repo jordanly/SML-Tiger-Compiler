@@ -45,6 +45,8 @@ structure Main = struct
    fun compile filename = 
         let
             val absyn : Absyn.exp = Parse.parse filename
+            val _ = print "================ AST ==================\n";
+            val _ = PrintAbsyn.print(TextIO.stdOut, absyn)
             val _ = print "======== Syntax Errors (if any) ========\n";
             val frags : MipsFrame.frag list= (FindEscape.findEscape absyn; Semant.transProg absyn)
         in 

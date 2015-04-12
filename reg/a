@@ -1,4 +1,3 @@
 CM.make "sources.cm";
-print "================ AST ==================\n";
-(PrintAbsyn.print(TextIO.stdOut, Parse.parse "k1.tig"));
-(Translate.resetFragList(); Main.compile "k1.tig")
+Translate.resetFragList();
+Main.compile "k1.tig"
