@@ -56,6 +56,37 @@ struct
           {liveIn=calcIn(liveEntry, StrKeyGraph.nodeInfo flowGraphNode), liveOut=calcOut(nodeID)}
         end
 
+    fun computeLiveness(flowGraph, liveMap) =
+        let
+          fun checkChanged(liveEntry as {liveIn=liveIn, liveOut=liveOut}, liveEntry' as {liveIn=liveIn', liveOut=liveOut'}) =
+            Temp.Set.equal(liveIn, liveIn') andalso Temp.Set.equal(liveOut, liveOut')
+          fun iterator(nodeID, (curMap, isChanged)) = 
+              let
+                val liveEntry = case FlowNodeTempMap.find(curMap, nodeID) of
+                                     SOME(entry) => entry
+                                   | NONE => (print ("Liveness.sml: could not find node: " ^ nodeID);
+                                             {liveIn=Temp.Set.empty, liveOut=Temp.Set.empty})
+                val liveEntry' = processNode(flowGraph, nodeID, curMap)
+                val newMap = FlowNodeTempMap.insert(curMap, nodeID, liveEntry')
+                val changedStatus = if isChanged = false
+                                    then checkChanged(liveEntry, liveEntry')
+                                    else true
+              in
+                (newMap, changedStatus)
+              end
+          fun runUntilFixed(flowGraph, liveMap) = 
+              let
+                val nodeIDs = map StrKeyGraph.getNodeID (StrKeyGraph.nodes flowGraph)
+                val (newMap, changed) = foldl iterator (liveMap, false) nodeIDs
+              in
+                if changed
+                then runUntilFixed(flowGraph, newMap)
+                else newMap
+              end
+        in
+          runUntilFixed(flowGraph, liveMap)
+        end
+
     fun interferenceGraph(flowgraph : MakeGraph.graphentry StrKeyGraph.graph) = 
         let
           val liveMap = createEmptyLiveNodes(flowgraph)
