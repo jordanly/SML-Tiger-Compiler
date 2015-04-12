@@ -67,20 +67,9 @@ struct
     fun computeLiveness(flowGraph, liveMap) =
         let
           fun checkChanged(liveEntry as {liveIn=liveIn, liveOut=liveOut}, liveEntry' as {liveIn=liveIn', liveOut=liveOut'}) =
-            (
-            let
-              val _ = printSet(liveIn, "liveIn")
-              val _ = printSet(liveIn', "liveIn'")
-              val _ = printSet(liveOut, "liveOut")
-              val _ = printSet(liveOut', "liveOut'")
-            in
               not (Temp.Set.equal(liveIn, liveIn') andalso Temp.Set.equal(liveOut, liveOut'))
-            end
-            )
           fun iterator(nodeID, (curMap, isChanged)) = 
               let
-                val _ = print "iterating\n"
-                val _ = print (nodeID ^ "\n")
                 val liveEntry = case FlowNodeTempMap.find(curMap, nodeID) of
                                      SOME(entry) => entry
                                    | NONE => (print ("Liveness.sml: could not find node: " ^ nodeID);
