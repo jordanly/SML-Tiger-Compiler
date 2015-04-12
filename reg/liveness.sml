@@ -12,6 +12,12 @@ struct
           {liveIn: Temp.Set.set,
            liveOut: Temp.Set.set}
 
+    (* DEBUG *)
+    fun printSet(set, name) = 
+      (print ("Printing set " ^ name ^ "-----\n");
+      app (fn temp => print (Temp.makestring temp ^ ", ")) (Temp.Set.listItems set);
+      print "\n")
+
     (* Pre-process step, create empty in/out sets for each flow now *)
     fun createEmptyLiveNodes(flowgraph : MakeGraph.graphentry StrKeyGraph.graph) =
         let
@@ -40,13 +46,15 @@ struct
               in
                 foldl Temp.Set.union Temp.Set.empty succInList
               end
-          fun calcIn(liveEntry as {liveIn, liveOut}, flowGraphEntry as {def, use, isMove}) =
+          fun calcIn(liveEntry as {liveIn, liveOut}, flowGraphEntry : MakeGraph.graphentry) =
               let
                 fun getOut(nodeID) = 
                   case FlowNodeTempMap.find(liveMap, nodeID) of
                        SOME({liveIn, liveOut}) => liveOut
                      | NONE => (print ("Liveness.sml: could not find node: " ^ nodeID);
                                 Temp.Set.empty)
+                val use = #use flowGraphEntry
+                val def = #def flowGraphEntry
                 val defSet = foldl Temp.Set.add' Temp.Set.empty def
                 val useSet = foldl Temp.Set.add' Temp.Set.empty use
               in
@@ -59,9 +67,20 @@ struct
     fun computeLiveness(flowGraph, liveMap) =
         let
           fun checkChanged(liveEntry as {liveIn=liveIn, liveOut=liveOut}, liveEntry' as {liveIn=liveIn', liveOut=liveOut'}) =
-            Temp.Set.equal(liveIn, liveIn') andalso Temp.Set.equal(liveOut, liveOut')
+            (
+            let
+              val _ = printSet(liveIn, "liveIn")
+              val _ = printSet(liveIn', "liveIn'")
+              val _ = printSet(liveOut, "liveOut")
+              val _ = printSet(liveOut', "liveOut'")
+            in
+              not (Temp.Set.equal(liveIn, liveIn') andalso Temp.Set.equal(liveOut, liveOut'))
+            end
+            )
           fun iterator(nodeID, (curMap, isChanged)) = 
               let
+                val _ = print "iterating\n"
+                val _ = print (nodeID ^ "\n")
                 val liveEntry = case FlowNodeTempMap.find(curMap, nodeID) of
                                      SOME(entry) => entry
                                    | NONE => (print ("Liveness.sml: could not find node: " ^ nodeID);
@@ -87,9 +106,10 @@ struct
           runUntilFixed(flowGraph, liveMap)
         end
 
-    fun interferenceGraph(flowgraph : MakeGraph.graphentry StrKeyGraph.graph) = 
+    fun interferenceGraph(flowGraph : MakeGraph.graphentry StrKeyGraph.graph) = 
         let
-          val liveMap = createEmptyLiveNodes(flowgraph)
+          val liveMap = createEmptyLiveNodes(flowGraph)
+          val liveness = computeLiveness(flowGraph, liveMap)
         in
           (TempKeyGraph.empty, FlowNodeTempMap.empty)
         end
