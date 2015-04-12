@@ -340,7 +340,7 @@ struct
                                 SOME ty => (checkTypesAssignable(actualTy ty, #ty (transExp(venv, tenv, init, level, break)), pos, "error : mismatched types in vardec");
                                            {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=actualTy ty, read_only=false})),
                                             tenv=tenv, expList=createAssignExp()::expList})
-                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv, expList=createAssignExp()::expList})
+                              | NONE => (Err.error pos "type not recognized"; {venv=venv, tenv=tenv, expList=(expList @ [createAssignExp()])})
                             )
                       | NONE =>
                             let 
@@ -350,7 +350,7 @@ struct
                               then Err.error pos "error: initializing nil expressions not constrained by record type"
                               else ();
                               {venv=S.enter(venv, name, (Env.VarEntry{access=access', ty=ty, read_only=false})),
-                                                                      tenv=tenv, expList=createAssignExp()::expList}
+                                                                      tenv=tenv, expList=(expList @ [createAssignExp()])}
                             end
                     )
                 end
