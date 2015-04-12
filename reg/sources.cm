@@ -33,12 +33,14 @@ canon.sml
 assem.sml
 
 (* Register allocation *)
+strkeygraph.sml
+tempkeygraph.sml
 funcgraph.sig
 funcgraph.sml
 makegraph.sml
 liveness.sig
 liveness.sml
-(* color.sml *)
+color.sml
 
 (* Misc. *)
 (* runtime.c ? *)
