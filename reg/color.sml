@@ -16,46 +16,50 @@ struct
     structure TT = Temp.Table
     type allocation = Frame.register Temp.Table.table
 
-    fun getSimplifiableNode (igraph, initial, registers) = 
-        if List.length(TG.nodes igraph) = 0
-        then NONE
-        else
+    (* Finds a simplifiable ID in an igraph, or none if no node is simplifiable *)
+    fun getSimplifiableID (_, _, _, []) = NONE
+      | getSimplifiableID (igraph, initial, registers, possibleNode::rest) = 
+            let
+                fun isNone NONE = true | isNone (SOME _) = false
+                val numregisters = List.length registers
+                val possibleID = TG.getNodeID(possibleNode)
+                val degree = TG.outDegree(possibleNode)
+            in
+                if degree < numregisters andalso isNone(TT.look(initial, possibleID))
+                then SOME possibleID
+                else getSimplifiableID(igraph, initial, registers, rest)
+            end
 
-        let
-            fun isNone NONE = false | isNone (SOME _) = true
-            val numregisters = List.length registers
-            val possibleNode = List.hd(TG.nodes(igraph))
-            val possNodeID = TG.getNodeID(possibleNode)
-            val degree = TG.degree(possibleNode)
-        in
-            if degree < numregisters andalso isNone(TT.look(initial, possNodeID))
-            then SOME possibleNode
-            else getSimplifiableNode(TG.removeNode(igraph, possNodeID), initial, registers)
-        end
-
-    fun findColor(igraph, node, initial, []) = NONE
-      | findColor(igraph, node, initial, possibleColor::rest) = 
+    (* Returns SOME suitable color for the given node, or NONE if it's not colorable*)
+    fun findColor(igraph, nodeID, initial, []) = NONE
+      | findColor(igraph, nodeID, initial, possibleColor::rest) = 
             let
                 fun foldHelper (adjnode, boolean) : bool = boolean orelse
-                    case TT.look(initial, TG.getNodeID(node)) of
+                    case TT.look(initial, adjnode) of
                         SOME adjColor => (possibleColor = adjColor)
                       | NONE => false
-                val colorIsBad : bool = foldl foldHelper false (TG.adj node)
+                val colorIsBad : bool = foldl foldHelper false (TG.adj(TG.getNode(igraph, nodeID)))
             in
                 if colorIsBad
-                then findColor(igraph, node, initial, rest)
+                then findColor(igraph, nodeID, initial, rest)
                 else SOME possibleColor
             end
 
+    (* Augment the initial register allocation, also returns a list of spills *)
     fun color {igraph, initial, spillCost, registers} =
-        case getSimplifiableNode (igraph, initial, registers) of
-            SOME node => 
-                (case findColor(igraph, node, initial, registers) of
-                    SOME foundcolor => color{igraph=igraph,
-                                    initial=TT.enter(initial, TG.getNodeID node, foundcolor),
+        case getSimplifiableID (igraph, initial, registers, TG.nodes igraph) of
+            SOME simplifiableID => 
+                let
+                    val simplifiableNode = TG.getNode(igraph, simplifiableID)
+                    val simplifiedGraph = TG.removeNode(igraph, simplifiableID)
+                    val (tempAlloc, spilllist) = color{igraph=simplifiedGraph,
+                                    initial=initial,
                                     spillCost=spillCost,
                                     registers=registers}
-                  | NONE => (print "bad"; (initial, []))
-                )
+                in
+                    case findColor(igraph, simplifiableID, tempAlloc, registers) of
+                        SOME foundcolor => (print ("found " ^ foundcolor); (TT.enter(tempAlloc, simplifiableID, foundcolor), spilllist))
+                      | NONE =>  (tempAlloc, simplifiableID::spilllist)
+                end
           | NONE => (initial, []) (* Can't simplify, TODO *)
 end
