@@ -57,7 +57,7 @@ struct
                 val defSet = foldl Temp.Set.add' Temp.Set.empty def
                 val useSet = foldl Temp.Set.add' Temp.Set.empty use
               in
-                Temp.Set.union(useSet, Temp.Set.difference(defSet, liveOut))
+                Temp.Set.union(useSet, Temp.Set.difference(liveOut, defSet))
               end
         in
           {liveIn=calcIn(liveEntry, StrKeyGraph.nodeInfo flowGraphNode), liveOut=calcOut(nodeID)}
@@ -97,7 +97,20 @@ struct
     fun interferenceGraph(flowGraph : MakeGraph.graphentry StrKeyGraph.graph) = 
         let
           val liveMap = createEmptyLiveNodes(flowGraph)
-          val liveness = computeLiveness(flowGraph, liveMap)
+          val liveMap' = computeLiveness(flowGraph, liveMap)
+          fun printNodes(curMap) = 
+              let
+                fun getEntry(nodeID) = case FlowNodeTempMap.find(curMap, nodeID) of
+                                     SOME(entry) => entry
+                                   | NONE => (print ("Liveness.sml: could not find node: " ^ nodeID);
+                                             {liveIn=Temp.Set.empty, liveOut=Temp.Set.empty})
+                fun printNode(node) = (print ("Node name = " ^ StrKeyGraph.getNodeID node ^ "\n");
+                                       printSet((#liveIn (getEntry(StrKeyGraph.getNodeID node))), "LIVEIN");
+                                       printSet((#liveOut (getEntry(StrKeyGraph.getNodeID node))), "LIVEOUT"))
+              in
+                app printNode (StrKeyGraph.nodes flowGraph)
+              end
+          val _ = printNodes(liveMap')
         in
           (TempKeyGraph.empty, FlowNodeTempMap.empty)
         end
