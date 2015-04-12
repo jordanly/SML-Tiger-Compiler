@@ -16,11 +16,24 @@ struct
     structure TT = Temp.Table
     type allocation = Frame.register Temp.Table.table
 
+    (* Returns true if the 'a option argument is NONE *)
+    fun isNone NONE = true | isNone (SOME _) = false
+
+    (* Returns a list of temps that are in the graph but not in the register allocation table *)
+    fun findNodesToSpill(graph, allocation) = 
+        let
+            fun addNodeIfNecessary(node, listSoFar) = 
+                if (isNone(TT.look(allocation, TG.getNodeID node)))
+                then (TG.getNodeID node)::listSoFar
+                else listSoFar 
+        in
+            foldl addNodeIfNecessary [] (TG.nodes graph)
+        end
+
     (* Finds a simplifiable ID in an igraph, or none if no node is simplifiable *)
     fun getSimplifiableID (_, _, _, []) = NONE
       | getSimplifiableID (igraph, initial, registers, possibleNode::rest) = 
             let
-                fun isNone NONE = true | isNone (SOME _) = false
                 val numregisters = List.length registers
                 val possibleID = TG.getNodeID(possibleNode)
                 val degree = TG.outDegree(possibleNode)
@@ -61,5 +74,5 @@ struct
                         SOME foundcolor => (TT.enter(tempAlloc, simplifiableID, foundcolor), spilllist)
                       | NONE =>  (tempAlloc, simplifiableID::spilllist)
                 end
-          | NONE => (initial, []) (* Can't simplify, TODO *)
+          | NONE => (initial, findNodesToSpill(igraph, initial))
 end
