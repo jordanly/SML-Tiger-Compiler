@@ -41,6 +41,7 @@ makegraph.sml
 liveness.sig
 liveness.sml
 color.sml
+regalloc.sml
 
 (* Misc. *)
 (* runtime.c ? *)

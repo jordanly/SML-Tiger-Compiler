@@ -2,9 +2,22 @@ structure Main = struct
 
     structure Tr = Translate
     structure F = MipsFrame
-    (* structure R = RegAlloc *)
+    structure R = RegAlloc
 
-    fun emitproc out (F.PROC{body,frame}) =
+    fun withOpenFile fname f = 
+        let
+            val out = TextIO.openOut fname
+        in (f out before TextIO.closeOut out) 
+            handle e => (TextIO.closeOut out; raise e)
+        end 
+
+    fun emitproc out (F.STRING(lab,s)) =
+            (
+                print ("========== Fragment:  " ^ (S.name lab) ^ " ==========\n");
+                TextIO.output(TextIO.stdOut, F.string(lab,s));
+                TextIO.output(out, F.string(lab,s))
+            )
+      | emitproc out (F.PROC{body,frame}) =
             let val _ = print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n")
                 val _ = print ("=== PRE-CANON " ^ S.name (F.name frame) ^ " ===\n")
                 val _ = Printtree.printtree(TextIO.stdOut,body);
@@ -24,23 +37,12 @@ structure Main = struct
                     ^ " -- use: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp ^ ", ") "" use)
                     ^ " -- ismove: " ^ (Bool.toString ismove) ^ ")"
                 val _ = StrKeyGraph.printGraph printGraphNode flowgraph
-                val igraph = Liveness.interferenceGraph flowgraph
+                val (igraph, _) = Liveness.interferenceGraph flowgraph
+                fun dummySpillCost x = 1;
+                val (alloc, spilllist) = Color.color {igraph=igraph, initial=R.initialAlloc, spillCost=dummySpillCost, registers=R.regList}
             in 
                 app (fn i => TextIO.output(out,format0 i)) instrs
             end
-      | emitproc out (F.STRING(lab,s)) =
-            (
-                print ("========== Fragment:  " ^ (S.name lab) ^ " ==========\n");
-                TextIO.output(TextIO.stdOut, F.string(lab,s));
-                TextIO.output(out, F.string(lab,s))
-            )
-
-   fun withOpenFile fname f = 
-        let
-            val out = TextIO.openOut fname
-        in (f out before TextIO.closeOut out) 
-            handle e => (TextIO.closeOut out; raise e)
-        end 
 
    fun compile filename = 
         let
