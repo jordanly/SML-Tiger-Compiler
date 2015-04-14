@@ -157,8 +157,9 @@ struct
           val _ = print ("========== printing nodes for live-in/live-out =========\n")
           val _ = printNodes(liveMap')
           val _ = print ("========== printing interference graph =========\n")
-          val _ = TempKeyGraph.printGraph printGraphNode (createInterferenceGraph(flowGraph, liveMap'))
+          val iGraph : igraphentry TempKeyGraph.graph = createInterferenceGraph(flowGraph, liveMap')
+          val _ = TempKeyGraph.printGraph printGraphNode iGraph
         in
-          (TempKeyGraph.empty, FlowNodeTempMap.empty)
+          (iGraph, liveMap')
         end
 end
