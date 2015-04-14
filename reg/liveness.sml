@@ -127,7 +127,18 @@ struct
                                              {liveIn=Temp.Set.empty, liveOut=Temp.Set.empty})
                 val liveOutTemps = Temp.Set.listItems(#liveOut liveEntry)
                 fun process(defTemp, [], iGraph) = iGraph
-                  | process(defTemp, outTemp::l, iGraph) = process(defTemp, l, TempKeyGraph.doubleEdge(iGraph, defTemp, outTemp))
+                  | process(defTemp, outTemp::l, iGraph) = 
+                      let
+                        (* If move and temps are same, do not create edge *)
+                        val newGraph = 
+                          case #ismove nodeInfo of
+                               true => if Temp.compare(defTemp, outTemp) = EQUAL
+                                       then iGraph
+                                       else TempKeyGraph.doubleEdge(iGraph, defTemp, outTemp)
+                             | false => TempKeyGraph.doubleEdge(iGraph, defTemp, outTemp)
+                      in
+                        process(defTemp, l, newGraph)
+                      end
 
                 fun iterate([], outTempList, iGraph) = iGraph
                   | iterate(defTemp::l, outTempList, iGraph) = iterate(l, outTempList, process(defTemp, outTempList, iGraph))
