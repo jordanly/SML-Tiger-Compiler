@@ -148,6 +148,22 @@ struct
         in
           foldl processDefs iGraph nodes
         end
+    
+    fun createMoveList(flowGraph : MakeGraph.graphentry StrKeyGraph.graph, iGraph : igraphentry TempKeyGraph.graph) =
+        let
+          fun iterator(node, curList) =
+              let
+                val {def=defs, use=uses, ismove=ismove} = StrKeyGraph.nodeInfo node
+                fun getZeroth(tempList) = TempKeyGraph.getNode(iGraph, List.nth(tempList, 0))
+              in
+                (* if it's a move and there's no interference, valid for coalesce *)
+                if ismove = true andalso TempKeyGraph.isAdjacent(getZeroth(defs), getZeroth(uses))
+                then (List.nth(defs, 0), List.nth(uses, 0))::curList
+                else curList
+              end
+        in
+          foldl iterator [] (StrKeyGraph.nodes flowGraph)
+        end
 
     fun interferenceGraph(flowGraph : MakeGraph.graphentry StrKeyGraph.graph) = 
         let
@@ -169,8 +185,9 @@ struct
           val _ = printNodes(liveMap')
           val _ = print ("========== printing interference graph =========\n")
           val iGraph : igraphentry TempKeyGraph.graph = createInterferenceGraph(flowGraph, liveMap')
+          val moveList = createMoveList(flowGraph, iGraph)
           val _ = TempKeyGraph.printGraph printGraphNode iGraph
         in
-          (iGraph, liveMap')
+          (iGraph, liveMap', moveList)
         end
 end

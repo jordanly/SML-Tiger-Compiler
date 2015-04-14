@@ -30,7 +30,7 @@ structure Main = struct
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
-                val (igraph, _) = Liveness.interferenceGraph flowgraph
+                val (igraph, _, _) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilllist) = Color.color {igraph=igraph, initial=R.initialAlloc, spillCost=dummySpillCost, registers=R.regList}
             in 
                 (

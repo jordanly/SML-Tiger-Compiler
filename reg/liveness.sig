@@ -7,7 +7,8 @@ sig
     val interferenceGraph :
             MakeGraph.graphentry StrKeyGraph.graph ->
                 igraphentry TempKeyGraph.graph *
-                liveSetEntry FlowNodeTempMap.map
+                liveSetEntry FlowNodeTempMap.map *
+                (TempKeyGraph.nodeID * TempKeyGraph.nodeID) list
 
     val printGraphNode : TempKeyGraph.nodeID * 'Z -> string
     val show : TextIO.outstream * igraphentry TempKeyGraph.graph -> unit
