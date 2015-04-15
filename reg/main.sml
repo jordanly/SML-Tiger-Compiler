@@ -29,9 +29,11 @@ structure Main = struct
                 val stms : Tree.stm list = Canon.linearize body
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
+                val formattedInstrs : string = foldl (fn (insn, strSoFar) => strSoFar ^ (format0 insn)) "" instrs
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
                 val (igraph, _, _) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilllist) = Color.color {igraph=igraph, initial=R.initialAlloc, spillCost=dummySpillCost, registers=R.regList}
+                val finalAssembly : string = R.performAllocation(formattedInstrs, alloc)
             in 
                 (
                     print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n");
@@ -43,8 +45,7 @@ structure Main = struct
                     app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs;
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
-
-                    app (fn i => TextIO.output(out,format0 i)) instrs
+                    TextIO.output(out, finalAssembly)
                 )
             end
 
