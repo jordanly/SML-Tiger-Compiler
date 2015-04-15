@@ -1,12 +1,15 @@
 signature FINDESCAPE = 
 sig
 	val findEscape : Absyn.exp -> unit
+    val getEscapeRefs : unit -> (bool ref) list ref
+    val resetEscapeRefs : unit -> unit
 end
 
 structure FindEscape : FINDESCAPE = 
 struct
   type depth = int
   type escEnv = (depth * bool ref) Symbol.table
+  val escapeRefs = ref [] : (bool ref) list ref
  
   fun traverseVar(env:escEnv, d:depth, s:Absyn.var) : unit =
       let
@@ -87,7 +90,7 @@ struct
         fun trdec(A.FunctionDec(fundecs), env) =
             let
               fun addParamToEnv({name=name', escape=escape', typ=_, pos=_}, env) =
-                S.enter(env, name', (d + 1, escape'))
+                (escapeRefs := (escape')::(!escapeRefs); S.enter(env, name', (d + 1, escape')))
               fun evalFundec {name=_, params=params', result=_, body=body', pos=_} =
                   let
                     val env' = foldl addParamToEnv env params'
@@ -100,7 +103,8 @@ struct
             end
           | trdec(A.VarDec {name, escape, typ, init, pos}, env) =
               let
-                val env' = S.enter(env, name, (d, escape))
+                val _ = escapeRefs := (escape)::(!escapeRefs)
+                val env' = S.enter(env, name, (d, escape)) 
               in
                 traverseExp(env', d, init);
                 env'
@@ -111,4 +115,6 @@ struct
         foldl foldDecs env s
       end
   fun findEscape(prog: Absyn.exp): unit = traverseExp(S.empty, 0, prog)
+  fun getEscapeRefs() = escapeRefs
+  fun resetEscapeRefs() = escapeRefs := []
 end

@@ -485,7 +485,6 @@ struct
     let
       val mainlabel = Temp.newlabel()
       val mainlevel = Translate.newLevel {parent=Translate.outermost, name=mainlabel, formals=[]}
-      val _ = FindEscape.findEscape my_exp
       val mainexp = #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, mainlevel, mainlabel))
     in
       R.procEntryExit {level=mainlevel, body=mainexp};
