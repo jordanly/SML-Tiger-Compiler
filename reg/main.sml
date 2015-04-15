@@ -1,6 +1,7 @@
 structure Main = struct
 
     structure Tr = Translate
+    structure TT = Temp.Table
     structure F = MipsFrame
     structure R = RegAlloc
 
@@ -19,7 +20,6 @@ structure Main = struct
             )
       | emitproc out (F.PROC{body,frame}) =
             let 
-                val format0 = Assem.format(F.makestring)
                 fun dummySpillCost x = 1;
                 fun printGraphNode (id, node as {def, use, ismove}) =
                     id ^ "(def: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp ^ ", ") "" def)
@@ -29,11 +29,10 @@ structure Main = struct
                 val stms : Tree.stm list = Canon.linearize body
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
-                val formattedInstrs : string = foldl (fn (insn, strSoFar) => strSoFar ^ (format0 insn)) "" instrs
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
                 val (igraph, _, _) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilllist) = Color.color {igraph=igraph, initial=R.initialAlloc, spillCost=dummySpillCost, registers=R.regList}
-                val finalAssembly : string = R.performAllocation(formattedInstrs, alloc)
+                val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
             in 
                 (
                     print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n");
@@ -42,12 +41,10 @@ structure Main = struct
                     print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
-                    app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs;
+                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs;
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
-                    print ("=== IGRAPH "  ^ S.name (F.name frame) ^ " ===\n");
-                    Liveness.show(TextIO.stdOut, igraph);
-                    TextIO.output(out, finalAssembly)
+                    app (fn i => TextIO.output(out, format0 i)) instrs
                 )
             end
 
