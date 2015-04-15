@@ -45,6 +45,8 @@ structure Main = struct
                     app (fn i => TextIO.output(TextIO.stdOut,format0 i)) instrs;
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
+                    print ("=== IGRAPH "  ^ S.name (F.name frame) ^ " ===\n");
+                    Liveness.show(TextIO.stdOut, igraph);
                     TextIO.output(out, finalAssembly)
                 )
             end

@@ -181,14 +181,8 @@ struct
               in
                 app printNode (StrKeyGraph.nodes flowGraph)
               end
-          val _ = print ("========== printing nodes for live-in/live-out =========\n")
-          val _ = printNodes(liveMap')
-          val _ = print ("========== printing interference graph =========\n")
           val iGraph : igraphentry TempKeyGraph.graph = createInterferenceGraph(flowGraph, liveMap')
           val moveList = createMoveList(flowGraph, iGraph)
-          val _ = TempKeyGraph.printGraph printGraphNode iGraph
-          val _ = print "moving\n"
-          val _ = app (fn (x, y) => print ("move from " ^ Int.toString(x) ^ " to " ^ Int.toString(y) ^ "\n")) moveList
         in
           (iGraph, liveMap', moveList)
         end
