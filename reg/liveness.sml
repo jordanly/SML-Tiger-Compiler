@@ -157,7 +157,7 @@ struct
                 fun getZeroth(tempList) = TempKeyGraph.getNode(iGraph, List.nth(tempList, 0))
               in
                 (* if it's a move and there's no interference, valid for coalesce *)
-                if ismove = true andalso TempKeyGraph.isAdjacent(getZeroth(defs), getZeroth(uses))
+                if ismove = true andalso not (TempKeyGraph.isAdjacent(getZeroth(defs), getZeroth(uses)))
                 then (List.nth(defs, 0), List.nth(uses, 0))::curList
                 else curList
               end
@@ -187,6 +187,8 @@ struct
           val iGraph : igraphentry TempKeyGraph.graph = createInterferenceGraph(flowGraph, liveMap')
           val moveList = createMoveList(flowGraph, iGraph)
           val _ = TempKeyGraph.printGraph printGraphNode iGraph
+          val _ = print "moving\n"
+          val _ = app (fn (x, y) => print ("move from " ^ Int.toString(x) ^ " to " ^ Int.toString(y) ^ "\n")) moveList
         in
           (iGraph, liveMap', moveList)
         end

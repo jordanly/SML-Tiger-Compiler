@@ -48,10 +48,27 @@ structure Main = struct
                 )
             end
 
+   fun sortFrags frags =
+      let
+        val revFrags = rev frags
+        fun moveStrings([], newList) = newList
+          | moveStrings(a::l, newList) =
+              case a of
+                  F.STRING(lab,s) => a::moveStrings(l, newList)
+                | _ => moveStrings(l, newList)
+        fun moveProcs([], newList) = newList
+          | moveProcs(a::l, newList) =
+              case a of
+                  F.PROC{body,frame} => a::moveProcs(l, newList)
+                | _ => moveProcs(l, newList)
+      in
+        moveStrings(frags, moveProcs(frags, []))
+      end
+
    fun compile filename = 
         let
             val absyn : Absyn.exp = Parse.parse filename
-            val frags : MipsFrame.frag list= (FindEscape.findEscape absyn; Semant.transProg absyn)
+            val frags : MipsFrame.frag list= sortFrags (FindEscape.findEscape absyn; Semant.transProg absyn)
         in 
             (
                 print "================ AST ==================\n";
