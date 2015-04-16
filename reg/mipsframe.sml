@@ -210,7 +210,6 @@ struct
           fun moveTemp((from, to)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
           val tempMoveStms = map moveTemp saveTempMap
           (* === *)
-          
 
           (* end if function move callee saves back *) 
           fun moveTempRev((to, from)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
@@ -231,8 +230,15 @@ struct
                  dst=[], jump=SOME[]}
         ]
       
-    fun procEntryExit3(frame' : frame, body) =
-        {prolog = "PROCEDURE " ^ Symbol.name (name frame') ^ "\n",
-         body = body,
-         epilog = "END " ^ Symbol.name (name frame') ^ "\n"}
+    fun procEntryExit3(frame' as {name=name', formals=formals', numLocals=numLocals', curOffset=curOffset'} : frame,
+                       body, maxNumArgs) =
+        let
+            val spOffset = if maxNumArgs < ARGREGS
+                           then !curOffset' - (ARGREGS * wordSize) 
+                           else !curOffset' - (maxNumArgs * wordSize)
+        in
+            {prolog = "PROCEDURE " ^ Symbol.name (name frame') ^ "\n",
+            body = body,
+            epilog = "END " ^ Symbol.name (name frame') ^ "\n"}
+        end
 end

@@ -18,6 +18,22 @@ structure Main = struct
             else escapeOneVar(i+1)
         end
 
+        fun getMaxNumArgs(fragList : F.frag list) = 
+            let
+              fun lenFormals(frag : F.frag) = 
+                case frag of
+                      F.PROC {body, frame} => List.length(F.formals frame)
+                    | F.STRING(_, _) => 0
+              fun iterator(frag : F.frag, curMax) = 
+                case frag of
+                    F.PROC {body=b, frame=f} => if curMax < List.length(F.formals f)
+                                                then lenFormals frag
+                                                else curMax
+                  | F.STRING(_, _) => curMax
+            in
+              foldl iterator 0 (fragList)
+            end
+
     fun emitproc out (F.STRING(lab,s)) =
             (
                 print ("========== Fragment:  " ^ (S.name lab) ^ " ==========\n");
@@ -35,6 +51,7 @@ structure Main = struct
                 val stms : Tree.stm list = Canon.linearize body
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
+                val instrs' : Assem.instr list = #body (F.procEntryExit3(frame, instrs, getMaxNumArgs(Translate.getResult())))
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
