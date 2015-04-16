@@ -58,31 +58,23 @@ structure Main = struct
                 )
             end
 
-   fun sortFrags frags =
-      let
-        val revFrags = rev frags
-        fun moveStrings([], newList) = newList
-          | moveStrings(a::l, newList) =
-              case a of
-                  F.STRING(lab,s) => a::moveStrings(l, newList)
-                | _ => moveStrings(l, newList)
-        fun moveProcs([], newList) = newList
-          | moveProcs(a::l, newList) =
-              case a of
-                  F.PROC{body,frame} => a::moveProcs(l, newList)
-                | _ => moveProcs(l, newList)
-      in
-        moveStrings(frags, moveProcs(frags, []))
-      end
-
     fun compileAbsyn(absyn, filename) = 
         let
+            fun isStringFrag (F.STRING _) = true | isStringFrag _ = false
+            fun isProcFrag (F.PROC _) = true | isProcFrag _ = false
+
             val out = TextIO.openOut (filename ^ ".s")
-            val frags : MipsFrame.frag list = sortFrags (Semant.transProg absyn)
+            val frags : MipsFrame.frag list = Semant.transProg absyn
+            val stringFrags : MipsFrame.frag list = List.filter isStringFrag frags
+            val procFrags : MipsFrame.frag list = List.filter isProcFrag frags
             val _ = print "================ AST ==================\n";
             val _ = PrintAbsyn.print(TextIO.stdOut, absyn);
             val _ = print "======== Syntax Errors (if any) ========\n";
-            val spilled = foldl (fn(a, b) => b orelse (emitproc out a)) false frags
+            val _ = TextIO.output(out, ".data\n")
+            val _ = foldl (fn(a, b) => b orelse (emitproc out a)) false stringFrags
+                            handle e => (TextIO.closeOut out; raise e)
+            val _ = TextIO.output(out, "\n.text\n")
+            val spilled = foldl (fn(a, b) => b orelse (emitproc out a)) false procFrags
                             handle e => (TextIO.closeOut out; raise e)
             val _ = TextIO.closeOut out
         in 
