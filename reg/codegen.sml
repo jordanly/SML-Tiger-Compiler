@@ -182,7 +182,7 @@ struct
                     )
           | munchExp(T.BINOP(T.MUL, e1, e2)) =
               result(fn r => emit(
-                     A.OPER {assem="mult `d0, `s0, `s1\n",
+                     A.OPER {assem="mul `d0, `s0, `s1\n",
                              src=[munchExp e1, munchExp e2], dst=[r], jump=NONE}
                              )
                     )
