@@ -5,18 +5,25 @@ structure Main = struct
     structure F = MipsFrame
     structure R = RegAlloc
 
-    fun withOpenFile fname f = 
+    fun escapeOneVar(i) =
         let
-            val out = TextIO.openOut fname
-        in (f out before TextIO.closeOut out) 
-            handle e => (TextIO.closeOut out; raise e)
-        end 
+            val boolRefList = FindEscape.getEscapeRefs()
+        in
+            if i >= List.length(!boolRefList)
+            then false
+            else
+
+            if !(List.hd(!boolRefList)) = false
+            then (List.hd(!boolRefList) := true; true)
+            else escapeOneVar(i+1)
+        end
 
     fun emitproc out (F.STRING(lab,s)) =
             (
                 print ("========== Fragment:  " ^ (S.name lab) ^ " ==========\n");
                 TextIO.output(TextIO.stdOut, F.string(lab,s));
-                TextIO.output(out, F.string(lab,s))
+                TextIO.output(out, F.string(lab,s));
+                false
             )
       | emitproc out (F.PROC{body,frame}) =
             let 
@@ -30,7 +37,7 @@ structure Main = struct
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
-                val alloc = RegAlloc.allocateRegisters(igraph, movelist)
+                val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
             in 
                 (
@@ -43,7 +50,11 @@ structure Main = struct
                     app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs;
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
-                    app (fn i => TextIO.output(out, format0 i)) instrs
+                    app (fn i => TextIO.output(out, format0 i)) instrs;
+                    if spilled
+                    then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
+                    else ();
+                    spilled
                 )
             end
 
@@ -64,16 +75,29 @@ structure Main = struct
         moveStrings(frags, moveProcs(frags, []))
       end
 
+    fun compileAbsyn(absyn, filename) = 
+        let
+            val out = TextIO.openOut (filename ^ ".s")
+            val frags : MipsFrame.frag list = sortFrags (Semant.transProg absyn)
+            val _ = print "================ AST ==================\n";
+            val _ = PrintAbsyn.print(TextIO.stdOut, absyn);
+            val _ = print "======== Syntax Errors (if any) ========\n";
+            val spilled = foldl (fn(a, b) => b orelse (emitproc out a)) false frags
+                            handle e => (TextIO.closeOut out; raise e)
+            val _ = TextIO.closeOut out
+        in 
+            (
+                if spilled
+                then compileAbsyn(absyn, filename)
+                else ()
+            )
+        end
+
    fun compile filename = 
         let
             val absyn : Absyn.exp = Parse.parse filename
-            val frags : MipsFrame.frag list= sortFrags (FindEscape.findEscape absyn; Semant.transProg absyn)
+            val _ = FindEscape.findEscape absyn
         in 
-            (
-                print "================ AST ==================\n";
-                PrintAbsyn.print(TextIO.stdOut, absyn);
-                print "======== Syntax Errors (if any) ========\n";
-                withOpenFile (filename ^ ".s") (fn out => (app (emitproc out) frags))
-            )
-       end
+            compileAbsyn(absyn, filename)
+        end
 end

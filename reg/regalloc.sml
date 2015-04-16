@@ -4,7 +4,7 @@ sig
     type allocation = Frame.register Temp.Table.table
     val initialAlloc : allocation
     val regList : Frame.register list
-    val allocateRegisters : Liveness.igraphentry TempKeyGraph.graph * (Temp.temp * Temp.temp) list -> allocation
+    val allocateRegisters : Liveness.igraphentry TempKeyGraph.graph * (Temp.temp * Temp.temp) list -> allocation * bool
 end
 
 structure RegAlloc : REGALLOC = 
@@ -25,6 +25,6 @@ struct
         let
             val (newalloc, spilllist) = Color.color {igraph=igraph, initial=initialAlloc, spillCost=dummySpillCost, registers=regList}
         in
-            newalloc
+            (newalloc, List.length(spilllist) > 0)
         end
 end
