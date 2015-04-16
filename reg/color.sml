@@ -71,6 +71,21 @@ struct
                 else SOME possibleColor
             end
 
+    (* Returns SOME suitable color for the given nodes, or NONE if they're not colorable*)
+    fun findColorCoalesced(igraph, t1, t2, initial, []) = NONE
+      | findColorCoalesced(igraph, t1, t2, initial, possibleColor::rest) = 
+            let
+                fun foldHelper (adjnode, boolean) : bool = boolean orelse
+                    case TT.look(initial, adjnode) of
+                        SOME adjColor => (possibleColor = adjColor)
+                      | NONE => false
+                val colorIsBad : bool = foldl foldHelper false (TG.adj(TG.getNode(igraph, t1)) @ TG.adj(TG.getNode(igraph, t2)))
+            in
+                if colorIsBad
+                then findColorCoalesced(igraph, t1, t2, initial, rest)
+                else SOME possibleColor
+            end
+
     (* Augment the initial register allocation, also returns a list of spills *)
     fun color {igraph, initial, spillCost, registers, movelist} =
         case getSimplifiableID (igraph, initial, registers, movelist, TG.nodes igraph) of
@@ -110,6 +125,19 @@ struct
                                     spillCost=spillCost,
                                     registers=registers,
                                     movelist=List.drop(movelist, 1)}
+                    else if (isNone(TT.look(initial, srcTemp))) andalso (isNone(TT.look(initial, dstTemp))) andalso (TG.inDegree(srcNode) + TG.inDegree(dstNode) < 30)
+                    then
+                        let 
+                            val newcolor = getSome(findColorCoalesced(igraph, srcTemp, dstTemp, initial, registers))
+                            val table2 = TT.enter(initial, srcTemp, newcolor)
+                            val table3 = TT.enter(table2, dstTemp, newcolor)
+                        in 
+                            color{igraph=igraph,
+                                    initial=table3,
+                                    spillCost=spillCost,
+                                    registers=registers,
+                                    movelist=List.drop(movelist, 1)}
+                        end
                     else color{igraph=igraph,
                                     initial=initial,
                                     spillCost=spillCost,
