@@ -483,7 +483,7 @@ struct
 
     fun transProg (my_exp : A.exp) = 
     let
-      val mainlabel = Temp.newlabel()
+      val mainlabel = Temp.namedlabel("main")
       val mainlevel = Translate.newLevel {parent=Translate.outermost, name=mainlabel, formals=[]}
       val mainexp = #exp (transExp (Env.base_venv, Env.base_tenv, my_exp, mainlevel, mainlabel))
     in

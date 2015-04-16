@@ -70,12 +70,16 @@ structure Main = struct
             val _ = print "================ AST ==================\n";
             val _ = PrintAbsyn.print(TextIO.stdOut, absyn);
             val _ = print "======== Syntax Errors (if any) ========\n";
+            (* Emit .data segment *)
             val _ = TextIO.output(out, ".data\n")
             val _ = foldl (fn(a, b) => b orelse (emitproc out a)) false stringFrags
                             handle e => (TextIO.closeOut out; raise e)
+            (* Emit .text segment *)
             val _ = TextIO.output(out, "\n.text\n")
             val spilled = foldl (fn(a, b) => b orelse (emitproc out a)) false procFrags
                             handle e => (TextIO.closeOut out; raise e)
+            (* Emit syscall to end program *)
+            val _ = TextIO.output(out, "addi $v0, $0, 10\nsyscall\n")
             val _ = TextIO.closeOut out
         in 
             (
