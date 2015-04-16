@@ -78,8 +78,6 @@ structure Main = struct
             val _ = TextIO.output(out, "\n.text\n")
             val spilled = foldl (fn(a, b) => b orelse (emitproc out a)) false procFrags
                             handle e => (TextIO.closeOut out; raise e)
-            (* Emit syscall to end program *)
-            val _ = TextIO.output(out, "addi $v0, $0, 10\nsyscall\n")
             val _ = TextIO.closeOut out
         in 
             (

@@ -171,6 +171,8 @@ struct
         let
           val label' = name frame'
           val copySpToFp = Tr.MOVE(Tr.TEMPLOC(FP), Tr.TEMP(SP))
+
+          (* move args === *)
           val argTemps = getRegisterTemps argregs
           fun moveArgs([], seqList, offset) = seqList
             | moveArgs(a::access, seqList, offset) =
@@ -190,9 +192,36 @@ struct
                              (* load from frame into temp reg *)
                              Tr.MOVE(exp2loc (exp(a, Tr.TEMP FP)), Tr.TEMP te)::moveArgs(access, seqList, offset + 1)
                     end
-          val moveStms = moveArgs(formals frame', [], 0)
+          val moveArgStms = moveArgs(formals frame', [], 0)
+          (* === *)
+
+          (* move calleesaves to temps === *)
+          val calleeSaveTemps = getRegisterTemps calleesaves
+          val newCalleeSaveLocs = map (fn x => Temp.newtemp()) calleeSaveTemps
+
+          (* callee list and list of new temps should be same size *)
+          fun moveCalleeSaves(a::from, b::dest, newList) = (a, b)::newList
+            | moveCalleeSaves([], l, newList) = newList
+            | moveCalleeSaves(l, [], newList) = newList
+
+          (* tuple list of callee save temps and their new locations *)
+          val saveTempMap = moveCalleeSaves(calleeSaveTemps, newCalleeSaveLocs, [])
+
+          fun moveTemp((from, to)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
+          val tempMoveStms = map moveTemp saveTempMap
+          (* === *)
+          
+
+          (* end if function move callee saves back *) 
+          fun moveTempRev((to, from)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
+          val tempMoveBackStms = map moveTempRev saveTempMap
         in
-          seq ([Tr.LABEL(label')] @ [copySpToFp] @ moveStms @ [stm])
+          seq ([Tr.LABEL(label')] 
+               @ [copySpToFp]
+               @ tempMoveStms
+               @ moveArgStms
+               @ [stm]
+               @ tempMoveBackStms)
         end
 
     fun procEntryExit2(frame, body) = 
