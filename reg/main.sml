@@ -20,7 +20,6 @@ structure Main = struct
             )
       | emitproc out (F.PROC{body,frame}) =
             let 
-                fun dummySpillCost x = 1;
                 fun printGraphNode (id, node as {def, use, ismove}) =
                     id ^ "(def: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp ^ ", ") "" def)
                     ^ " -- use: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp ^ ", ") "" use)
@@ -30,8 +29,8 @@ structure Main = struct
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
-                val (igraph, _, _) = Liveness.interferenceGraph flowgraph
-                val (alloc, spilllist) = Color.color {igraph=igraph, initial=R.initialAlloc, spillCost=dummySpillCost, registers=R.regList}
+                val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
+                val alloc = RegAlloc.allocateRegisters(igraph, movelist)
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
             in 
                 (

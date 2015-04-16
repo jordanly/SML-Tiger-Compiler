@@ -8,7 +8,7 @@ sig
             MakeGraph.graphentry StrKeyGraph.graph ->
                 igraphentry TempKeyGraph.graph *
                 liveSetEntry FlowNodeTempMap.map *
-                (TempKeyGraph.nodeID * TempKeyGraph.nodeID) list
+                (Temp.temp * Temp.temp) list
 
     val printGraphNode : TempKeyGraph.nodeID * 'Z -> string
     val show : TextIO.outstream * igraphentry TempKeyGraph.graph -> unit
