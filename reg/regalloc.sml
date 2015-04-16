@@ -23,7 +23,7 @@ struct
         end
     fun allocateRegisters (igraph, movelist) =
         let
-            val (newalloc, spilllist) = Color.color {igraph=igraph, initial=initialAlloc, spillCost=dummySpillCost, registers=regList}
+            val (newalloc, spilllist) = Color.color {igraph=igraph, initial=initialAlloc, spillCost=dummySpillCost, registers=regList, movelist=movelist}
         in
             (newalloc, List.length(spilllist) > 0)
         end

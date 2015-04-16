@@ -5,7 +5,8 @@ sig
     val color: {igraph: Liveness.igraphentry TempKeyGraph.graph, 
                 initial: allocation,
                 spillCost: Liveness.igraphentry -> int,
-                registers: Frame.register list}
+                registers: Frame.register list,
+                movelist : (Temp.temp * Temp.temp) list}
                 -> allocation * Temp.temp list
 end
 
@@ -16,8 +17,20 @@ struct
     structure TT = Temp.Table
     type allocation = Frame.register Temp.Table.table
 
+    (* SOME unwrapper *)
+    fun getSome (SOME x) = x | getSome NONE = "NO REGISTER FOUND"
+
     (* Returns true if the 'a option argument is NONE *)
     fun isNone NONE = true | isNone (SOME _) = false
+
+    (* Returns SOME move partner of the given temp or NONE *)
+    fun getMovePartner([], temp) = NONE
+      | getMovePartner((src, dst)::rest, temp) =
+        if src = temp
+        then SOME dst
+        else if dst = temp
+        then SOME src
+        else getMovePartner(rest, temp)
 
     (* Returns a list of temps that are in the graph but not in the register allocation table *)
     fun findNodesToSpill(graph, allocation) = 
@@ -31,16 +44,16 @@ struct
         end
 
     (* Finds a simplifiable ID in an igraph, or none if no node is simplifiable *)
-    fun getSimplifiableID (_, _, _, []) = NONE
-      | getSimplifiableID (igraph, initial, registers, possibleNode::rest) = 
+    fun getSimplifiableID (_, _, _, movelist, []) = NONE
+      | getSimplifiableID (igraph, initial, registers, movelist, possibleNode::rest) = 
             let
                 val numregisters = List.length registers
                 val possibleID = TG.getNodeID(possibleNode)
                 val degree = TG.outDegree(possibleNode)
             in
-                if degree < numregisters andalso isNone(TT.look(initial, possibleID))
+                if degree < numregisters andalso isNone(TT.look(initial, possibleID)) andalso isNone(getMovePartner(movelist, possibleID))
                 then SOME possibleID
-                else getSimplifiableID(igraph, initial, registers, rest)
+                else getSimplifiableID(igraph, initial, registers, movelist, rest)
             end
 
     (* Returns SOME suitable color for the given node, or NONE if it's not colorable*)
@@ -59,8 +72,8 @@ struct
             end
 
     (* Augment the initial register allocation, also returns a list of spills *)
-    fun color {igraph, initial, spillCost, registers} =
-        case getSimplifiableID (igraph, initial, registers, TG.nodes igraph) of
+    fun color {igraph, initial, spillCost, registers, movelist} =
+        case getSimplifiableID (igraph, initial, registers, movelist, TG.nodes igraph) of
             SOME simplifiableID => 
                 let
                     val simplifiableNode = TG.getNode(igraph, simplifiableID)
@@ -68,11 +81,39 @@ struct
                     val (tempAlloc, spilllist) = color{igraph=simplifiedGraph,
                                     initial=initial,
                                     spillCost=spillCost,
-                                    registers=registers}
+                                    registers=registers,
+                                    movelist=movelist}
                 in
                     case findColor(igraph, simplifiableID, tempAlloc, registers) of
                         SOME foundcolor => (TT.enter(tempAlloc, simplifiableID, foundcolor), spilllist)
                       | NONE =>  (tempAlloc, simplifiableID::spilllist)
                 end
-          | NONE => (initial, findNodesToSpill(igraph, initial))
+          | NONE => 
+                if List.length(movelist) = 0
+                then (initial, findNodesToSpill(igraph, initial))
+                else
+
+                let
+                    val (srcTemp, dstTemp) = List.hd(movelist)
+                    val srcNode = TG.getNode(igraph, srcTemp)
+                    val dstNode = TG.getNode(igraph, dstTemp)
+                in
+                    if not (isNone(TT.look(initial, srcTemp))) andalso isNone(TT.look(initial, dstTemp)) andalso (TG.inDegree(srcNode) + TG.inDegree(dstNode) < 30)
+                    then color{igraph=igraph,
+                                    initial=TT.enter(initial, dstTemp, getSome(TT.look(initial, srcTemp))),
+                                    spillCost=spillCost,
+                                    registers=registers,
+                                    movelist=List.drop(movelist, 1)}
+                    else if (isNone(TT.look(initial, srcTemp))) andalso not (isNone(TT.look(initial, dstTemp))) andalso (TG.inDegree(srcNode) + TG.inDegree(dstNode) < 30)
+                    then color{igraph=igraph,
+                                    initial=TT.enter(initial, srcTemp, getSome(TT.look(initial, dstTemp))),
+                                    spillCost=spillCost,
+                                    registers=registers,
+                                    movelist=List.drop(movelist, 1)}
+                    else color{igraph=igraph,
+                                    initial=initial,
+                                    spillCost=spillCost,
+                                    registers=registers,
+                                    movelist=List.drop(movelist, 1)}
+                end
 end
