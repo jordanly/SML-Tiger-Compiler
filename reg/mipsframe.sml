@@ -196,7 +196,7 @@ struct
           (* === *)
 
           (* move calleesaves to temps === *)
-          val calleeSaveTemps = getRegisterTemps calleesaves
+          val calleeSaveTemps = RA::(getRegisterTemps calleesaves) (* add RA *)
           val newCalleeSaveLocs = map (fn x => Temp.newtemp()) calleeSaveTemps
 
           (* callee list and list of new temps should be same size *)
