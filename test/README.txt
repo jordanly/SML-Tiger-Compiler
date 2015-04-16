@@ -1,4 +1,4 @@
-Extra Credit README
+List of Optimizations
 
 ===== Type-checker =====
 Purely functional records (already received 25% or 5/20 bonus on type checker for this)
@@ -35,14 +35,8 @@ Constant Folding
 
 Miscellaneous
 	String literals get allocated only once per unique string (test100.tig)
-	Common subexpression elimination NOT DONE
-	Induction variable elimination NOT DONE
-	Strength reduction NOT DONE
-	Jump threading NOT DONE
 
 ===== Register allocation =====
+Temps are colored with registers in the same order each time. This maximizes register reuse, so that we save the "higher-numbered" registers for when there is a lot of register pressure.
 heuristics for smart spilling NOT DONE
-live range spilling NOT DONE
-graph coloring spill spot allocation NOT DONE
 coalesce NOT DONE
-interprocedural register allocation (never has been done before) NOT DONE
