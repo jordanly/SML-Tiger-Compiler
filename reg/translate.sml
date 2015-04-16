@@ -137,7 +137,14 @@ struct
         Ex(F.exp (fraccess, followSLs declevel uselevel (Tr.TEMP F.FP)))
 
     fun binopIR (Tr.PLUS, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a + b))
+      | binopIR (Tr.PLUS, Ex(Tr.CONST 0), right) = right
+      | binopIR (Tr.PLUS, left, Ex(Tr.CONST 0)) = left
+      | binopIR (Tr.MINUS, left, Ex(Tr.CONST 0)) = left
       | binopIR (Tr.MINUS, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a - b))
+      | binopIR (Tr.MUL, Ex(Tr.CONST 0), right) = Ex(Tr.CONST 0)
+      | binopIR (Tr.MUL, left, Ex(Tr.CONST 0)) = Ex(Tr.CONST 0)
+      | binopIR (Tr.MUL, Ex(Tr.CONST 1), right) = right
+      | binopIR (Tr.MUL, left, Ex(Tr.CONST 1)) = left
       | binopIR (Tr.MUL, Ex(Tr.CONST a), Ex(Tr.CONST b)) = Ex(Tr.CONST (a * b))
       | binopIR (binop as Tr.MUL, left as Ex(Tr.CONST a), right) =
             (case logBase2 a of

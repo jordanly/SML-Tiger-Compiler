@@ -12,9 +12,10 @@ Dead-code elimination / Code simplification
 	FOR with low > hi => (test115.tig)
 	FOR with low = hi => no jumps (test116.tig, test117.tig)
 	ARRAY[0] => doesn't generate mult instruction (test118.tig)
-	add by 0 => no add instruction NOT DONE
-	mult by 0 => 0 NOT DONE
-	mult by 1 => no mult NOT DONE
+	add by 0 => no add instruction (test120.tig)
+	subtract by 0 => no sub instruction (test121.tig)
+	mult by 0 => 0 (test122.tig)
+	mult by 1 => no mult (test123.tig)
 
 Strength reduction
 	mult by power of 2 => LSHIFT not MULT (test119.tig)

@@ -1,0 +1,6 @@
+/* mult by 0 => 0 */
+let
+	var a := 3
+in
+	a * 0
+end

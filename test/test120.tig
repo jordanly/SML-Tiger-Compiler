@@ -1,0 +1,6 @@
+/* add by 0 => no add instruction */
+let
+	var a := 3
+in
+	a + 0
+end
