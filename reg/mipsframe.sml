@@ -170,6 +170,7 @@ struct
     fun procEntryExit1(frame' : frame, stm : Tr.stm) = 
         let
           val label' = name frame'
+          val copySpToFp = Tr.MOVE(Tr.TEMPLOC(FP), Tr.TEMP(SP))
           val argTemps = getRegisterTemps argregs
           fun moveArgs([], seqList, offset) = seqList
             | moveArgs(a::access, seqList, offset) =
@@ -191,7 +192,7 @@ struct
                     end
           val moveStms = moveArgs(formals frame', [], 0)
         in
-          seq ([Tr.LABEL(label')] @ moveStms @ [stm])
+          seq ([Tr.LABEL(label')] @ [copySpToFp] @ moveStms @ [stm])
         end
 
     fun procEntryExit2(frame, body) = 
