@@ -250,7 +250,7 @@ struct
                                         src=[FP], dst=[FP], jump=NONE}
 
             (* return instruction *)
-            val returnInsn = Assem.OPER {assem="j `d0\n", src=[], dst=[RA],
+            val returnInsn = Assem.OPER {assem="jr `d0\n", src=[], dst=[RA],
                                          jump=NONE}
             val body' = [labelInsn]
                         @ [copySpToFpInsn]
