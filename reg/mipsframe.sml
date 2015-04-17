@@ -232,8 +232,8 @@ struct
             val labelInsn = Assem.LABEL {assem=Symbol.name label' ^ ":\n", lab=label'}
 
             (* copy current fp to sp for new frame *)
-            val copySpToFpInsn = Assem.MOVE {assem="move `d0, `s0\n",
-                                             src=SP, dst=FP}
+            val copySpToFpInsn = Assem.OPER {assem="move `d0, `s0\n",
+                                             src=[SP], dst=[FP], jump=NONE}
 
             (* set new SP offset/allocate frame *)
             val spOffset = if maxNumArgs < ARGREGS
@@ -244,8 +244,8 @@ struct
                                          src=[FP], dst=[SP], jump=NONE}
 
             (* deallocate frame, move sp to fp and reset fp from sl *)
-            val moveSpToFp = Assem.MOVE {assem="move `d0, `s0\n",
-                                         src=FP, dst=SP}
+            val moveSpToFp = Assem.OPER {assem="move `d0, `s0\n",
+                                         src=[FP], dst=[SP], jump=NONE}
             val getPrevFp = Assem.OPER {assem="lw `d0, 0(`s0)\n",
                                         src=[FP], dst=[FP], jump=NONE}
 
