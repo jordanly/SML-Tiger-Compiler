@@ -75,6 +75,24 @@ structure Main = struct
                 )
             end
 
+   fun writeRuntime(outstream) = 
+      let
+        val runtimeStream = TextIO.openIn "runtimele.s"
+        val _ = TextIO.output(outstream, TextIO.inputAll runtimeStream)
+        val _ = TextIO.closeIn runtimeStream
+      in
+        ()
+      end
+
+   fun writeSysspim(outstream) = 
+      let
+        val runtimeStream = TextIO.openIn "sysspim.s"
+        val _ = TextIO.output(outstream, TextIO.inputAll runtimeStream)
+        val _ = TextIO.closeIn runtimeStream
+      in
+        ()
+      end
+
     fun compileAbsyn(absyn, filename) = 
         let
             fun isStringFrag (F.STRING _) = true | isStringFrag _ = false
@@ -93,8 +111,13 @@ structure Main = struct
                             handle e => (TextIO.closeOut out; raise e)
             (* Emit .text segment *)
             val _ = TextIO.output(out, "\n.text\n")
+            (* Write runtime before program*)
+            val _ = writeRuntime out
+            (* Write program *)
             val spilled = foldl (fn(a, b) => b orelse (emitproc out a)) false procFrags
                             handle e => (TextIO.closeOut out; raise e)
+            (* Write sysspim at end *)
+            val _ = writeSysspim out
             val _ = TextIO.closeOut out
         in 
             (
@@ -103,7 +126,7 @@ structure Main = struct
                 else ()
             )
         end
-
+   
    fun compile filename = 
         let
             val absyn : Absyn.exp = Parse.parse filename

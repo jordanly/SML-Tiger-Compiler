@@ -751,3 +751,6 @@ tig_flush:
 tig_exit:
   j exit
   .end tig_exit
+
+# ==================== START PROGRAM ==============
+

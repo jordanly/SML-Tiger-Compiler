@@ -1,3 +1,6 @@
+
+# =========== END PROGRAM ============
+
 # system calls for Tiger, when running on SPIM
 #
 # $Id: sysspim.s,v 1.1 2002/08/25 05:06:41 shivers Exp $
