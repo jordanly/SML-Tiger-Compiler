@@ -106,7 +106,7 @@ struct
 
     fun name {name=name, formals=_, numLocals=_, curOffset=_} = name
     fun formals {name=_, formals=formals, numLocals=_, curOffset=_} = formals
-    fun string(lab, s) = (Symbol.name lab) ^ ": .ascii \"" ^ s ^ "\"\n"
+    fun string(lab, s) = (Symbol.name lab) ^ ":\n .word " ^ Int.toString(String.size(s)) ^ "\n .ascii \"" ^ s ^ "\"\n"
     
     val ARGREGS = 4 (* registers allocated for arguments in mips *)
     val STARTOFFSET = ~40 (* 0-36 used for RA and calleesaves *)
