@@ -109,6 +109,7 @@ struct
     fun string(lab, s) = (Symbol.name lab) ^ ": .ascii \"" ^ s ^ "\"\n"
     
     val ARGREGS = 4 (* registers allocated for arguments in mips *)
+    val STARTOFFSET = ~40 (* 0-36 used for RA and calleesaves *)
     fun newFrame {name, formals} = 
         let
             fun allocFormals(offset, [], allocList, index) = allocList
@@ -120,7 +121,7 @@ struct
                   )
         in
             {name=name, formals=allocFormals(0, formals, [], 0),
-            numLocals=ref 0, curOffset=ref 0}
+            numLocals=ref 0, curOffset=ref STARTOFFSET}
         end
 
     fun allocLocal frame' escape = 
@@ -192,25 +193,21 @@ struct
           val moveArgStms = moveArgs(formals frame', [], 0)
           (* === *)
 
-          (* move calleesaves to temps === *)
+          fun memAddr(offset, temp) = Tr.MEM(Tr.BINOP(Tr.PLUS, temp, offset))
+          (* move calleesaves and ra to stack === *)
           val calleeSaveTemps = RA::(getRegisterTemps calleesaves) (* add RA *)
-          val newCalleeSaveLocs = map (fn x => Temp.newtemp()) calleeSaveTemps
-
-          (* callee list and list of new temps should be same size *)
-          fun moveCalleeSaves(a::from, b::dest, newList) = (a, b)::newList
-            | moveCalleeSaves([], l, newList) = newList
-            | moveCalleeSaves(l, [], newList) = newList
-
-          (* tuple list of callee save temps and their new locations *)
-          val saveTempMap = moveCalleeSaves(calleeSaveTemps, newCalleeSaveLocs, [])
-
-          fun moveTemp((from, to)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
-          val tempMoveStms = map moveTemp saveTempMap
+          fun storeCalleeSaves([], moveList, offset) =  moveList
+            | storeCalleeSaves(temp::tempList, moveList, offset) = 
+                Tr.MOVE(exp2loc(memAddr(Tr.CONST offset, Tr.TEMP FP)), Tr.TEMP temp)::storeCalleeSaves(tempList, moveList, offset - 4)
+          val tempMoveStms = storeCalleeSaves(calleeSaveTemps, [], ~4)
           (* === *)
 
           (* end if function move callee saves back *) 
-          fun moveTempRev((to, from)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
-          val tempMoveBackStms = map moveTempRev saveTempMap
+          fun loadCalleeSaves([], moveList, offset) =  moveList
+            | loadCalleeSaves(temp::tempList, moveList, offset) = 
+                Tr.MOVE(exp2loc(Tr.TEMP temp), memAddr(Tr.CONST offset, Tr.TEMP FP))::loadCalleeSaves(tempList, moveList, offset - 4)
+          val tempMoveBackStms = rev(loadCalleeSaves(calleeSaveTemps, [], ~4)) (* rev for aesthetics *)
+          (* === *)
         in
           seq (tempMoveStms
                @ moveArgStms
