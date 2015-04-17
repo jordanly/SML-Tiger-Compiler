@@ -52,7 +52,7 @@ structure Main = struct
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
                 val instrs' : Assem.instr list = #body (F.procEntryExit3(frame, instrs, getMaxNumArgs(Translate.getResult())))
-                val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs
+                val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs'
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
@@ -64,10 +64,10 @@ structure Main = struct
                     print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
-                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs;
+                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs';
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
-                    app (fn i => TextIO.output(out, format0 i)) instrs;
+                    app (fn i => TextIO.output(out, format0 i)) instrs';
                     if spilled
                     then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
                     else ();

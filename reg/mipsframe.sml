@@ -169,9 +169,6 @@ struct
 
     fun procEntryExit1(frame' : frame, stm : Tr.stm) = 
         let
-          val label' = name frame'
-          val copySpToFp = Tr.MOVE(Tr.TEMPLOC(FP), Tr.TEMP(SP))
-
           (* move args === *)
           val argTemps = getRegisterTemps argregs
           fun moveArgs([], seqList, offset) = seqList
@@ -215,9 +212,7 @@ struct
           fun moveTempRev((to, from)) = Tr.MOVE(exp2loc(Tr.TEMP(to)), Tr.TEMP from)
           val tempMoveBackStms = map moveTempRev saveTempMap
         in
-          seq ([Tr.LABEL(label')] 
-               @ [copySpToFp]
-               @ tempMoveStms
+          seq (tempMoveStms
                @ moveArgStms
                @ [stm]
                @ tempMoveBackStms)
@@ -233,12 +228,26 @@ struct
     fun procEntryExit3(frame' as {name=name', formals=formals', numLocals=numLocals', curOffset=curOffset'} : frame,
                        body, maxNumArgs) =
         let
+            val label' = name frame'
+            val labelInsn = Assem.LABEL {assem=Symbol.name label' ^ ":\n", lab=label'}
+
+            (* copy current fp to sp for new frame *)
+            val copySpToFpInsn = Assem.MOVE {assem="move `d0, `s0\n",
+                                             src=SP, dst=FP}
+
+            (* set new SP offset/allocate frame *)
             val spOffset = if maxNumArgs < ARGREGS
                            then !curOffset' - (ARGREGS * wordSize) 
                            else !curOffset' - (maxNumArgs * wordSize)
+            val moveSpInsn = Assem.OPER {assem="addi `d0, `s0, " ^ Int.toString(spOffset) ^ "\n",
+                                     src=[FP], dst=[SP], jump=NONE}
+            val body' = [labelInsn]
+                        @ [copySpToFpInsn]
+                        @ [moveSpInsn]
+                        @ body
         in
             {prolog = "PROCEDURE " ^ Symbol.name (name frame') ^ "\n",
-            body = body,
+            body = body',
             epilog = "END " ^ Symbol.name (name frame') ^ "\n"}
         end
 end
