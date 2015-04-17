@@ -239,7 +239,8 @@ struct
             val spOffset = if maxNumArgs < ARGREGS
                            then !curOffset' - (ARGREGS * wordSize) 
                            else !curOffset' - (maxNumArgs * wordSize)
-            val moveSpInsn = Assem.OPER {assem="addi `d0, `s0, " ^ Int.toString(spOffset) ^ "\n",
+            (* sml outputs negatives nums with ~ instead of - breaking qtspim *)
+            val moveSpInsn = Assem.OPER {assem="addi `d0, `s0, -" ^ Int.toString(abs(spOffset)) ^ "\n",
                                          src=[FP], dst=[SP], jump=NONE}
 
             (* deallocate frame, move sp to fp and reset fp from sl *)
