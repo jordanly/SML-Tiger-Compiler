@@ -231,6 +231,11 @@ struct
             val label' = name frame'
             val labelInsn = Assem.LABEL {assem=Symbol.name label' ^ ":\n", lab=label'}
 
+            (* Move $fp from runtime element into $a0, since $a0 is null when tig_main is called
+             This instruction should only be added if this frame is the tig_main frame*)
+            val moveTig_mainSL = Assem.OPER {assem="move `d0, `s0\n",
+                                             src=[FP], dst=[A0], jump=NONE}
+
             (* copy current fp to sp for new frame *)
             val copySpToFpInsn = Assem.OPER {assem="move `d0, `s0\n",
                                              src=[SP], dst=[FP], jump=NONE}
@@ -253,6 +258,7 @@ struct
             val returnInsn = Assem.OPER {assem="jr `d0\n", src=[], dst=[RA],
                                          jump=NONE}
             val body' = [labelInsn]
+                        @ (if name' = Symbol.symbol "tig_main" then [moveTig_mainSL] else [])
                         @ [copySpToFpInsn]
                         @ [moveSpInsn]
                         @ body
