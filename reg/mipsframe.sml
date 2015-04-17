@@ -240,11 +240,24 @@ struct
                            then !curOffset' - (ARGREGS * wordSize) 
                            else !curOffset' - (maxNumArgs * wordSize)
             val moveSpInsn = Assem.OPER {assem="addi `d0, `s0, " ^ Int.toString(spOffset) ^ "\n",
-                                     src=[FP], dst=[SP], jump=NONE}
+                                         src=[FP], dst=[SP], jump=NONE}
+
+            (* deallocate frame, move sp to fp and reset fp from sl *)
+            val moveSpToFp = Assem.MOVE {assem="move `d0, `s0\n",
+                                         src=FP, dst=SP}
+            val getPrevFp = Assem.OPER {assem="lw `d0, 0(`s0)\n",
+                                        src=[FP], dst=[FP], jump=NONE}
+
+            (* return instruction *)
+            val returnInsn = Assem.OPER {assem="j `d0\n", src=[], dst=[RA],
+                                         jump=NONE}
             val body' = [labelInsn]
                         @ [copySpToFpInsn]
                         @ [moveSpInsn]
                         @ body
+                        @ [moveSpToFp]
+                        @ [getPrevFp]
+                        @ [returnInsn]
         in
             {prolog = "PROCEDURE " ^ Symbol.name (name frame') ^ "\n",
             body = body',
