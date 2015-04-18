@@ -18,21 +18,21 @@ structure Main = struct
             else escapeOneVar(i+1)
         end
 
-        fun getMaxNumArgs(fragList : F.frag list) = 
-            let
-              fun lenFormals(frag : F.frag) = 
-                case frag of
-                      F.PROC {body, frame} => List.length(F.formals frame)
-                    | F.STRING(_, _) => 0
-              fun iterator(frag : F.frag, curMax) = 
-                case frag of
-                    F.PROC {body=b, frame=f} => if curMax < List.length(F.formals f)
-                                                then lenFormals frag
-                                                else curMax
-                  | F.STRING(_, _) => curMax
-            in
-              foldl iterator 0 (fragList)
-            end
+    fun getMaxNumArgs(fragList : F.frag list) = 
+        let
+          fun lenFormals(frag : F.frag) = 
+            case frag of
+                  F.PROC {body, frame} => List.length(F.formals frame)
+                | F.STRING(_, _) => 0
+          fun iterator(frag : F.frag, curMax) = 
+            case frag of
+                F.PROC {body=b, frame=f} => if curMax < List.length(F.formals f)
+                                            then lenFormals frag
+                                            else curMax
+              | F.STRING(_, _) => curMax
+        in
+          foldl iterator 0 (fragList)
+        end
 
     fun emitproc out (F.STRING(lab,s)) =
             (
@@ -56,6 +56,7 @@ structure Main = struct
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
+                val format1 = Assem.format(fn temp => Temp.makestring temp)
             in 
                 (
                     print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n");
@@ -64,9 +65,11 @@ structure Main = struct
                     print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
-                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs';
+                    app (fn i => TextIO.output(TextIO.stdOut, format1 i)) instrs';
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
+                    print ("=== Intereference Graph "  ^ S.name (F.name frame) ^ " ===\n");
+                    Liveness.show(TextIO.stdOut, igraph);
                     app (fn i => TextIO.output(out, format0 i)) instrs';
                     if spilled
                     then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
