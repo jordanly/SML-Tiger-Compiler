@@ -5,6 +5,9 @@ structure Main = struct
     structure F = MipsFrame
     structure R = RegAlloc
 
+    fun printBoolList(boolListRef) =
+      (app (fn x : bool ref => if !x then print "true, " else print "false, ") boolListRef; print "\n")
+
     fun escapeOneVar(i) =
         let
             val boolRefList = FindEscape.getEscapeRefs()
@@ -13,8 +16,8 @@ structure Main = struct
             then false
             else
 
-            if !(List.hd(!boolRefList)) = false
-            then (List.hd(!boolRefList) := true; true)
+            if !(List.nth(!boolRefList, i)) = false
+            then (List.nth(!boolRefList, i) := true; true)
             else escapeOneVar(i+1)
         end
 
@@ -104,6 +107,7 @@ structure Main = struct
             fun isProcFrag (F.PROC _) = true | isProcFrag _ = false
 
             val out = TextIO.openOut (filename ^ ".s")
+            val _ = Translate.resetFragList() (* reset since new tree *)
             val frags : MipsFrame.frag list = Semant.transProg absyn
             val stringFrags : MipsFrame.frag list = List.filter isStringFrag frags
             val procFrags : MipsFrame.frag list = List.filter isProcFrag frags
