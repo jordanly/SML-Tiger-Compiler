@@ -23,6 +23,17 @@ struct
     (* Returns true if the 'a option argument is NONE *)
     fun isNone NONE = true | isNone (SOME _) = false
 
+    (* print allocation *)
+    fun printAlloc(regTable : Frame.register Temp.Table.table, tempList : Temp.temp list) =
+        let
+          fun printTemp(temp) = 
+            case Temp.Table.look(regTable, temp) of
+                 SOME(x) => print(Temp.makestring(temp) ^ " -> " ^ x ^ "\n")
+               | NONE => print("== reg error ==")
+        in
+          app printTemp tempList
+        end
+
     (* Returns SOME move partner of the given temp or NONE *)
     fun getMovePartner([], temp) = NONE
       | getMovePartner((src, dst)::rest, temp) =

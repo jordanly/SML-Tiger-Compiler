@@ -67,6 +67,10 @@ structure Main = struct
                     app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs';
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
+                    (*
+                    print ("=== IGraph "  ^ S.name (F.name frame) ^ " ===\n");
+                    Liveness.show(TextIO.stdOut, igraph);
+                    *)
                     app (fn i => TextIO.output(out, format0 i)) instrs';
                     if spilled
                     then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
