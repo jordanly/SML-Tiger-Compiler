@@ -286,7 +286,7 @@ struct
         let
             val n = length exps
             val r = Temp.newtemp()
-            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("allocRecord", [Tr.CONST n]))
+            val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("tig_allocRecord", [Tr.CONST n]))
             fun setField (exp, elem) = Tr.MOVE((Tr.MEMLOC(
                                                     Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem)))), 
                                                     unEx exp)
