@@ -7,13 +7,18 @@ Purely functional records (already received 25% or 5/20 bonus on type checker fo
 Dead-code elimination / Code simplification
 	if 0 then _ else _ => JUMP not CJUMP (test101.tig)
 	if 1 then _ else _ => JUMP not CJUMP (test102.tig)
+
 	WHILE 0 => no code or labels (test113.tig)
 	WHILE 1 => JUMP not CJUMP at end (test114.tig)
+
 	FOR with low > hi => (test115.tig)
 	FOR with low = hi => no jumps (test116.tig, test117.tig)
+
 	ARRAY[0] => doesn't generate mult instruction (test118.tig)
+
 	add by 0 => no add instruction (test120.tig)
 	subtract by 0 => no sub instruction (test121.tig)
+	
 	mult by 0 => 0 (test122.tig)
 	mult by 1 => no mult (test123.tig)
 
