@@ -270,7 +270,7 @@ struct
               )
           | munchExp(T.CALL(T.NAME(n1), args)) = 
               let
-                val calldefs = F.RA::F.RV::F.V1::(F.getRegisterTemps F.callersaves)
+                val calldefs = F.RA::F.RV::F.V1::(F.getRegisterTemps F.calleesaves)
               in
                 emit(
                   A.OPER {assem="jal " ^ Symbol.name n1 ^ "\n",
