@@ -282,13 +282,14 @@ struct
                    Tr.MEM(Tr.TEMP(addr))))
             end
 
+    (* records are malloced down from address, therefore must store negative to address *)
     fun recordIR (exps) =
         let
             val n = length exps
             val r = Temp.newtemp()
             val recordInit = Tr.MOVE(Tr.TEMPLOC(r), F.externalCall("tig_allocRecord", [Tr.CONST n]))
             fun setField (exp, elem) = Tr.MOVE((Tr.MEMLOC(
-                                                    Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(F.wordSize * elem)))), 
+                                                    Tr.BINOP(Tr.PLUS, Tr.TEMP(r), Tr.CONST(~1 * F.wordSize * (elem + 1))))), 
                                                     unEx exp)
             fun instantiateFields ([]) = [recordInit]
               | instantiateFields (head :: l) = (setField(head, length l)) :: (instantiateFields (l))
@@ -304,7 +305,7 @@ struct
     fun fieldIR (nameEx, elem) =
         Ex(Tr.MEM(Tr.BINOP(
                     Tr.PLUS, unEx nameEx, 
-                    Tr.CONST(elem * F.wordSize))))
+                    Tr.CONST(~1 * F.wordSize * (elem + 1)))))
 
     fun nilIR () = Ex (Tr.CONST 0)
 
