@@ -20,7 +20,6 @@ struct
       | checkEqualityOp ({exp=_, ty=_}, {exp=_, ty=_}, pos) = Err.error pos "error : comparison expected both int, string, record, or array"
 
     fun checkComparisonOp ({exp=_, ty=T.INT}, {exp=_, ty=T.INT}, pos) = ()
-      | checkComparisonOp ({exp=_, ty=T.STRING}, {exp=_, ty=T.STRING}, pos) = ()
       | checkComparisonOp ({exp=_, ty=_ }, {exp=_, ty=_ }, pos) = Err.error pos "error: comparison of incompatible types"
 
     fun checkTypesEqual (tyA, tyB, pos, errMsg) = if T.eq(tyA, tyB)
@@ -88,22 +87,22 @@ struct
                                 in {exp=R.relopIR(Tr.NE, exp', #exp (trexp right), ty'), ty=T.INT}
                                 end
                               ) 
-                  | A.LtOp => (checkEqualityOp(trexp left, trexp right, pos);
+                  | A.LtOp => (checkComparisonOp(trexp left, trexp right, pos);
                                 let val {exp=exp', ty=ty'} = trexp left
                                 in {exp=R.relopIR(Tr.LT, exp', #exp (trexp right), ty'), ty=T.INT}
                                 end
                               ) 
-                  | A.LeOp => (checkEqualityOp(trexp left, trexp right, pos);
+                  | A.LeOp => (checkComparisonOp(trexp left, trexp right, pos);
                                 let val {exp=exp', ty=ty'} = trexp left
                                 in {exp=R.relopIR(Tr.LE, exp', #exp (trexp right), ty'), ty=T.INT}
                                 end
                               ) 
-                  | A.GtOp => (checkEqualityOp(trexp left, trexp right, pos);
+                  | A.GtOp => (checkComparisonOp(trexp left, trexp right, pos);
                                 let val {exp=exp', ty=ty'} = trexp left
                                 in {exp=R.relopIR(Tr.GT, exp', #exp (trexp right), ty'), ty=T.INT}
                                 end
                               ) 
-                  | A.GeOp => (checkEqualityOp(trexp left, trexp right, pos);
+                  | A.GeOp => (checkComparisonOp(trexp left, trexp right, pos);
                                 let val {exp=exp', ty=ty'} = trexp left
                                 in {exp=R.relopIR(Tr.GE, exp', #exp (trexp right), ty'), ty=T.INT}
                                 end

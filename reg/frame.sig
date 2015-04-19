@@ -14,6 +14,7 @@ sig
     val argregs : (Temp.temp * register) list
     val calleesaves : (Temp.temp * register) list
     val callersaves : (Temp.temp * register) list
+    val returnregs : (Temp.temp * register) list
     val tempMap : register Temp.Table.table
     val getRegisterTemps : (Temp.temp * register) list -> Temp.temp list
     val makestring : Temp.temp -> register

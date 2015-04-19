@@ -117,7 +117,6 @@ structure Main = struct
             val procFrags : MipsFrame.frag list = List.filter isProcFrag frags
             val _ = print "================ AST ==================\n";
             val _ = PrintAbsyn.print(TextIO.stdOut, absyn);
-            val _ = print "======== Syntax Errors (if any) ========\n";
             (* Emit .data segment *)
             val _ = TextIO.output(out, ".data\n")
             val _ = foldl (fn(a, b) => b orelse (emitproc out a)) false stringFrags
@@ -142,6 +141,7 @@ structure Main = struct
    
    fun compile filename = 
         let
+            val _ = print "======== Syntax Errors (if any) ========\n";
             val absyn : Absyn.exp = Parse.parse filename
             val _ = FindEscape.findEscape absyn
         in 
