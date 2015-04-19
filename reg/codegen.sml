@@ -124,7 +124,8 @@ struct
                             src=[munchExp e1, munchExp e2],
                             jump=SOME [l1, l2]}
                 )
-        and munchExp(T.CONST i) =
+        and munchExp(T.CONST 0) = F.R0
+          | munchExp(T.CONST i) =
               result(fn r => emit(
                      A.OPER {assem="li `d0, " ^ intToStringFormat i ^ "\n",
                              src=[], dst=[r], jump=NONE}

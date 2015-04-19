@@ -1,0 +1,6 @@
+/* Tr.CONST 0 uses $zero, not li into some register */
+let
+	var a := 3
+in
+	a = 0
+end
