@@ -3,6 +3,7 @@ sig
     structure Frame : FRAME
     type allocation = Frame.register Temp.Table.table
     val initialAlloc : allocation
+    val printAlloc : Frame.register Temp.Table.table * Temp.temp list -> unit
     val regList : Frame.register list
     val allocateRegisters : Liveness.igraphentry TempKeyGraph.graph * (Temp.temp * Temp.temp) list -> allocation * bool
 end
@@ -34,9 +35,7 @@ struct
     fun allocateRegisters (igraph, movelist) =
         let
             val (newalloc, spilllist) = Color.color {igraph=igraph, initial=initialAlloc, spillCost=dummySpillCost, registers=regList, movelist=movelist}
-            val testList = map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph)
         in
-            printAlloc(newalloc, testList);
             (newalloc, List.length(spilllist) > 0)
         end
 end
