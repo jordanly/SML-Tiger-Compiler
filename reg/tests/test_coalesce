@@ -1,0 +1,8 @@
+let
+    var a := 10
+    var b := a
+    var c := b + 10
+    var d := a + 10
+in
+    0
+end
