@@ -42,6 +42,9 @@ Constant Folding
 Miscellaneous
 	String literals get allocated only once per unique string (test100.tig)
 
+===== Instruction Selection =====
+Tr.CONST 0 uses $zero, not li into some register (test124.tig)
+
 ===== Register allocation =====
 Temps are colored with registers in the same order each time. This maximizes register reuse, so that we save the "higher-numbered" registers for when there is a lot of register pressure.
 heuristics for smart spilling NOT DONE
