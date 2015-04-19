@@ -30,7 +30,7 @@ struct
         end
     val regList = 
         let fun addToList ((temp, assignedRegister), listSoFar) = assignedRegister::listSoFar
-        in foldl addToList [] (Frame.calleesaves @ Frame.callersaves @ Frame.returnregs)
+        in foldl addToList [] (Frame.calleesaves @ Frame.callersaves @ [(Frame.RV, "$v0"), (Frame.V1, "$v1")])
         end
     fun allocateRegisters (igraph, movelist) =
         let

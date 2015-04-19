@@ -51,6 +51,8 @@ struct
     val RA = Temp.newtemp() (* return address *)
 
     val specialregs = [
+        (RV, "$v0"),
+        (V1, "$v1"),
         (R0, "$zero"),
         (AT, "$at"), 
         (K0, "$k0"),
@@ -59,10 +61,6 @@ struct
         (SP, "$sp"),
         (FP, "$fp"),
         (RA, "$ra")
-    ]
-    val returnregs = [
-        (RV, "$v0"),
-        (V1, "$v1")
     ]
     val argregs = [
         (A0, "$a0"),
