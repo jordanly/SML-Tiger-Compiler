@@ -63,8 +63,10 @@ struct
               in
                 Temp.Set.union(useSet, Temp.Set.difference(liveOut, defSet))
               end
+          val outVal = calcOut(nodeID)
+          val inVal = calcIn(liveEntry, StrKeyGraph.nodeInfo flowGraphNode)
         in
-          {liveIn=calcIn(liveEntry, StrKeyGraph.nodeInfo flowGraphNode), liveOut=calcOut(nodeID)}
+          {liveIn=inVal, liveOut=outVal}
         end
 
     fun computeLiveness(flowGraph, liveMap) =
@@ -87,7 +89,7 @@ struct
               end
           fun runUntilFixed(flowGraph, liveMap) = 
               let
-                val nodeIDs = map StrKeyGraph.getNodeID (StrKeyGraph.nodes flowGraph)
+                val nodeIDs = rev (map StrKeyGraph.getNodeID (StrKeyGraph.nodes flowGraph))
                 val (newMap, changed) = foldl iterator (liveMap, false) nodeIDs
               in
                 if changed
@@ -121,6 +123,7 @@ struct
                 val nodeID = StrKeyGraph.getNodeID node
                 val nodeInfo = StrKeyGraph.nodeInfo node
                 val defs = #def nodeInfo
+                val uses = #use nodeInfo
                 val liveEntry = case FlowNodeTempMap.find(liveMap, nodeID) of
                                      SOME(entry) => entry
                                    | NONE => (print ("Liveness.sml: could not find node: " ^ nodeID);
@@ -132,7 +135,7 @@ struct
                         (* If move and temps are same, do not create edge *)
                         val newGraph = 
                           case #ismove nodeInfo of
-                               true => if Temp.compare(defTemp, outTemp) = EQUAL
+                               true => if Temp.compare(List.hd(uses), outTemp) = EQUAL
                                        then iGraph
                                        else TempKeyGraph.doubleEdge(iGraph, defTemp, outTemp)
                              | false => TempKeyGraph.doubleEdge(iGraph, defTemp, outTemp)
@@ -183,6 +186,10 @@ struct
               end
           val iGraph : igraphentry TempKeyGraph.graph = createInterferenceGraph(flowGraph, liveMap')
           val moveList = createMoveList(flowGraph, iGraph)
+          (*
+          val _ = print "========= MOVE LIST =========\n"
+          val _ = app (fn(x, y) => print("move from " ^ (Temp.makestring x) ^ " -> " ^ (Temp.makestring y) ^ "\n")) moveList
+          *)
         in
           (iGraph, liveMap', moveList)
         end
