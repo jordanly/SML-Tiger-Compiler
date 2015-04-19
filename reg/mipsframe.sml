@@ -109,7 +109,7 @@ struct
     fun string(lab, s) = (Symbol.name lab) ^ ":\n .word " ^ Int.toString(String.size(s)) ^ "\n .ascii \"" ^ s ^ "\"\n"
     
     val ARGREGS = 4 (* registers allocated for arguments in mips *)
-    val STARTOFFSET = ~40 (* 0-36 used for RA and calleesaves *)
+    val STARTOFFSET = ~44 (* 0-40 used for RA and FP and calleesaves *)
     fun newFrame {name, formals} = 
         let
             fun allocFormals(offset, [], allocList, index) = allocList
@@ -199,14 +199,14 @@ struct
           fun storeCalleeSaves([], moveList, offset) =  moveList
             | storeCalleeSaves(temp::tempList, moveList, offset) = 
                 Tr.MOVE(exp2loc(memAddr(Tr.CONST offset, Tr.TEMP FP)), Tr.TEMP temp)::storeCalleeSaves(tempList, moveList, offset - 4)
-          val tempMoveStms = storeCalleeSaves(calleeSaveTemps, [], ~4)
+          val tempMoveStms = storeCalleeSaves(calleeSaveTemps, [], ~8)
           (* === *)
 
           (* end if function move callee saves back *) 
           fun loadCalleeSaves([], moveList, offset) =  moveList
             | loadCalleeSaves(temp::tempList, moveList, offset) = 
                 Tr.MOVE(exp2loc(Tr.TEMP temp), memAddr(Tr.CONST offset, Tr.TEMP FP))::loadCalleeSaves(tempList, moveList, offset - 4)
-          val tempMoveBackStms = rev(loadCalleeSaves(calleeSaveTemps, [], ~4)) (* rev for aesthetics *)
+          val tempMoveBackStms = rev(loadCalleeSaves(calleeSaveTemps, [], ~8)) (* rev for aesthetics *)
           (* === *)
         in
           seq (tempMoveStms
@@ -233,6 +233,9 @@ struct
             val moveTig_mainSL = Assem.OPER {assem="move `d0, `s0\n",
                                              src=[FP], dst=[A0], jump=NONE}
 
+
+            val saveFpToStack = Assem.OPER {assem="sw `d0, -4(`s0)\n",
+                                            src=[SP], dst=[FP], jump=NONE}
             (* copy current fp to sp for new frame *)
             val copySpToFpInsn = Assem.OPER {assem="move `d0, `s0\n",
                                              src=[SP], dst=[FP], jump=NONE}
@@ -248,7 +251,7 @@ struct
             (* deallocate frame, move sp to fp and reset fp from sl *)
             val moveSpToFp = Assem.OPER {assem="move `d0, `s0\n",
                                          src=[FP], dst=[SP], jump=NONE}
-            val getPrevFp = Assem.OPER {assem="lw `d0, 0(`s0)\n",
+            val getPrevFp = Assem.OPER {assem="lw `d0, -4(`s0)\n",
                                         src=[FP], dst=[FP], jump=NONE}
 
             (* return instruction *)
@@ -256,6 +259,7 @@ struct
                                          jump=NONE}
             val body' = [labelInsn]
                         @ (if name' = Symbol.symbol "tig_main" then [moveTig_mainSL] else [])
+                        @ [saveFpToStack]
                         @ [copySpToFpInsn]
                         @ [moveSpInsn]
                         @ body
