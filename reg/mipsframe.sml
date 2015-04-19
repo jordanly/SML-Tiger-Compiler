@@ -53,14 +53,16 @@ struct
     val specialregs = [
         (R0, "$zero"),
         (AT, "$at"), 
-        (RV, "$v0"),
-        (V1, "$v1"),
         (K0, "$k0"),
         (K1, "$k1"),
         (GP, "$gp"),
         (SP, "$sp"),
         (FP, "$fp"),
         (RA, "$ra")
+    ]
+    val returnregs = [
+        (RV, "$v0"),
+        (V1, "$v1")
     ]
     val argregs = [
         (A0, "$a0"),
