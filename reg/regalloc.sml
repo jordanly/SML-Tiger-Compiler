@@ -19,7 +19,7 @@ struct
           fun printTemp(temp) = 
             case Temp.Table.look(regTable, temp) of
                  SOME(x) => print(Temp.makestring(temp) ^ " -> " ^ x ^ "\n")
-               | NONE => print("== reg error ==")
+               | NONE => print("== reg error, failed to alloc: " ^ Temp.makestring(temp) ^ "==\n")
         in
           app printTemp tempList
         end
@@ -30,7 +30,7 @@ struct
         end
     val regList = 
         let fun addToList ((temp, assignedRegister), listSoFar) = assignedRegister::listSoFar
-        in foldl addToList [] (Frame.calleesaves @ Frame.callersaves @ [(Frame.RV, "$v0"), (Frame.V1, "$v1")])
+        in foldl addToList [] (Frame.specialregs @ Frame.argregs @ Frame.calleesaves @ Frame.callersaves)
         end
     fun allocateRegisters (igraph, movelist) =
         let

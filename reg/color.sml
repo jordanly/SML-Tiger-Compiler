@@ -58,7 +58,7 @@ struct
 
     (* Returns SOME suitable color for the given node, or NONE if it's not colorable*)
     fun findColor(igraph, nodeID, initial, []) = NONE
-      | findColor(igraph, nodeID, initial, possibleColor::rest) = 
+      | findColor(igraph, nodeID, initial, possibleColor::rest : Frame.register list) = 
             let
                 fun foldHelper (adjnode, boolean) : bool = boolean orelse
                     case TT.look(initial, adjnode) of

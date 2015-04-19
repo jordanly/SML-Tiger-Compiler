@@ -262,7 +262,7 @@ struct
                         @ [saveFpToStack]
                         @ [copySpToFpInsn]
                         @ [moveSpInsn]
-                        @ body
+                        @ procEntryExit2(frame', body)
                         @ [moveSpToFp]
                         @ [getPrevFp]
                         @ [returnInsn]
