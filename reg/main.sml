@@ -68,7 +68,7 @@ structure Main = struct
                     print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
-                    app (fn i => TextIO.output(TextIO.stdOut, format1 i)) instrs';
+                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs';
                     (*
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
