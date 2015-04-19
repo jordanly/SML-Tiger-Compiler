@@ -18,8 +18,6 @@ let
     var x17 := 17
     var x18 := 18
     var x19 := 19
-    var x18 := 17
-    var x19 := 17
     var x20 := 20
     var x21 := 21
     var x22 := 22
@@ -52,6 +50,7 @@ in
      + x19
      + x20
     + x21
+    + x22
     + x23
     + x24
     + x25

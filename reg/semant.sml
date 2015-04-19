@@ -65,18 +65,42 @@ struct
                 end
           | trexp (A.OpExp{left, oper, right, pos}) = 
                 (case oper of
-                    A.PlusOp => (checkInt(trexp left, pos);
-                                 checkInt(trexp right, pos);
-                                 {exp=R.binopIR(Tr.PLUS, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.MinusOp => (checkInt(trexp left, pos); 
-                                  checkInt(trexp right, pos);
-                                  {exp=R.binopIR(Tr.MINUS, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.TimesOp => (checkInt(trexp left, pos); 
-                                  checkInt(trexp right, pos);
-                                  {exp=R.binopIR(Tr.MUL, #exp (trexp left), #exp (trexp right)), ty=T.INT})
-                  | A.DivideOp => (checkInt(trexp left, pos); 
-                                   checkInt(trexp right, pos);
-                                   {exp=R.binopIR(Tr.DIV, #exp (trexp left), #exp (trexp right)), ty=T.INT})
+                    A.PlusOp => 
+                      let
+                        val leftVal = trexp left
+                        val rightVal = trexp right
+                        val _ = checkInt(leftVal, pos)
+                        val _ = checkInt(rightVal, pos)
+                      in
+                        {exp=R.binopIR(Tr.PLUS, #exp leftVal, #exp rightVal), ty=T.INT}
+                      end
+                  | A.MinusOp => 
+                      let
+                        val leftVal = trexp left
+                        val rightVal = trexp right
+                        val _ = checkInt(leftVal, pos)
+                        val _ = checkInt(rightVal, pos)
+                      in
+                        {exp=R.binopIR(Tr.MINUS, #exp leftVal, #exp rightVal), ty=T.INT}
+                      end
+                  | A.TimesOp => 
+                      let
+                        val leftVal = trexp left
+                        val rightVal = trexp right
+                        val _ = checkInt(leftVal, pos)
+                        val _ = checkInt(rightVal, pos)
+                      in
+                        {exp=R.binopIR(Tr.MUL, #exp leftVal, #exp rightVal), ty=T.INT}
+                      end
+                  | A.DivideOp => 
+                      let
+                        val leftVal = trexp left
+                        val rightVal = trexp right
+                        val _ = checkInt(leftVal, pos)
+                        val _ = checkInt(rightVal, pos)
+                      in
+                        {exp=R.binopIR(Tr.DIV, #exp leftVal, #exp rightVal), ty=T.INT}
+                      end
                   | A.EqOp => (checkEqualityOp(trexp left, trexp right, pos);
                                 let val {exp=exp', ty=ty'} = trexp left
                                 in {exp=R.relopIR(Tr.EQ, exp', #exp (trexp right), ty'), ty=T.INT}
@@ -140,12 +164,15 @@ struct
           | trexp (A.SeqExp(expList)) = 
                 let
                     fun helper((seqExp, pos), {stmlist=stmlist', ty=ty'}) =
-                        let val {exp=exp'', ty=ty''} = trexp seqExp
-                        in {stmlist=stmlist'@[exp''], ty=ty''}
+                        let 
+                          val {exp=exp'', ty=ty''} = trexp seqExp
+                        in 
+                          {stmlist=stmlist'@[exp''], ty=ty''}
                         end
                     fun checkSequence sequence = foldl helper {stmlist=[], ty=T.UNIT} sequence
+                    val checkedSequence = checkSequence expList
                 in
-                    {exp=R.Ex(R.eseq(#stmlist (checkSequence expList))), ty= (#ty (checkSequence expList))}
+                    {exp=R.Ex(R.eseq(#stmlist checkedSequence)), ty=(#ty checkedSequence)}
                 end
           | trexp (A.AssignExp({var, exp, pos})) = 
                 let
