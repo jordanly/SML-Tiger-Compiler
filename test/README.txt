@@ -30,12 +30,12 @@ Constant Folding
 	CONST - CONST => CONST not BINOP (test104.tig)
 	CONST * CONST => CONST not BINOP (test105.tig)
 	CONST / CONST => CONST not BINOP (test106.tig)
-	CONST = CONST => JUMP not CJUMP (test107.tig) NOT DONE
-	CONST <> CONST => JUMP not CJUMP (test108.tig) NOT DONE
-	CONST < CONST => JUMP not CJUMP (test109.tig) NOT DONE
-	CONST <= CONST => JUMP not CJUMP (test110.tig) NOT DONE
-	CONST > CONST => JUMP not CJUMP (test111.tig) NOT DONE
-	CONST >= CONST => JUMP not CJUMP (test112.tig) NOT DONE
+	CONST = CONST => JUMP not CJUMP (test107.tig)
+	CONST <> CONST => JUMP not CJUMP (test108.tig)
+	CONST < CONST => JUMP not CJUMP (test109.tig)
+	CONST <= CONST => JUMP not CJUMP (test110.tig)
+	CONST > CONST => JUMP not CJUMP (test111.tig)
+	CONST >= CONST => JUMP not CJUMP (test112.tig)
 
 Miscellaneous
 	String literals get allocated only once per unique string (test100.tig)

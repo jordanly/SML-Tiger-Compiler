@@ -63,16 +63,16 @@ structure Main = struct
             in 
                 (
                     print ("========== Fragment:  " ^ S.name (F.name frame) ^ " ==========\n");
-                    print ("=== PRE-CANON " ^ S.name (F.name frame) ^ " ===\n");
+                    (*print ("=== PRE-CANON " ^ S.name (F.name frame) ^ " ===\n");
                     Printtree.printtree(TextIO.stdOut,body);
                     print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n");
-                    app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
+                    app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;*)
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs';
-                    print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
+                    (*print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
                     print ("=== Interference Graph "  ^ S.name (F.name frame) ^ " ===\n");
-                    Liveness.show(TextIO.stdOut, igraph);
+                    Liveness.show(TextIO.stdOut, igraph);*)
                     print ("=== Register allocation "  ^ S.name (F.name frame) ^ " ===\n");
                     R.printAlloc(alloc, map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph));
                     app (fn i => TextIO.output(out, format0 i)) instrs';

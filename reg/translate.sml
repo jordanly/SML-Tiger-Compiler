@@ -161,13 +161,25 @@ struct
 
     (* ty mostly for comparing if STRING *)
     fun relopIR (relop, left, right, ty) = 
-        case (ty,relop) of
-            (T.STRING, Tr.EQ) => Ex(F.externalCall("stringEqual", [unEx left, unEx right]))
-          | (T.STRING, Tr.LE) => Ex(F.externalCall("stringLE", [unEx left, unEx right]))
-          | (T.STRING, Tr.LT) => Ex(F.externalCall("stringLT", [unEx left, unEx right]))
-          | (T.STRING, Tr.GE) => Ex(F.externalCall("stringGE", [unEx left, unEx right]))
-          | (T.STRING, Tr.GT) => Ex(F.externalCall("stringGT", [unEx left, unEx right]))
-          | _        => Cx(fn (t, f) => Tr.CJUMP(relop, unEx(left), unEx(right), t, f))
+        let 
+            val leftExp = unEx left
+            val rightExp = unEx right
+        in
+            case (ty,relop,leftExp,rightExp) of
+                (T.STRING, Tr.EQ, _, _) => Ex(F.externalCall("stringEqual", [leftExp, rightExp]))
+              | (T.STRING, Tr.NE, _, _) => Ex(Tr.BINOP(Tr.MINUS, Tr.CONST 1, F.externalCall("stringEqual", [leftExp, rightExp])))
+              | (T.STRING, Tr.LE, _, _) => Ex(F.externalCall("stringLE", [leftExp, rightExp]))
+              | (T.STRING, Tr.LT, _, _) => Ex(F.externalCall("stringLT", [leftExp, rightExp]))
+              | (T.STRING, Tr.GE, _, _) => Ex(F.externalCall("stringGE", [leftExp, rightExp]))
+              | (T.STRING, Tr.GT, _, _) => Ex(F.externalCall("stringGT", [leftExp, rightExp]))
+              | (T.INT, Tr.EQ, Tr.CONST a, Tr.CONST b) => if a = b then Ex(Tr.CONST 1) else Ex(Tr.CONST 0)
+              | (T.INT, Tr.NE, Tr.CONST a, Tr.CONST b) => if a <> b then Ex(Tr.CONST 1) else Ex(Tr.CONST 0)  
+              | (T.INT, Tr.LE, Tr.CONST a, Tr.CONST b) => if a <= b then Ex(Tr.CONST 1) else Ex(Tr.CONST 0)
+              | (T.INT, Tr.LT, Tr.CONST a, Tr.CONST b) => if a < b then Ex(Tr.CONST 1) else Ex(Tr.CONST 0)
+              | (T.INT, Tr.GE, Tr.CONST a, Tr.CONST b) => if a >= b then Ex(Tr.CONST 1) else Ex(Tr.CONST 0)
+              | (T.INT, Tr.GT, Tr.CONST a, Tr.CONST b) => if a > b then Ex(Tr.CONST 1) else Ex(Tr.CONST 0)
+              | _        => Cx(fn (t, f) => Tr.CJUMP(relop, leftExp, rightExp, t, f))
+        end          
 
     fun ifthenIR(test, then') =
         let
