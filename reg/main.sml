@@ -69,12 +69,16 @@ structure Main = struct
                     app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn i => TextIO.output(TextIO.stdOut, format1 i)) instrs';
+                    (*
                     print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
+                    *)
                     (*
                     print ("=== Interference Graph "  ^ S.name (F.name frame) ^ " ===\n");
                     Liveness.show(TextIO.stdOut, igraph);
                     *)
+                    print ("=== Register allocation "  ^ S.name (F.name frame) ^ " ===\n");
+                    R.printAlloc(alloc, map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph));
                     app (fn i => TextIO.output(out, format0 i)) instrs';
                     if spilled
                     then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
