@@ -1,0 +1,2 @@
+/* CONST = CONST => JUMP not CJUMP */
+if 3 <> 3 then 4 else 3
