@@ -24,8 +24,6 @@ Dead-code elimination / Code simplification
 
 Strength reduction
 	mult by power of 2 => LSHIFT not MULT (test119.tig)
-	divide by power of 2 => ARSHIFT NOT DONE
-	UMINUS UMINUS exp => exp NOT DONE
 	
 Constant Folding
 	CONST + CONST => CONST not BINOP (test103.tig)
