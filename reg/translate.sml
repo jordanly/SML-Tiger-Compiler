@@ -266,7 +266,7 @@ struct
       | forIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel) = fullForIR (varEx, escape, loEx, hiEx, bodyNx, breaklabel)
 
     fun arrayIR (sizeEx, initEx) =
-        Ex(F.externalCall("initArray", [unEx sizeEx, unEx initEx]))
+        Ex(F.externalCall("tig_initArray", [unEx sizeEx, unEx initEx]))
 
     fun subscriptIR (arrEx, Ex (Tr.CONST 0)) = Ex(Tr.MEM(unEx arrEx))
       | subscriptIR (arrEx, indexEx) =
