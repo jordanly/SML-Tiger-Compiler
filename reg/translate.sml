@@ -286,11 +286,11 @@ struct
                 val addr = Temp.newtemp()
                 val arr = unEx arrEx
                 val index = unEx indexEx
+                (* Add one to index since index 0 is size of array*)
+                val accessVal = Tr.BINOP(Tr.MUL, Tr.BINOP(Tr.PLUS, index, Tr.CONST 1), Tr.CONST(F.wordSize))
             in
                 Ex(Tr.ESEQ(
-                   Tr.MOVE(Tr.TEMPLOC(addr),
-                           Tr.BINOP(Tr.PLUS, arr,
-                                    Tr.BINOP(Tr.MUL, index, Tr.CONST(F.wordSize)))),
+                   Tr.MOVE(Tr.TEMPLOC(addr), Tr.BINOP(Tr.PLUS, arr, accessVal)),
                    Tr.MEM(Tr.TEMP(addr))))
             end
 
