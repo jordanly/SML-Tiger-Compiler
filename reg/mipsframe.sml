@@ -245,7 +245,7 @@ struct
             fun loadRegs([], moveList, offset) =  moveList
               | loadRegs(temp::tempList, moveList, offset) = 
                   Assem.OPER {assem="lw `d0, " ^ (intToStringFormat offset) ^ "(`s0)\n", src=[FP], dst=[temp], jump=NONE}
-                  ::storeRegs(tempList, moveList, offset - 4)
+                  ::loadRegs(tempList, moveList, offset - 4)
             val tempMoveBackStms = rev(loadRegs(regsToSave, [], ~8)) (* rev for aesthetics *)
 
             (* deallocate frame, move sp to fp and reset fp from sl *)
