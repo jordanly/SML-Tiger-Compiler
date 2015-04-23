@@ -41,7 +41,8 @@ struct
 	  look(!linePos,!lineNum);
 	  print ":";
 	  print msg;
-	  print "\n"
+	  print "\n";
+    OS.Process.exit(OS.Process.failure)
       end
 
   fun impossible msg =
