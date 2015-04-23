@@ -51,14 +51,33 @@ structure Main = struct
                     ^ " -- use: " ^ (foldl (fn (temp, str) => str ^ Temp.makestring temp ^ ", ") "" use)
                     ^ " -- ismove: " ^ (Bool.toString ismove) ^ ")"
 
+                fun allocContains (alloc, allTemps, tempToSave) =
+                    if tempToSave = F.RA
+                    then true
+                    else
+
+                    let
+                        val predefinedTemps = F.getRegisterTemps (F.callersaves @ F.calleesaves @ F.argregs @ F.specialregs)
+                        fun isSome (SOME _ ) = true | isSome NONE = false
+                        fun getSome (SOME x) = x | getSome NONE = "NOT A REGISTER"
+                        fun containsHelper(temp, boolSoFar) = 
+                            if isSome(List.find (fn i => i=temp) predefinedTemps)
+                            then boolSoFar
+                            else boolSoFar orelse String.compare(getSome(TT.look(alloc, tempToSave)), getSome(TT.look(alloc, temp))) = EQUAL
+                    in
+                        foldl containsHelper false allTemps
+                    end
+
                 val stms : Tree.stm list = Canon.linearize body
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
                 val instrs' : Assem.instr list = #body (F.procEntryExit3(frame, instrs, getMaxNumArgs(Translate.getResult())))
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs'
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
+                val allTemps = map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph)
                 val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
-                val instrs'' = F.procEntryExit4(frame, instrs', F.RA::(F.getRegisterTemps F.calleesaves))
+                val tempsToSave = List.filter (fn x => allocContains(alloc, allTemps, x)) (F.RA::(F.getRegisterTemps F.calleesaves))
+                val instrs'' = F.procEntryExit4(frame, instrs', tempsToSave)
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
                 val format1 = Assem.format(fn temp => Temp.makestring temp)
             in 
@@ -75,7 +94,7 @@ structure Main = struct
                     print ("=== Interference Graph "  ^ S.name (F.name frame) ^ " ===\n");
                     Liveness.show(TextIO.stdOut, igraph);*)
                     print ("=== Register allocation "  ^ S.name (F.name frame) ^ " ===\n");
-                    R.printAlloc(alloc, map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph));
+                    R.printAlloc(alloc, allTemps);
                     app (fn i => TextIO.output(out, format0 i)) instrs'';
                     if spilled
                     then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
