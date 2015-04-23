@@ -58,6 +58,7 @@ structure Main = struct
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs'
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
                 val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
+                val instrs'' = F.procEntryExit4(frame, instrs', F.RA::(F.getRegisterTemps F.calleesaves))
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
                 val format1 = Assem.format(fn temp => Temp.makestring temp)
             in 
@@ -68,14 +69,14 @@ structure Main = struct
                     print ("=== POST-CANON "  ^ S.name (F.name frame) ^ " ===\n");
                     app (fn s => Printtree.printtree(TextIO.stdOut,s)) stms;*)
                     print ("=== EMIT "  ^ S.name (F.name frame) ^ " ===\n");
-                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs';
+                    app (fn i => TextIO.output(TextIO.stdOut, format0 i)) instrs'';
                     (*print ("=== Flowgraph "  ^ S.name (F.name frame) ^ " ===\n");
                     StrKeyGraph.printGraph printGraphNode flowgraph;
                     print ("=== Interference Graph "  ^ S.name (F.name frame) ^ " ===\n");
                     Liveness.show(TextIO.stdOut, igraph);*)
                     print ("=== Register allocation "  ^ S.name (F.name frame) ^ " ===\n");
                     R.printAlloc(alloc, map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph));
-                    app (fn i => TextIO.output(out, format0 i)) instrs';
+                    app (fn i => TextIO.output(out, format0 i)) instrs'';
                     if spilled
                     then if escapeOneVar(0) then () else (Err.impossible "Failed to allocate registers")
                     else ();

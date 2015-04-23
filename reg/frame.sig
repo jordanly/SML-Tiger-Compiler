@@ -33,4 +33,5 @@ sig
     val procEntryExit1 : frame * Tree.stm -> Tree.stm
     val procEntryExit2 : frame * Assem.instr list -> Assem.instr list
     val procEntryExit3 : frame * Assem.instr list * int -> {prolog: string, body: Assem.instr list, epilog: string}
+    val procEntryExit4 : frame * Assem.instr list * Temp.temp list -> Assem.instr list
 end

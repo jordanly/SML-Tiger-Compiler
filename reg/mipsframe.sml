@@ -195,27 +195,8 @@ struct
                     end
           val moveArgStms = moveArgs(formals frame', [], 0)
           (* === *)
-
-          fun memAddr(offset, temp) = Tr.MEM(Tr.BINOP(Tr.PLUS, temp, offset))
-          (* move calleesaves and ra to stack === *)
-          val calleeSaveTemps = RA::(getRegisterTemps calleesaves) (* add RA *)
-          fun storeCalleeSaves([], moveList, offset) =  moveList
-            | storeCalleeSaves(temp::tempList, moveList, offset) = 
-                Tr.MOVE(exp2loc(memAddr(Tr.CONST offset, Tr.TEMP FP)), Tr.TEMP temp)::storeCalleeSaves(tempList, moveList, offset - 4)
-          val tempMoveStms = storeCalleeSaves(calleeSaveTemps, [], ~8)
-          (* === *)
-
-          (* end if function move callee saves back *) 
-          fun loadCalleeSaves([], moveList, offset) =  moveList
-            | loadCalleeSaves(temp::tempList, moveList, offset) = 
-                Tr.MOVE(exp2loc(Tr.TEMP temp), memAddr(Tr.CONST offset, Tr.TEMP FP))::loadCalleeSaves(tempList, moveList, offset - 4)
-          val tempMoveBackStms = rev(loadCalleeSaves(calleeSaveTemps, [], ~8)) (* rev for aesthetics *)
-          (* === *)
         in
-          seq (tempMoveStms
-               @ moveArgStms
-               @ [stm]
-               @ tempMoveBackStms)
+          seq (moveArgStms @ [stm])
         end
 
     fun procEntryExit2(frame, body) = 
@@ -274,4 +255,26 @@ struct
             body = body',
             epilog = "END " ^ Symbol.name (name frame') ^ "\n"}
         end
+
+    fun procEntryExit4(frame' as {name=name', formals=formals', numLocals=numLocals', curOffset=curOffset'} : frame,
+                       body, regsToSave) = 
+      let
+        fun intToStringFormat(i) = if i < 0
+                                   then ("-" ^ Int.toString(abs(i)))
+                                   else Int.toString(i)
+
+        fun storeRegs([], moveList, offset) = moveList
+          | storeRegs(temp::tempList, moveList, offset) = 
+              Assem.OPER {assem="sw `s0, " ^ (intToStringFormat offset) ^ "(`s1)\n", src=[temp, FP], dst=[], jump=NONE}
+              ::storeRegs(tempList, moveList, offset - 4)
+        val tempMoveStms = storeRegs(regsToSave, [], ~8)
+
+        fun loadRegs([], moveList, offset) =  moveList
+          | loadRegs(temp::tempList, moveList, offset) = 
+              Assem.OPER {assem="lw `d0, " ^ (intToStringFormat offset) ^ "(`s0)\n", src=[FP], dst=[temp], jump=NONE}
+              ::storeRegs(tempList, moveList, offset - 4)
+        val tempMoveBackStms = rev(loadRegs(regsToSave, [], ~8)) (* rev for aesthetics *)
+      in
+        tempMoveStms @ body @ tempMoveBackStms
+      end
 end
