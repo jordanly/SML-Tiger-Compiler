@@ -202,12 +202,12 @@ struct
     fun procEntryExit2(frame, body) = 
         body @
         [Assem.OPER {assem="",
-                 src=getRegisterTemps (specialregs @ calleesaves),
+                 src=getRegisterTemps (specialregs),
                  dst=[], jump=SOME[]}
         ]
       
     fun procEntryExit3(frame' as {name=name', formals=formals', numLocals=numLocals', curOffset=curOffset'} : frame,
-                       body, maxNumArgs) =
+                       body, maxNumArgs, regsToSave) =
         let
             val label' = name frame'
             val labelInsn = Assem.LABEL {assem=Symbol.name label' ^ ":\n", lab=label'}
@@ -232,6 +232,22 @@ struct
             val moveSpInsn = Assem.OPER {assem="addi `d0, `s0, -" ^ Int.toString(abs(spOffset)) ^ "\n",
                                          src=[FP], dst=[SP], jump=NONE}
 
+            fun intToStringFormat(i) = if i < 0
+              then ("-" ^ Int.toString(abs(i)))
+              else Int.toString(i)
+
+            fun storeRegs([], moveList, offset) = moveList
+              | storeRegs(temp::tempList, moveList, offset) = 
+                  Assem.OPER {assem="sw `s0, " ^ (intToStringFormat offset) ^ "(`s1)\n", src=[temp, FP], dst=[], jump=NONE}
+                  ::storeRegs(tempList, moveList, offset - 4)
+            val tempMoveStms = storeRegs(regsToSave, [], ~8)
+
+            fun loadRegs([], moveList, offset) =  moveList
+              | loadRegs(temp::tempList, moveList, offset) = 
+                  Assem.OPER {assem="lw `d0, " ^ (intToStringFormat offset) ^ "(`s0)\n", src=[FP], dst=[temp], jump=NONE}
+                  ::storeRegs(tempList, moveList, offset - 4)
+            val tempMoveBackStms = rev(loadRegs(regsToSave, [], ~8)) (* rev for aesthetics *)
+
             (* deallocate frame, move sp to fp and reset fp from sl *)
             val moveSpToFp = Assem.OPER {assem="move `d0, `s0\n",
                                          src=[FP], dst=[SP], jump=NONE}
@@ -246,7 +262,9 @@ struct
                         @ [saveFpToStack]
                         @ [copySpToFpInsn]
                         @ [moveSpInsn]
+                        @ tempMoveStms
                         @ procEntryExit2(frame', body)
+                        @ tempMoveBackStms
                         @ [moveSpToFp]
                         @ [getPrevFp]
                         @ [returnInsn]
@@ -255,26 +273,4 @@ struct
             body = body',
             epilog = "END " ^ Symbol.name (name frame') ^ "\n"}
         end
-
-    fun procEntryExit4(frame' as {name=name', formals=formals', numLocals=numLocals', curOffset=curOffset'} : frame,
-                       body, regsToSave) = 
-      let
-        fun intToStringFormat(i) = if i < 0
-                                   then ("-" ^ Int.toString(abs(i)))
-                                   else Int.toString(i)
-
-        fun storeRegs([], moveList, offset) = moveList
-          | storeRegs(temp::tempList, moveList, offset) = 
-              Assem.OPER {assem="sw `s0, " ^ (intToStringFormat offset) ^ "(`s1)\n", src=[temp, FP], dst=[], jump=NONE}
-              ::storeRegs(tempList, moveList, offset - 4)
-        val tempMoveStms = storeRegs(regsToSave, [], ~8)
-
-        fun loadRegs([], moveList, offset) =  moveList
-          | loadRegs(temp::tempList, moveList, offset) = 
-              Assem.OPER {assem="lw `d0, " ^ (intToStringFormat offset) ^ "(`s0)\n", src=[FP], dst=[temp], jump=NONE}
-              ::storeRegs(tempList, moveList, offset - 4)
-        val tempMoveBackStms = rev(loadRegs(regsToSave, [], ~8)) (* rev for aesthetics *)
-      in
-        tempMoveStms @ body @ tempMoveBackStms
-      end
 end

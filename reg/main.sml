@@ -70,14 +70,18 @@ structure Main = struct
 
                 val stms : Tree.stm list = Canon.linearize body
                 val stms' : Tree.stm list = Canon.traceSchedule(Canon.basicBlocks stms)
+
                 val instrs : Assem.instr list = List.concat(map (MipsGen.codegen frame) stms')
-                val instrs' : Assem.instr list = #body (F.procEntryExit3(frame, instrs, getMaxNumArgs(Translate.getResult())))
+                val instrs' : Assem.instr list = F.procEntryExit2(frame, instrs)
+
                 val flowgraph : MakeGraph.graphentry StrKeyGraph.graph = MakeGraph.makeFlowgraph instrs'
                 val (igraph, _, movelist) = Liveness.interferenceGraph flowgraph
-                val allTemps = map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph)
                 val (alloc, spilled) = RegAlloc.allocateRegisters(igraph, movelist)
+
+                val allTemps = map (TempKeyGraph.getNodeID) (TempKeyGraph.nodes igraph)
                 val tempsToSave = List.filter (fn x => allocContains(alloc, allTemps, x)) (F.RA::(F.getRegisterTemps F.calleesaves))
-                val instrs'' = F.procEntryExit4(frame, instrs', tempsToSave)
+                val instrs'' : Assem.instr list = #body (F.procEntryExit3(frame, instrs, getMaxNumArgs(Translate.getResult()), tempsToSave))
+
                 val format0 = Assem.format(fn temp => case TT.look(alloc, temp) of SOME reg => reg | NONE => "NO REGISTER FOUND")
                 val format1 = Assem.format(fn temp => Temp.makestring temp)
             in 
