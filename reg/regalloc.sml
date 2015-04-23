@@ -19,7 +19,7 @@ struct
           fun printTemp(temp) = 
             case Temp.Table.look(regTable, temp) of
                  SOME(x) => print(Temp.makestring(temp) ^ " -> " ^ x ^ "\n")
-               | NONE => Err.error 0 ("== reg error, failed to alloc: " ^ Temp.makestring(temp) ^ "==\n")
+               | NONE => print("== Failed to allocate: " ^ Temp.makestring(temp) ^ "==\n")
         in
           app printTemp tempList
         end
