@@ -166,8 +166,8 @@ struct
             val rightExp = unEx right
         in
             case (ty,relop,leftExp,rightExp) of
-                (T.STRING, Tr.EQ, _, _) => Ex(F.externalCall("stringEqual", [leftExp, rightExp]))
-              | (T.STRING, Tr.NE, _, _) => Ex(Tr.BINOP(Tr.MINUS, Tr.CONST 1, F.externalCall("stringEqual", [leftExp, rightExp])))
+                (T.STRING, Tr.EQ, _, _) => Ex(F.externalCall("tig_stringEqual", [leftExp, rightExp]))
+              | (T.STRING, Tr.NE, _, _) => Ex(Tr.BINOP(Tr.MINUS, Tr.CONST 1, F.externalCall("tig_stringEqual", [leftExp, rightExp])))
               | (T.STRING, Tr.LE, _, _) => Ex(F.externalCall("stringLE", [leftExp, rightExp]))
               | (T.STRING, Tr.LT, _, _) => Ex(F.externalCall("stringLT", [leftExp, rightExp]))
               | (T.STRING, Tr.GE, _, _) => Ex(F.externalCall("stringGE", [leftExp, rightExp]))
