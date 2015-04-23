@@ -263,7 +263,7 @@ struct
                         @ [copySpToFpInsn]
                         @ [moveSpInsn]
                         @ tempMoveStms
-                        @ procEntryExit2(frame', body)
+                        @ body
                         @ tempMoveBackStms
                         @ [moveSpToFp]
                         @ [getPrevFp]
