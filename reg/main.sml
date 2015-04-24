@@ -161,6 +161,10 @@ structure Main = struct
    
    fun compile filename = 
         let
+            (* allow multiple compiles *)
+            val _ = Translate.resetFragList()
+            val _ = FindEscape.resetEscapeRefs()
+
             val _ = print "======== Syntax Errors (if any) ========\n";
             val absyn : Absyn.exp = Parse.parse filename
             val _ = FindEscape.findEscape absyn
