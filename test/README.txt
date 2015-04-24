@@ -44,6 +44,13 @@ Miscellaneous
 Tr.CONST 0 uses $zero, not li into some register (test124.tig)
 
 ===== Register allocation =====
-Temps are colored with registers in the same order each time. This maximizes register reuse, so that we save the "higher-numbered" registers for when there is a lot of register pressure.
-heuristics for smart spilling NOT DONE
-coalesce NOT DONE
+Temps are colored with registers in the same order each time. This maximizes register reuse,
+	so that we save the "higher-numbered" registers for when there is a lot of register pressure.
+
+Coalesce (test101.tig). Notice that the answer 4 is immediately assigned to $v0,
+	not to some other temp than moved to $v0.
+
+===== Proc entry exit =====
+Callee-saved registers (the $s registers) are only saved and restored at the beginning and
+	end of a function if they are actually used. (Notice how test101.tig does not save any
+	$s registers, but merge.tig does)
