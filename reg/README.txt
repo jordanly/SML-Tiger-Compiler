@@ -18,6 +18,14 @@ Notes:
 + Appel's given canon.sml produces numerous "match nonexhaustive" warnings.
 	To our knowledge, these do not affect the correctness of our compiler.
 
++ We have fixed the following mistakes that cost us points on previous phases:
+	1. IR trees are not all 0
+	2. Record initialization is in the correct order and consistent
+	3. Function fragments are all generated correctly
+	4. The "view shift" for moving temps is implemented
+	5. Findescape is implemented
+	6. Assembly instructions are ordered correctly
+
 
 ======================================================================================================
 
