@@ -1,2 +1,2 @@
-# sml_journey
-Three friends and their magical journey into compiler land.
+# SML-Tiger-Compiler
+A basic tiger compiler written in SML.
